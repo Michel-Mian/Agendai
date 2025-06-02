@@ -1,87 +1,137 @@
 @extends('index')
 
 @section('content')
-<div class="flex min-h-screen">
-    @include('components.sidebar')
-    <div class="flex-1">
-        <div class="container mx-auto px-4 py-8 max-w-4xl">
-            <!-- Profile Section -->
-            <div class="text-center mb-12">
-                <div class="relative inline-block">
-                    <img 
-                        src="" 
-                        alt="Foto do perfil de João" 
-                        class="w-32 h-32 rounded-full object-cover mx-auto shadow-lg border-4 border-white"
-                    >
-                </div>
-                <h1 class="text-3xl font-semibold text-green-600 mt-6">
-                    Olá, João.
-                </h1>
-            </div>
-
-            <!-- Cards Section -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Card 1: Visualizar Viagens -->
-                <div class="bg-emerald-300 rounded-2xl p-8 text-center shadow-lg hover:shadow-xl transition-shadow duration-300">
-                    <div class="mb-6">
-                        <!-- Calendar Icon -->
-                        <svg class="w-16 h-16 mx-auto text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
+<div class="flex min-h-screen bg-gray-50">
+    @include('components/layout/sidebar')
+    <div class="flex-1 flex flex-col">
+        @include('components/layout/header')
+        <main class="flex-1 p-8">
+            <!-- Cards superiores -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
+                <div class="bg-white rounded-xl shadow p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="text-gray-500 text-sm">Viagens Planejadas</div>
+                        <div class="text-3xl font-bold mt-6">12 até agora!</div>
                     </div>
-                    <h3 class="text-xl font-semibold text-gray-800 mb-8">
-                        Visualizar minhas viagens
-                    </h3>
-                    <a href="" 
-                       class="inline-flex items-center bg-white text-gray-700 px-6 py-2 rounded-full font-medium hover:bg-gray-50 transition-colors duration-200">
-                        Saiba mais
-                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </a>
-                </div>
-
-                <!-- Card 2: Adicionar Roteiro -->
-                <div class="bg-emerald-400 rounded-2xl p-8 text-center shadow-lg hover:shadow-xl transition-shadow duration-300">
-                    <div class="mb-6">
-                        <!-- Globe Icon -->
-                        <svg class="w-16 h-16 mx-auto text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
-                        </svg>
+                    <div class="self-end mt-4">
+                        <span class="bg-green-100 p-2 rounded-lg">
+                            <i class="fa-solid fa-calendar" style="color: #63E6BE;"></i>                        
+                        </span>
                     </div>
-                    <h3 class="text-xl font-semibold text-gray-800 mb-8">
-                        Adicionar novo roteiro
-                    </h3>
-                    <a href="" 
-                       class="inline-flex items-center bg-white text-gray-700 px-6 py-2 rounded-full font-medium hover:bg-gray-50 transition-colors duration-200">
-                        Saiba mais
-                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </a>
                 </div>
-
-                <!-- Card 3: Buscar Voos -->
-                <div class="bg-emerald-300 rounded-2xl p-8 text-center shadow-lg hover:shadow-xl transition-shadow duration-300">
-                    <div class="mb-6">
-                        <!-- Airplane Icon -->
-                        <svg class="w-16 h-16 mx-auto text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                        </svg>
+                <div class="bg-white rounded-xl shadow p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="text-gray-500 text-sm">Sua moeda preferida</div>
+                        <div class="text-3xl font-bold mt-2">Real</div>
+                        <div class="text-base mt-1 ">R$4,59 em relação ao dólar americano</div>
                     </div>
-                    <h3 class="text-xl font-semibold text-gray-800 mb-8">
-                        Buscar melhores voos
-                    </h3>
-                    <a href="" 
-                       class="inline-flex items-center bg-white text-gray-700 px-6 py-2 rounded-full font-medium hover:bg-gray-50 transition-colors duration-200">
-                        Saiba mais
-                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </a>
+                    <div class="self-end mt-4">
+                        <span class="bg-blue-100 p-2 rounded-lg">
+                            <i class="fa-solid fa-file-invoice-dollar" style="color: #63E6BE;"></i>                        
+                        </span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="text-gray-500 text-sm">Próxima Viagem</div>
+                        <div class="text-xl font-bold mt-2">Rio de Janeiro</div>
+                        <div class="text-purple-600 text-xs mt-1">Em 15 dias</div>
+                    </div>
+                    <div class="self-end mt-4">
+                        <span class="bg-purple-100 p-2 rounded-lg">
+                            <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="10" r="3"/><path d="M12 2v2m0 16v2m10-10h-2M4 12H2m15.364-7.364l-1.414 1.414M6.05 17.95l-1.414 1.414m12.728 0l-1.414-1.414M6.05 6.05L4.636 4.636"/></svg>
+                        </span>
+                    </div>
                 </div>
             </div>
-        </div>
+            <!-- Ações rápidas -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow p-6 flex items-center">
+                    <span class="bg-green-100 p-3 rounded-lg mr-4">
+                        <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+                    </span>
+                    <div>
+                        <div class="font-semibold">Criar Novo Roteiro</div>
+                        <div class="text-gray-500 text-sm">Planeje sua próxima viagem</div>
+                    </div>
+                    <span class="ml-auto">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                    </span>
+                </div>
+                <div class="bg-white rounded-xl shadow p-6 flex items-center">
+                    <span class="bg-blue-100 p-3 rounded-lg mr-4">
+                        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6M3 10a7 7 0 1114 0 7 7 0 01-14 0z"/></svg>
+                    </span>
+                    <div>
+                        <div class="font-semibold">Buscar Voos</div>
+                        <div class="text-gray-500 text-sm">Encontre as melhores ofertas</div>
+                    </div>
+                    <span class="ml-auto">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                    </span>
+                </div>
+                <div class="bg-white rounded-xl shadow p-6 flex items-center">
+                    <span class="bg-purple-100 p-3 rounded-lg mr-4">
+                        <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                    </span>
+                    <div>
+                        <div class="font-semibold">Explorar Destinos</div>
+                        <div class="text-gray-500 text-sm">Descubra novos lugares</div>
+                    </div>
+                    <span class="ml-auto">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                    </span>
+                </div>
+            </div>
+            <!-- Suas viagens -->
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold">Suas Viagens</h2>
+                    <button class="bg-white border rounded-lg px-4 py-2 text-sm font-medium flex items-center gap-2 hover:bg-gray-100">
+                        Ver Todas
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Card Rio de Janeiro -->
+                    <div class="bg-white rounded-xl shadow flex">
+                        <div class="w-1/3 flex items-center justify-center bg-gray-100 rounded-l-xl">
+                            <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                        </div>
+                        <div class="flex-1 p-6">
+                            <div class="flex items-center justify-between">
+                                <div class="font-semibold text-lg">Rio de Janeiro</div>
+                                <span class="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full">Próxima</span>
+                            </div>
+                            <div class="text-gray-500 text-sm mt-2">14/02/2024 • 5 dias</div>
+                            <div class="flex items-center text-gray-500 text-sm mt-2">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87M16 3.13a4 4 0 010 7.75M8 3.13a4 4 0 000 7.75"/></svg>
+                                2 pessoas
+                            </div>
+                            <a href="#" class="text-green-600 font-medium mt-4 inline-flex items-center">Ver Detalhes <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></a>
+                        </div>
+                    </div>
+                    <!-- Card Salvador -->
+                    <div class="bg-white rounded-xl shadow flex opacity-80">
+                        <div class="w-1/3 flex items-center justify-center bg-gray-100 rounded-l-xl">
+                            <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                        </div>
+                        <div class="flex-1 p-6">
+                            <div class="flex items-center justify-between">
+                                <div class="font-semibold text-lg">Salvador</div>
+                                <span class="bg-gray-200 text-gray-700 text-xs px-3 py-1 rounded-full">Concluída</span>
+                            </div>
+                            <div class="text-gray-500 text-sm mt-2">09/01/2024 • 7 dias</div>
+                            <div class="flex items-center text-gray-500 text-sm mt-2">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87M16 3.13a4 4 0 010 7.75M8 3.13a4 4 0 000 7.75"/></svg>
+                                2 pessoas
+                            </div>
+                            <a href="#" class="text-green-600 font-medium mt-4 inline-flex items-center">Ver Detalhes <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 </div>
 @endsection

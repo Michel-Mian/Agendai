@@ -12,7 +12,6 @@
                     Register
                 </a>
             </div>
-            
         </div>
     </nav>
 </header>

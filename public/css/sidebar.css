@@ -1,0 +1,27 @@
+.sidebar-expanded {
+    width: 256px !important;
+    min-width: 256px !important;
+    transition: width 0.3s;
+}
+
+.sidebar-collapsed {
+    width: 64px !important;
+    min-width: 64px !important;
+    transition: width 0.3s;
+}
+
+.sidebar-collapsed .nav-text,
+.sidebar-collapsed #logo-text,
+.sidebar-collapsed .profile-info,
+.sidebar-collapsed .profile-chevron {
+    display: none !important;
+}
+
+.sidebar-collapsed .profile-toggle {
+    justify-content: center;
+}
+
+.sidebar-collapsed #sidebar-header {
+    flex-direction: column !important;
+    align-items: center !important;
+}
