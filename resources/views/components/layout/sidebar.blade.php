@@ -82,7 +82,7 @@
                         <span>Configurações</span>
                     </a>
                     <hr class="my-2 border-gray-200">
-                    <form method="POST" action="#">
+                    <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="flex items-center space-x-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
