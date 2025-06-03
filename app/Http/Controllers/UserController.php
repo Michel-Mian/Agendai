@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;   
 
 class UserController extends Controller
 {
@@ -35,15 +36,29 @@ class UserController extends Controller
     }
 
     public function login(Request $request){
-        $user = DB::table('users')->where('email', $request->email)->first();
+        $user = $request->only('email', 'password');
 
-        if ($user && Hash::check($request->password, $user->password)) {
-            // Aqui você poderia usar Auth::login() se estivesse usando Eloquent
-            return redirect('dashboard');
+        if(Auth::attempt($user)){
+            return redirect()->intended('dashboard');
         }
-
         return back()->withErrors([
             'email' => 'Email ou senha incorretos.',
         ]);
+        
+        // $user = DB::table('users')->where('email', $request->email)->first();
+        // if ($user && Hash::check($request->password, $user->password)) {
+        //     // Aqui você poderia usar Auth::login() se estivesse usando Eloquent
+        //     return redirect('dashboard');
+        // }
+
+        // return back()->withErrors([
+        //     'email' => 'Email ou senha incorretos.',
+        // ]);
+    }
+
+    public function logout()
+    {
+        Auth::logout();
+        return redirect('/login');
     }
 }
