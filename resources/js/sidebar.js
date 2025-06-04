@@ -8,6 +8,9 @@ document.addEventListener('DOMContentLoaded', function () {
     toggleSidebarButton.addEventListener('click', function () {
         sidebar.classList.toggle('sidebar-collapsed');
         sidebar.classList.toggle('sidebar-expanded');
+        // Salvar o estado atual no Local Storage
+        const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+        localStorage.setItem('sidebar-collapsed', isCollapsed);
     });
 
     profileButton.addEventListener('click', function (e) {
@@ -24,4 +27,17 @@ document.addEventListener('DOMContentLoaded', function () {
     profileDropdown.addEventListener('click', function (e) {
         e.stopPropagation();
     });
+
 });
+
+// Restaurar o estado da sidebar ao carregar a página
+    document.addEventListener('DOMContentLoaded', function () {
+        const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+        if (isCollapsed) {
+            sidebar.classList.add('sidebar-collapsed');
+            sidebar.classList.remove('sidebar-expanded');
+        } else {
+            sidebar.classList.add('sidebar-expanded');
+            sidebar.classList.remove('sidebar-collapsed');
+        }
+    });

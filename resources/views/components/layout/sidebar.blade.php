@@ -1,30 +1,30 @@
-<div id="sidebar" class="bg-white shadow-lg transition-all duration-300 ease-in-out w-64 min-h-screen relative flex flex-col sidebar-expanded">
+<div id="sidebar" class="bg-white shadow-lg min-h-screen relative flex flex-col sidebar-expanded">
     <!-- Header com Logo e Toggle -->
     <div id="sidebar-header" class="flex items-center justify-between p-2 border-b border-gray-200 transition-all duration-300" style="background-color: #f7faf8;">
-    <div id="logo-container" class="flex items-center justify-center w-full space-x-3">
-        <div class="w-24 h-24 rounded-lg flex items-center justify-center p-0">
-            <img src="{{ asset('imgs/logoagendaipreto.png') }}" alt="">
+        <div id="logo-container" class="flex items-center justify-center w-full space-x-3">
+            <div class="w-24 h-24 rounded-lg flex items-center justify-center p-0">
+                <img src="{{ asset('imgs/logoagendaipreto.png') }}" alt="">
+            </div>
         </div>
+        <button id="toggle-sidebar" class="p-1 rounded-lg hover:bg-gray-100 transition-colors">
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
     </div>
-    <button id="toggle-sidebar" class="p-1 rounded-lg hover:bg-gray-100 transition-colors">
-        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-        </svg>
-    </button>
-</div>
 
 
     <!-- Navigation Menu -->
     <nav class="flex-1 p-4">
         <ul class="space-y-2">
             <li>
-                <a href="#" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
+                <a href="/dashboard" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
                     <i class="fa-solid fa-book"></i>
                     <span class="nav-text">Dashboard</span>
                 </a>
             </li>
             <li>
-                <a href="#" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
+                <a href="/myTrips" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
                     <i class="fa-solid fa-calendar-week"></i>
                     <span class="nav-text">Minhas Viagens</span>
                 </a>
@@ -37,14 +37,14 @@
             </li>
             <li>
                 <a href="#" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
-                    <i class="fa-solid fa-hotel"></i>
-                    <span class="nav-text">Hotéis</span>
+                    <i class="fa-solid fa-plus"></i>
+                    <span class="nav-text">Criar Viagem</span>
                 </a>
             </li>
             <li>
                 <a href="#" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
-                    <i class="fa-solid fa-sheet-plastic"></i>
-                    <span class="nav-text">Relatórios</span>
+                    <i class="fa-solid fa-earth-americas"></i>
+                    <span class="nav-text">Explorar</span>
                 </a>
             </li>
         </ul>
@@ -58,8 +58,12 @@
                      alt="Foto do perfil" 
                      class="w-8 h-8 rounded-full object-cover">
                 <div class="flex-1 text-left profile-info">
-                    <p class="text-sm font-medium text-gray-900">Fulano</p>
-                    <p class="text-xs text-gray-500">teste@teste.com</p>
+                    @if(Auth::check())
+                        <p class="text-sm font-medium text-gray-900">{{ Auth::user()->name }}</p>
+                        <p class="text-xs text-gray-500">{{ Auth::user()->email }}</p>
+                    @else
+                        <p class="text-xs text-gray-400">Usuário não autenticado</p>
+                    @endif
                 </div>
                 <svg class="w-4 h-4 text-gray-400 profile-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
