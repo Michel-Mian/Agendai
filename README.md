@@ -1,6 +1,6 @@
 <!-- Logo do projeto -->
 <p align="center">
-  <img src="public/imgs/logoagendaibranco.png" alt="Logo do AgendAí" width="200"/>
+  <img src="public/imgs/logoagendaibranco.png" alt="Logo do AgendAí" width="400"/>
 </p>
 
 <h1 align="center">🌍 AgendAí – Planeje Sua Viagem dos Sonhos</h1>
@@ -84,6 +84,6 @@ Este projeto foi desenvolvido como parte do Trabalho de Conclusão de Curso (TCC
 
 ## 📷 Capturas de Tela
 
-> *
+> * ainda em desenvolvimento
 
 ---
