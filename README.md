@@ -61,21 +61,18 @@ Desenvolver um **sistema web completo e intuitivo**, capaz de auxiliar no **plan
 
 ## 🛠️ Tecnologias Utilizadas
 
-> *(Adicione ou edite conforme o stack do projeto)*
-
 - HTML5 / CSS3  
 - JavaScript  
-- PHP  
+- PHP
+- Laravel / Blade
 - MySQL  
-- API de Clima / API de Câmbio  
-- Biblioteca de Mapas (ex: Leaflet ou Google Maps)
+- APIs
 
 ---
 
 ## 📈 Status do Projeto
 
 📌 **Em desenvolvimento**  
-*(Atualize para "Finalizado" quando concluído)*
 
 ---
 
@@ -87,12 +84,6 @@ Este projeto foi desenvolvido como parte do Trabalho de Conclusão de Curso (TCC
 
 ## 📷 Capturas de Tela
 
-> *(Espaço reservado para screenshots do sistema)*
-
----
-
-## 🧭 Como Contribuir
-
-> *(Opcional – caso o repositório seja aberto ao público ou colaboração)*
+> *
 
 ---
