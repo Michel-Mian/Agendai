@@ -1,13 +1,16 @@
+#sidebar {
+    transition: width 0.3s ease;
+    overflow: hidden;
+}
+
 .sidebar-expanded {
     width: 256px !important;
     min-width: 256px !important;
-    transition: width 0.3s;
 }
 
 .sidebar-collapsed {
     width: 64px !important;
     min-width: 64px !important;
-    transition: width 0.3s;
 }
 
 .sidebar-collapsed .nav-text,

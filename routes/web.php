@@ -15,7 +15,10 @@ Route::post('/logout', [UserController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth'])->group(function (){
     Route::get('/dashboard', function () {
-        return view('dashboard');
+        return view('dashboard', ['title' => 'Dashboard']);
+    });
+    Route::get('/myTrips', function() {
+        return view('myTrips', ['title' => 'Minhas Viagens']);
     });
 });
 
