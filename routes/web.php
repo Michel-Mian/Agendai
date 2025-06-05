@@ -20,5 +20,7 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/myTrips', function() {
         return view('myTrips', ['title' => 'Minhas Viagens']);
     });
+    Route::get('/myProfile/{id}/edit', [UserController::class, 'edit']);
+    Route::put('/myProfile/{id}/edit', [UserController::class, 'update']);
 });
 

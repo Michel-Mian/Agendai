@@ -29,6 +29,7 @@ class UserController extends Controller
         $user = new User();
         $user->name = $request->name;
         $user->email = $request->email;
+        $user->profile_photo_url = $request->profile_photo_url;
         $user->password = Hash::make($request->password);
         $user->save();
         return redirect('dashboard');
@@ -60,5 +61,26 @@ class UserController extends Controller
     {
         Auth::logout();
         return redirect('/');
+    }
+
+    public function edit($id){
+        $user = User::findOrfail($id);
+        return view('/myProfile', ['user' => $user]);   
+    }
+
+    public function update(Request $request, $id){
+        $user = User::findOrFail($id);
+        $user->name = $request->name;
+        $user->email = $request->email;
+
+        // Verifica se foi enviado um novo arquivo de foto
+        if ($request->hasFile('profile_photo')) {
+            $file = $request->file('profile_photo');
+            $path = $file->store('profile_photos', 'public'); // Salva em storage/app/public/profile_photos
+            $user->profile_photo_url = 'storage/' . $path; // Caminho acessível via URL
+        }
+
+        $user->save();
+        return redirect('/myProfile/' . $user->id . '/edit')->with('success', 'Perfil atualizado com sucesso!');
     }
 }
