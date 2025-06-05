@@ -1,6 +1,6 @@
 <!-- Logo do projeto -->
 <p align="center">
-  <img src="public/imgs/logoagendaibranco.png" alt="Logo do AgendAí" width="300"/>
+  <img src="public/imgs/logoagendaibranco.png" alt="Logo do AgendAí" width="200"/>
 </p>
 
 <h1 align="center">🌍 AgendAí – Planeje Sua Viagem dos Sonhos</h1>
