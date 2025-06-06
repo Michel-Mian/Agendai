@@ -5,8 +5,27 @@
     @include('components/layout/sidebar')
     <div class="flex-1 flex flex-col">
         @include('components/layout/header')
-        <div class="flex-100 p-6">
-            <div class="bg-white/90 shadow-xl rounded-2xl p-8 max-w-xl mx-auto border border-blue-100">
+        <div class="flex-100 p-6 bg-gray-50">
+            <div class="flex bg-blue-50 rounded-lg shadow mb-6 max-w-xl mx-auto border border-blue-100">
+                <button type="button" class="flex-1 px-6 py-2 bg-white text-blue-900 rounded-lg font-semibold shadow transition cursor-pointer focus:outline-none" style="box-shadow: 0 2px 8px 0 #e0e7ef;" id="btnProfile">
+                    Perfil
+                </button>
+                <button type="button" class="flex-1 px-6 py-2 bg-transparent text-blue-700 rounded-lg font-semibold transition cursor-pointer hover:bg-gray-100 hover:text-blue-900" id="btnPreferences">
+                    Preferências
+                </button>
+            </div>
+            <div class="bg-white/90 shadow-xl rounded-2xl p-8 max-w-xl mx-auto border border-blue-100" id="cardProfile">
+                @if ($errors->any())
+                    <div class="mb-4">
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                            <ul class="list-disc pl-5">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                @endif
                 <form action="" method="POST" enctype="multipart/form-data" id="profileForm">
                     @isset($user)
                         @method('put')
@@ -54,10 +73,45 @@
 
                     <!-- Botões -->
                     <div class="flex justify-between mt-8 gap-4">
-                        <button type="button" onclick="clearProfileForm()" class="flex-1 px-6 py-2 bg-gray-100 text-blue-700 rounded-lg font-semibold shadow hover:bg-gray-200 transition">Limpar</button>
-                        <button type="submit" class="flex-1 px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg font-semibold shadow hover:from-blue-700 hover:to-blue-600 transition">Salvar Alterações</button>
+                        <button type="button" onclick="clearProfileForm()" class="flex-1 px-6 py-2 bg-gray-100 text-blue-700 rounded-lg font-semibold shadow hover:bg-gray-200 transition cursor-pointer">Limpar</button>
+                        <button type="submit" class="flex-1 px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg font-semibold shadow hover:from-blue-700 hover:to-blue-600 transition cursor-pointer">Salvar Alterações</button>
                     </div>
                 </form>
+            </div>
+            <div class="bg-white/90 shadow-xl rounded-2xl p-8 max-w-xl mx-auto border border-blue-100 hidden" id="cardPreferences">
+                <h2 class="text-2xl font-semibold text-blue-900 mb-6">Preferências</h2>
+                <form action="" method="POST" id="preferencesForm">
+                    @csrf
+                    @method('put')
+
+                    <div class="mb-5">
+                        <label for="language" class="block text-lg font-semibold text-blue-900 mb-1">Idioma</label>
+                        <select id="language" name="language" class="block w-full border border-blue-200 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 text-blue-900 placeholder-blue-300 transition py-2 px-3">
+                            <option value="en">Inglês</option>
+                            <option value="pt">Português</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-5">
+                        <label for="theme" class="block text-lg font-semibold text-blue-900 mb-1">Tema</label>
+                        <select id="theme" name="theme" class="block w-full border border-blue-200 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 text-blue-900 placeholder-blue-300 transition py-2 px-3">
+                            <option value="light">Claro</option>
+                            <option value="dark">Escuro</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-5">
+                        <label for="currency" class="block text-lg font-semibold text-blue-900 mb-1">Moeda</label>
+                        <select id="currency" name="currency" class="block w-full border border-blue-200 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 text-blue-900 placeholder-blue-300 transition py-2 px-3">
+                            <option value="USD">Dólar (USD)</option>
+                            <option value="EUR">Euro (EUR)</option>
+                            <option value="BRL">Real (BRL)</option>
+                        </select>
+                    </div>
+
+                    <div class="flex justify-between mt-8 gap-4">
+                        <button type="button" onclick="clearPreferencesForm()" class="flex-1 px-6 py-2 bg-gray-100 text-blue-700 rounded-lg font-semibold shadow hover:bg-gray-200 transition cursor-pointer">Limpar</button>
+                        <button type="submit" class="flex-1 px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg font-semibold shadow hover:from-blue-700 hover:to-blue-600 transition cursor-pointer">Salvar Preferências
             </div>
         </div>
     </div>
