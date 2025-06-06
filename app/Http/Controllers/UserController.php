@@ -69,18 +69,29 @@ class UserController extends Controller
     }
 
     public function update(Request $request, $id){
-        $user = User::findOrFail($id);
-        $user->name = $request->name;
-        $user->email = $request->email;
+    $user = User::findOrFail($id);
 
-        // Verifica se foi enviado um novo arquivo de foto
-        if ($request->hasFile('profile_photo')) {
-            $file = $request->file('profile_photo');
-            $path = $file->store('profile_photos', 'public'); // Salva em storage/app/public/profile_photos
-            $user->profile_photo_url = 'storage/' . $path; // Caminho acessível via URL
-        }
+    $request->validate([
+        'name' => 'required',
+        'email' => 'required|email|unique:users,email,' . $user->id, // ignora o próprio usuário
+    ],
+    [
+        'name.required' => 'Ops, o nome é obrigatório.',
+        'email.required' => 'Ops, o e-mail é obrigatório.',
+        'email.email' => 'Por favor, digite um e-mail válido.',
+        'email.unique' => 'Hmmm, parece que esse e-mail já existe.',
+    ]);
 
-        $user->save();
-        return redirect('/myProfile/' . $user->id . '/edit')->with('success', 'Perfil atualizado com sucesso!');
+    $user->name = $request->name;
+    $user->email = $request->email;
+
+    if ($request->hasFile('profile_photo')) {
+        $file = $request->file('profile_photo');
+        $path = $file->store('profile_photos', 'public');
+        $user->profile_photo_url = 'storage/' . $path;
     }
+
+    $user->save();
+    return redirect('/myProfile/' . $user->id . '/edit')->with('success', 'Perfil atualizado com sucesso!');
+}
 }
