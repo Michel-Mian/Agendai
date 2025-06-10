@@ -29,5 +29,8 @@ Route::middleware(['auth'])->group(function (){
     });
     Route::get('/myProfile/{id}/edit', [UserController::class, 'edit']);
     Route::put('/myProfile/{id}/edit', [UserController::class, 'update']);
+    Route::get('/flights', function(){
+        return view('flights', ['title' => 'Voos']);
+    });
 });
 

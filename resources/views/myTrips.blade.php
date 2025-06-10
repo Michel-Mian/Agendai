@@ -33,7 +33,7 @@
                         </button>
                     </div>
                 </div>
-                <div id="detalhes-1" class="detalhes-viagem hidden px-6 py-6 bg-gray-50 transition-all duration-300">
+            <div id="detalhes-1" class="detalhes-viagem hidden px-6 py-6 bg-gray-50 transition-all duration-300">
     <h3 class="text-xl font-bold mb-6 text-gray-800">Itinerário Detalhado</h3>
 
     <div class="space-y-6">
@@ -88,10 +88,6 @@
                         <span class="ml-3 bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-0.5 rounded-full">Restaurante</span>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
             </div>
         </div>
     </div>
