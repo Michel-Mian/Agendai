@@ -58,7 +58,7 @@
                         </span>
                     </div>
                 </a>
-                <a href="">
+                <a href="/flights">
                     <div class="bg-white rounded-xl shadow p-6 flex items-center cursor-pointer transition duration-200 hover:shadow-lg">
                         <span class="bg-blue-100 p-3 rounded-lg mr-4">
                             <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6M3 10a7 7 0 1114 0 7 7 0 01-14 0z"/></svg>
@@ -110,7 +110,7 @@
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87M16 3.13a4 4 0 010 7.75M8 3.13a4 4 0 000 7.75"/></svg>
                                 2 pessoas
                             </div>
-                            <a href="/myTrips" class="text-green-600 font-medium mt-4 inline-flex items-center">Ver Detalhes <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></a>
+                            <a href="/myTrips" class="text-blue-600 font-medium mt-4 inline-flex items-center">Ver Detalhes <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></a>
                         </div>
                     </div>
                     <div class="bg-white rounded-xl shadow flex opacity-80">
@@ -124,7 +124,7 @@
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87M16 3.13a4 4 0 010 7.75M8 3.13a4 4 0 000 7.75"/></svg>
                                 2 pessoas
                             </div>
-                            <a href="/myTrips" class="text-green-600 font-medium mt-4 inline-flex items-center">Ver Detalhes <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></a>
+                            <a href="/myTrips" class="text-blue-600 font-medium mt-4 inline-flex items-center">Ver Detalhes <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></a>
                         </div>
                     </div>
                 </div>

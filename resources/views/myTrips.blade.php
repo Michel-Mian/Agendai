@@ -22,13 +22,13 @@
                         <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">4 lugares</span>
                     </div>
                     <div class="flex space-x-3">
-                        <button class="flex items-center px-4 py-2 border rounded text-gray-700 hover:bg-gray-50 cursor-pointer">
+                        <button class="flex items-center px-4 py-2 border rounded text-blue-600 hover:text-blue-500 hover:bg-gray-50 cursor-pointer">
                             <i class="fa-solid fa-globe mr-2"></i> Ver no Mapa
                         </button>
-                        <button class="flex items-center px-4 py-2 border rounded text-gray-700 hover:bg-gray-50 cursor-pointer">
+                        <button class="flex items-center px-4 py-2 border rounded text-blue-600 hover:bg-gray-50 hover:text-blue-500 cursor-pointer">
                             Editar Viagem
                         </button>
-                        <button class="ml-auto text-green-700 font-semibold flex items-center hover:underline ver-detalhes-btn" data-target="detalhes-1">
+                        <button class="ml-auto text-blue-600 font-semibold flex items-center hover:underline ver-detalhes-btn" data-target="detalhes-1">
                             Ver Detalhes <i class="fa-solid fa-chevron-right ml-1 text-xs"></i>
                         </button>
                     </div>
