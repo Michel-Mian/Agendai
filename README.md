@@ -68,6 +68,8 @@ Desenvolver um **sistema web completo e intuitivo**, capaz de auxiliar no **plan
 - MySQL  
 - APIs
 - Figma
+- Node.Js
+- Tailwind
 
 ---
 
