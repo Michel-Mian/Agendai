@@ -66,13 +66,26 @@ class UserController extends Controller
         return redirect('/');
     }
 
-    public function edit($id){
-        $user = User::findOrfail($id);
-        return view('/myProfile', ['user' => $user]);   
+    private function getUser($id)
+    {
+        return User::findOrFail($id);
     }
 
-    public function update(Request $request, $id){
-    $user = User::findOrFail($id);
+    public function editProfile($id)
+    {
+        $user = $this->getUser($id);
+        return view('myProfile', ['user' => $user, 'title' => 'Meu Perfil']);
+    }
+
+    public function editConfig($id)
+    {
+        $user = $this->getUser($id);
+        return view('config', ['user' => $user, 'title' => 'Configurações']);
+    }
+
+    public function updateProfile(Request $request, $id)
+    {
+    $user = $this->getUser($id);
 
     $request->validate([
         'name' => 'required',
@@ -88,21 +101,50 @@ class UserController extends Controller
     $user->name = $request->name;
     $user->email = $request->email;
 
-    if ($request->hasFile('profile_photo')) {
-        $file = $request->file('profile_photo');
-        $path = $file->store('profile_photos', 'public');
-        $user->profile_photo_url = 'storage/' . $path;
-    }
+        if ($request->hasFile('profile_photo')) {
+            $file = $request->file('profile_photo');
+            $path = $file->store('profile_photos', 'public');
+            $user->profile_photo_url = 'storage/' . $path;
+        }
 
     $user->save();
-    return redirect('/myProfile/' . $user->id . '/edit')->with('success', 'Perfil atualizado com sucesso!');
-}
+    return redirect()->back()->with('success', 'Perfil atualizado com sucesso!');
+    }
 
-    public function getForgot(){
+    public function updateConfig(Request $request, $id)
+    {
+        $user = $this->getUser($id);
+
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:users,email,' . $user->id, // ignora o próprio usuário
+            'password' => 'nullable|min:8|confirmed',
+        ]);
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
+        if ($request->hasFile('profile_photo')) {
+            $file = $request->file('profile_photo');
+            $path = $file->store('profile_photos', 'public');
+            $user->profile_photo_url = 'storage/' . $path;
+        }
+
+        $user->save();
+        return redirect()->back()->with('success', 'Configurações atualizadas com sucesso!');
+    }
+
+    public function getForgot()
+    {
         return view('auth.forgot-password');
     }
 
-    public function forgotPassword(Request $request){
+    public function forgotPassword(Request $request)
+    {
         $request->validate(['email' => 'required|email']);
     
         $status = Password::sendResetLink(
@@ -114,11 +156,13 @@ class UserController extends Controller
             : back()->withErrors(['email' => __($status)]);
     }
 
-    public function getReset(string $token){
+    public function getReset(string $token)
+    {
         return view('auth.reset-password', ['token' => $token]);
     }
 
-    public function resetPassword(Request $request){
+    public function resetPassword(Request $request)
+    {
         $request->validate([
             'token' => 'required',
             'email' => 'required|email',
@@ -141,5 +185,24 @@ class UserController extends Controller
         return $status === Password::PasswordReset
             ? redirect()->route('login')->with('status', __($status))
             : back()->withErrors(['email' => [__($status)]]);
+    }
+
+    function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:8|confirmed',
+        ]);
+
+        $user = Auth::user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'Senha atual incorreta.']);
+        }
+
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return redirect()->back()->with('success', 'Senha alterada com sucesso!');
     }
 }

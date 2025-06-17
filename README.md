@@ -67,6 +67,9 @@ Desenvolver um **sistema web completo e intuitivo**, capaz de auxiliar no **plan
 - Laravel / Blade
 - MySQL  
 - APIs
+- Figma
+- Node.Js
+- Tailwind
 
 ---
 

@@ -112,8 +112,8 @@
                     <div class="flex justify-between mt-8 gap-4">
                         <button type="button" onclick="clearPreferencesForm()" class="flex-1 px-6 py-2 bg-gray-100 text-blue-700 rounded-lg font-semibold shadow hover:bg-gray-200 transition cursor-pointer">Limpar</button>
                         <button type="submit" class="flex-1 px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg font-semibold shadow hover:from-blue-700 hover:to-blue-600 transition cursor-pointer">Salvar Preferências
+                    </div>
             </div>
-        </div>
     </div>
 </div>
 @endsection

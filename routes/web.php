@@ -19,6 +19,7 @@ Route::get('/forgot-password', [UserController::class, 'getForgot'])->middleware
 Route::post('/forgot-password', [UserController::class, 'forgotPassword'])->middleware('guest')->name('password.email');
 Route::get('/reset-password/{token}', [UserController::class, 'getReset'])->middleware('guest')->name('password.reset');
 Route::post('/reset-password', [UserController::class, 'resetPassword'])->middleware('guest')->name('password.update');
+Route::post('/change-password', [UserController::class, 'changePassword'])->middleware('auth')->name('password.change');
 
 Route::middleware(['auth'])->group(function (){
     Route::get('/dashboard', function () {
@@ -27,11 +28,13 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/myTrips', function() {
         return view('myTrips', ['title' => 'Minhas Viagens']);
     });
-    Route::get('/myProfile/{id}/edit', [UserController::class, 'edit']);
-    Route::put('/myProfile/{id}/edit', [UserController::class, 'update']);
+    Route::get('/myProfile/{id}/edit', [UserController::class, 'editProfile']);
+    Route::put('/myProfile/{id}/edit', [UserController::class, 'updateProfile']);
     Route::get('/flights', function(){
         return view('flights', ['title' => 'Voos']);
     });
+    Route::get('/config/{id}/edit', [UserController::class, 'editConfig']);
+    Route::put('/config/{id}/edit', [UserController::class, 'updateConfig']);
     Route::get('/explore', function(){
         return view('explore', ['title' => 'Explorar']);
     });
