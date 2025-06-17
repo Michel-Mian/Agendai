@@ -46,7 +46,7 @@
                         <input 
                             type="text" 
                             id="locationInput"
-                            placeholder="Ex: Rio de Janeiro, São Paulo, Madrid..."
+                            placeholder="Ex: Rio de Janeiro..."
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                         <p class="text-xs text-gray-500">Digite o nome da cidade ou país</p>
@@ -133,6 +133,52 @@
 </div>
 
 <script>
+    // Lista de continentes para autocomplete local
+const continents = [
+    "África", "América", "América do Norte", "América do Sul", "Ásia", "Europa", "Oceania", "Antártida"
+];
+
+// Função para inicializar autocomplete Google Places
+function initPlacesAutocomplete() {
+    if (locationInput && typeof google !== 'undefined' && google.maps && google.maps.places) {
+        if (!locationInput._autocompleteInitialized) {
+            const autocomplete = new google.maps.places.Autocomplete(locationInput, {
+                types: ['(regions)'],
+            });
+            autocomplete.addListener('place_changed', function() {
+                if (typeof updateFilterCount === 'function') updateFilterCount();
+            });
+            locationInput._autocompleteInitialized = true;
+        }
+    }
+}
+
+// Inicializa autocomplete ao focar no input
+if (locationInput) {
+    locationInput.addEventListener('focus', initPlacesAutocomplete);
+
+    // Autocomplete local para continentes
+    locationInput.addEventListener('input', function() {
+        const value = locationInput.value.trim().toLowerCase();
+        let datalist = document.getElementById('continents-datalist');
+        if (!datalist) {
+            datalist = document.createElement('datalist');
+            datalist.id = 'continents-datalist';
+            document.body.appendChild(datalist);
+            locationInput.setAttribute('list', 'continents-datalist');
+        }
+        datalist.innerHTML = '';
+        if (value.length > 0) {
+            continents.forEach(cont => {
+                if (cont.toLowerCase().startsWith(value)) {
+                    const option = document.createElement('option');
+                    option.value = cont;
+                    datalist.appendChild(option);
+                }
+            });
+        }
+    });
+}
 document.addEventListener('DOMContentLoaded', function() {
     // Lista de todos os tipos de lugares
     const placeTypes = [
