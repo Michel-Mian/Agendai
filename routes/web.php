@@ -32,5 +32,8 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/flights', function(){
         return view('flights', ['title' => 'Voos']);
     });
+    Route::get('/explore', function(){
+        return view('explore', ['title' => 'Explorar']);
+    });
 });
 

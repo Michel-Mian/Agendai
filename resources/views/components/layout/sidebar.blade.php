@@ -42,7 +42,7 @@
                 </a>
             </li>
             <li>
-                <a href="#" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
+                <a href="/explore" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
                     <i class="fa-solid fa-earth-americas"></i>
                     <span class="nav-text">Explorar</span>
                 </a>
