@@ -168,7 +168,7 @@ let itinerary = { 1: [], 2: [], 3: [] };
 // Initialize Google Map
 function initMap() {
     map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: -22.9068, lng: -43.1729 },
+        center: { lat: 48.86447217071428, lng: 2.3484048697423208 },
         zoom: 12,
         zoomControl: true,
         mapTypeControl: false,
@@ -197,8 +197,8 @@ function initMap() {
 
     service.nearbySearch(
         {
-            location: { lat: -22.9068, lng: -43.1729 },
-            radius: 5000,
+            location: { lat: 48.86447217071428, lng: 2.3484048697423208 },
+            radius: 10000,
             type: 'tourist_attraction|restaurant|lodging',
         },
         (results, status) => {
