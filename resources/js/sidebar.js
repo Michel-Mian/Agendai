@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const toggleSidebarButton = document.getElementById('toggle-sidebar');
     const profileButton = document.getElementById('profile-button');
     const profileDropdown = document.getElementById('profile-dropdown');
+    const logo = document.getElementById('logo');
 
     toggleSidebarButton.addEventListener('click', function () {
         sidebar.classList.toggle('sidebar-collapsed');
@@ -11,6 +12,15 @@ document.addEventListener('DOMContentLoaded', function () {
         // Salvar o estado atual no Local Storage
         const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
         localStorage.setItem('sidebar-collapsed', isCollapsed);
+
+        // Esconde ou mostra a logo conforme o estado da sidebar
+        if (logo) {
+            if (isCollapsed) {
+                logo.classList.add('hidden');
+            } else {
+                logo.classList.remove('hidden');
+            }
+        }
     });
 
     profileButton.addEventListener('click', function (e) {
@@ -28,16 +38,15 @@ document.addEventListener('DOMContentLoaded', function () {
         e.stopPropagation();
     });
 
+    // Restaurar o estado da sidebar ao carregar a página
+    const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+    if (isCollapsed) {
+        sidebar.classList.add('sidebar-collapsed');
+        sidebar.classList.remove('sidebar-expanded');
+        if (logo) logo.classList.add('hidden');
+    } else {
+        sidebar.classList.add('sidebar-expanded');
+        sidebar.classList.remove('sidebar-collapsed');
+        if (logo) logo.classList.remove('hidden');
+    }
 });
-
-// Restaurar o estado da sidebar ao carregar a página
-    document.addEventListener('DOMContentLoaded', function () {
-        const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
-        if (isCollapsed) {
-            sidebar.classList.add('sidebar-collapsed');
-            sidebar.classList.remove('sidebar-expanded');
-        } else {
-            sidebar.classList.add('sidebar-expanded');
-            sidebar.classList.remove('sidebar-collapsed');
-        }
-    });
