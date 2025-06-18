@@ -54,7 +54,7 @@
     <div class="border-t border-gray-200 p-4">
         <div class="relative">
             <button id="profile-button" class="flex items-center space-x-3 w-full rounded-lg hover:bg-gray-50 transition-colors profile-toggle">
-                <img src="{{ Auth::user()?->profile_photo_url ? asset(Auth::user()->profile_photo_url) : asset('images/default-profile.png') }}"
+                <img src="{{ Auth::user()?->profile_photo_url ? asset(Auth::user()->profile_photo_url) : asset('imgs/default-profile.png') }}"
                      alt="Foto do perfil" 
                      class="w-8 h-8 rounded-full object-cover">
                 <div class="flex-1 text-left profile-info">

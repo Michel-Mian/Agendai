@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 
 class UserController extends Controller
 {
@@ -74,7 +75,36 @@ class UserController extends Controller
     public function editProfile($id)
     {
         $user = $this->getUser($id);
-        return view('myProfile', ['user' => $user, 'title' => 'Meu Perfil']);
+
+        // Busca moedas disponíveis na AwesomeAPI
+        $response = Http::get('https://economia.awesomeapi.com.br/json/available/uniq');
+        $currencies = [];
+        if ($response->successful()) {
+            $currencies = $response->json();
+        }
+
+        // Cotação (ajuste conforme já conversamos)
+        $token = 'SEU_TOKEN';
+        $currency = $user->currency;
+        if ($currency === 'BRL') {
+            $cotacao = 1;
+        } else {
+            $apiResponse = Http::get("https://economia.awesomeapi.com.br/json/last/{$currency}-BRL?token={$token}");
+            $cotacao = null;
+            if ($apiResponse->successful()) {
+                $json = $apiResponse->json();
+                if (isset($json[$currency.'BRL']['bid'])) {
+                    $cotacao = $json[$currency.'BRL']['bid'];
+                }
+            }
+        }
+
+        return view('myProfile', [
+            'user' => $user,
+            'title' => 'Meu Perfil',
+            'cotacao' => $cotacao,
+            'currencies' => $currencies
+        ]);
     }
 
     public function editConfig($id)
@@ -85,21 +115,15 @@ class UserController extends Controller
 
     public function updateProfile(Request $request, $id)
     {
-    $user = $this->getUser($id);
+        $user = $this->getUser($id);
 
-    $request->validate([
-        'name' => 'required',
-        'email' => 'required|email|unique:users,email,' . $user->id, // ignora o próprio usuário
-    ],
-    [
-        'name.required' => 'Ops, o nome é obrigatório.',
-        'email.required' => 'Ops, o e-mail é obrigatório.',
-        'email.email' => 'Por favor, digite um e-mail válido.',
-        'email.unique' => 'Hmmm, parece que esse e-mail já existe.',
-    ]);
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+        ]);
 
-    $user->name = $request->name;
-    $user->email = $request->email;
+        $user->name = $request->name;
+        $user->email = $request->email;
 
         if ($request->hasFile('profile_photo')) {
             $file = $request->file('profile_photo');
@@ -107,8 +131,9 @@ class UserController extends Controller
             $user->profile_photo_url = 'storage/' . $path;
         }
 
-    $user->save();
-    return redirect()->back()->with('success', 'Perfil atualizado com sucesso!');
+        $user->save();
+
+        return redirect()->back()->with('success', 'Perfil atualizado com sucesso!');
     }
 
     public function updateConfig(Request $request, $id)
@@ -204,5 +229,22 @@ class UserController extends Controller
         $user->save();
 
         return redirect()->back()->with('success', 'Senha alterada com sucesso!');
+    }
+
+    function updatePreferences(Request $request, $id)
+    {
+        $user = $this->getUser($id);
+
+        $request->validate([
+            'currency' => 'required',
+            // outros campos de preferência...
+        ]);
+
+        $user->currency = $request->currency;
+        // $user->language = $request->language;
+        // $user->theme = $request->theme;
+        $user->save();
+
+        return redirect()->back()->with('success', 'Preferências atualizadas com sucesso!');
     }
 }

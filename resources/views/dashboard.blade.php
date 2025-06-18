@@ -22,12 +22,24 @@
                 <div class="bg-white rounded-xl shadow p-6 flex flex-col justify-between">
                     <div>
                         <div class="text-gray-500 text-sm">Sua moeda preferida</div>
-                        <div class="text-3xl font-bold mt-2">Real</div>
-                        <div class="text-base mt-1 ">R$4,59 em relação ao dólar americano</div>
+                        <div class="text-3xl font-bold mt-2">
+                            @if(isset($currencies[$user->currency]))
+                                {{ $currencies[$user->currency] }} ({{ $user->currency }})
+                            @else
+                                {{ $user->currency }}
+                            @endif
+                        </div>
+                        @if(is_null($cotacao))
+                            <div class="text-red-600">Moeda não suportada para conversão.</div>
+                        @else
+                            <div class="text-gray-500 text-sm mt-2">
+                                US$ {{ number_format($cotacao, 2, ',', '.') }} em relação ao dólar americano
+                            </div>
+                        @endif
                     </div>
                     <div class="self-end mt-4">
                         <span class="bg-blue-100 p-2 rounded-lg">
-                            <i class="fa-solid fa-file-invoice-dollar" style="color: #74C0FC;"></i>                       
+                            <i class="fa-solid fa-file-invoice-dollar cursor-pointer hover:scale-130 transition-transform duration-200" style="color: #74C0FC;" id="modal-currency"></i>                       
                         </span>
                     </div>
                 </div>
@@ -38,7 +50,7 @@
                         <div class="text-purple-600 text-xs mt-1">Em 15 dias</div>
                     </div>
                     <div class="self-end mt-4">
-                        <i class="fa-solid fa-umbrella-beach" style="color: #74C0FC;"></i>
+                        <i class="fa-solid fa-umbrella-beach cursor-pointer" style="color: #74C0FC;"></i>
                     </div>
                 </div>
             </div>
@@ -129,7 +141,37 @@
                     </div>
                 </div>
             </div>
+            <!-- Modal -->
+            <div id="currency-modal" class="fixed inset-0 z-0 flex items-start justify-center pt-35 bg-opacity-10 backdrop-blur-sm bg-opacity-30 hidden border-t-4 border-gray-200">
+                <div class="bg-white rounded-xl shadow-lg p-8 max-w-xl w-full relative">
+                    <button id="close-currency-modal" class="absolute top-3 right-3 text-gray-400 hover:text-gray-200 text-2xl font-bold">&times;</button>
+                    <div class="text-center">
+                        <div class="text-2xl font-semibold mb-2">Cotação</div>
+                        <div class="text-gray-600 mb-4">
+                            Sua moeda preferida: 
+                            <span class="font-bold">
+                                @if(isset($currencies[$user->currency]))
+                                    {{ $currencies[$user->currency] }} ({{ $user->currency }})
+                                @else
+                                    {{ $user->currency }}
+                                @endif
+                            </span>
+                        </div>
+                        <div class="">
+                            <input type="number" id="conversion-period" min="7" max="365" class="border border-blue-200 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 text-blue-900 placeholder-blue-300 transition w-full px-4 py-2 mb-4" placeholder="Digite (em dias) o período de conversão" value="{{ old('valorConversao') }}">
+                        </div>
+                        @if(!empty($historico) && !is_null($cotacao))
+                            <canvas id="graficoMoeda" data-historico="{{ json_encode($historico) }}"></canvas>
+                        @elseif(is_null($cotacao))
+                            <div class="text-red-600">Moeda não suportada para conversão.</div>
+                        @endif
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 @endsection
