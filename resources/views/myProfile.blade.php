@@ -5,6 +5,7 @@
     @include('components/layout/sidebar')
     <div class="flex-1 flex flex-col">
         @include('components/layout/header')
+
         <div class="flex-100 p-6 bg-gray-50">
             <div class="flex bg-blue-50 rounded-lg shadow mb-6 max-w-xl mx-auto border border-blue-100">
                 <button type="button" class="flex-1 px-6 py-2 bg-white text-blue-900 rounded-lg font-semibold shadow transition cursor-pointer focus:outline-none" style="box-shadow: 0 2px 8px 0 #e0e7ef;" id="btnProfile">
@@ -26,11 +27,10 @@
                         </div>
                     </div>
                 @endif
-                <form action="" method="POST" enctype="multipart/form-data" id="profileForm">
-                    @isset($user)
-                        @method('put')
-                    @endisset
+                <!-- Formulário de perfil -->
+                <form action="{{ route('user.updateProfile', $user->id) }}" method="POST" enctype="multipart/form-data" id="profileForm">
                     @csrf
+                    @method('PUT')
 
                     <!-- Foto de Perfil -->
                     <div class="flex flex-col items-center mb-8">
@@ -80,9 +80,10 @@
             </div>
             <div class="bg-white/90 shadow-xl rounded-2xl p-8 max-w-xl mx-auto border border-blue-100 hidden" id="cardPreferences">
                 <h2 class="text-2xl font-semibold text-blue-900 mb-6">Preferências</h2>
-                <form action="" method="POST" id="preferencesForm">
+                <!-- Formulário de preferências -->
+                <form action="{{ route('user.updatePreferences', $user->id) }}" method="POST" id="preferencesForm">
                     @csrf
-                    @method('put')
+                    @method('PUT')
 
                     <div class="mb-5">
                         <label for="language" class="block text-lg font-semibold text-blue-900 mb-1">Idioma</label>
@@ -103,9 +104,11 @@
                     <div class="mb-5">
                         <label for="currency" class="block text-lg font-semibold text-blue-900 mb-1">Moeda</label>
                         <select id="currency" name="currency" class="block w-full border border-blue-200 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 text-blue-900 placeholder-blue-300 transition py-2 px-3">
-                            <option value="USD">Dólar (USD)</option>
-                            <option value="EUR">Euro (EUR)</option>
-                            <option value="BRL">Real (BRL)</option>
+                            @foreach($currencies as $code => $name)
+                                <option value="{{ $code }}" {{ $user->currency == $code ? 'selected' : '' }}>
+                                    {{ $name }} ({{ $code }})
+                                </option>
+                            @endforeach
                         </select>
                     </div>
 
@@ -113,7 +116,13 @@
                         <button type="button" onclick="clearPreferencesForm()" class="flex-1 px-6 py-2 bg-gray-100 text-blue-700 rounded-lg font-semibold shadow hover:bg-gray-200 transition cursor-pointer">Limpar</button>
                         <button type="submit" class="flex-1 px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg font-semibold shadow hover:from-blue-700 hover:to-blue-600 transition cursor-pointer">Salvar Preferências
                     </div>
+                </form>
             </div>
+        </div>
     </div>
 </div>
+
 @endsection
+
+
+
