@@ -13,6 +13,11 @@
     min-width: 64px !important;
 }
 
+.sidebar-collapsed #toggle-icon {
+    font-size: 25px !important;
+    margin: 25px !important;
+}
+
 .sidebar-collapsed .nav-text,
 .sidebar-collapsed #logo-text,
 .sidebar-collapsed .profile-info,
