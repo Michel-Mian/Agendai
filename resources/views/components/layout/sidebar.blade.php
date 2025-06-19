@@ -2,14 +2,14 @@
     <!-- Header com Logo e Toggle -->
     <div id="sidebar-header" class="flex items-center justify-between p-2 border-b border-gray-200 transition-all duration-300" style="background-color: #f7faf8;">
         <div id="logo-container" class="flex items-center justify-center w-full space-x-3">
-            <div class="w-24 h-24 rounded-lg flex items-center justify-center p-0">
-                <img src="{{ asset('imgs/logoagendaipreto.png') }}" alt="">
+            <div class="w-24 h-24 rounded-lg flex items-center justify-center p-0" id="logo">
+                <a href="/dashboard">
+                    <img src="{{ asset('imgs/logoagendaipreto.png') }}" alt="" class="cursor-pointer">
+                </a>
             </div>
         </div>
-        <button id="toggle-sidebar" class="p-1 rounded-lg hover:bg-gray-100 transition-colors">
-            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
+        <button id="toggle-sidebar" class="p-1 rounded-lg hover:none transition-colors cursor-pointer">
+            <i class="fa-solid fa-bars" id="toggle-icon"></i>
         </button>
     </div>
 
@@ -54,7 +54,7 @@
     <div class="border-t border-gray-200 p-4">
         <div class="relative">
             <button id="profile-button" class="flex items-center space-x-3 w-full rounded-lg hover:bg-gray-50 transition-colors profile-toggle">
-                <img src="{{ Auth::user()?->profile_photo_url ? asset(Auth::user()->profile_photo_url) : asset('images/default-profile.png') }}"
+                <img src="{{ Auth::user()?->profile_photo_url ? asset(Auth::user()->profile_photo_url) : asset('imgs/default-profile.png') }}"
                      alt="Foto do perfil" 
                      class="w-8 h-8 rounded-full object-cover">
                 <div class="flex-1 text-left profile-info">

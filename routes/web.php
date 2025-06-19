@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\DashBoardController;
 use Illuminate\Support\Facades\Route;
 use App\http\controllers\UserController;
 use Illuminate\Http\Request;
+use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
 
 Route::get('/', function () {
@@ -22,9 +24,7 @@ Route::post('/reset-password', [UserController::class, 'resetPassword'])->middle
 Route::post('/change-password', [UserController::class, 'changePassword'])->middleware('auth')->name('password.change');
 
 Route::middleware(['auth'])->group(function (){
-    Route::get('/dashboard', function () {
-        return view('dashboard', ['title' => 'Dashboard']);
-    });
+    Route::get('/dashboard', [DashBoardController::class, 'dashboard'])->name('dashboard');
     Route::get('/myTrips', function() {
         return view('myTrips', ['title' => 'Minhas Viagens']);
     });
@@ -38,5 +38,8 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/explore', function(){
         return view('explore', ['title' => 'Explorar']);
     });
+    Route::put('/user/{id}/profile', [UserController::class, 'updateProfile'])->name('user.updateProfile');
+    Route::put('/user/{id}/preferences', [UserController::class, 'updatePreferences'])->name('user.updatePreferences');
+    Route::get('/dashboard/historico', [DashBoardController::class, 'historicoAjax'])->name('dashboard.historico');
 });
 
