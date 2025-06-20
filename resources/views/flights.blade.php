@@ -11,9 +11,15 @@
 
             <!-- Lista de Voos -->
             <div class="max-w-4xl mx-auto mb-0 w-full py-8">
-                @include('components/flights/cardFlights')
-                @include('components/flights/cardFlights')
-                @include('components/flights/cardFlights')
+                @if(isset($flights))
+                    @forelse($flights as $flight)
+                        @include('components.flights.cardFlights', ['flight' => $flight])
+                    @empty
+                        <div class="text-center text-gray-500 py-8">
+                            Nenhum voo encontrado para os filtros selecionados.
+                        </div>
+                    @endforelse
+                @endif
             </div>
         </div>
     </div>
