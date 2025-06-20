@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashBoardController;
+use App\Http\Controllers\FlightsController;
 use Illuminate\Support\Facades\Route;
 use App\http\controllers\UserController;
 use Illuminate\Http\Request;
@@ -30,9 +31,7 @@ Route::middleware(['auth'])->group(function (){
     });
     Route::get('/myProfile/{id}/edit', [UserController::class, 'editProfile']);
     Route::put('/myProfile/{id}/edit', [UserController::class, 'updateProfile']);
-    Route::get('/flights', function(){
-        return view('flights', ['title' => 'Voos']);
-    });
+    Route::get('/flights', [FlightsController::class, 'search'])->name('flights.search');
     Route::get('/config/{id}/edit', [UserController::class, 'editConfig']);
     Route::put('/config/{id}/edit', [UserController::class, 'updateConfig']);
     Route::put('/user/{id}/profile', [UserController::class, 'updateProfile'])->name('user.updateProfile');

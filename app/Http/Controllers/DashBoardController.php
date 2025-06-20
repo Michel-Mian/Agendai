@@ -18,7 +18,7 @@ class DashBoardController extends Controller
         }
         
         // Busca cotação da moeda preferida do usuário
-        $token = 'ac8bc56a82869dcf2c33f484ae654568382832b29d360461ff126e318aeae19a';
+        $token = env('AWESOME_API_TOKEN');
         $currency = $user->currency ?? 'BRL';
         $supported = [
             'AED', 'AFN', 'ALL', 'AMD', 'ANG', 'AOA', 'ARS', 'AUD', 'AZN', 'BAM',
