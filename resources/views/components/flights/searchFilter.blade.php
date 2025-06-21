@@ -5,9 +5,9 @@
                 <!-- Tipo de viagem -->
                 <div class="flex flex-col">
                     <label for="trip_type" class="text-xs text-gray-500 mb-1">Tipo</label>
-                    <select name="trip_type" id="trip_type" class="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none">
-                        <option value="round">Ida e volta</option>
-                        <option value="oneway">Só ida</option>
+                    <select name="type_trip" id="type_trip" class="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none">
+                        <option value="1">Ida e volta</option>
+                        <option value="2">Só ida</option>
                     </select>
                 </div>
                 <!-- Passageiros -->
@@ -19,9 +19,20 @@
                 <div class="flex flex-col">
                     <label for="class" class="text-xs text-gray-500 mb-1">Classe</label>
                     <select name="class" id="class" class="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none">
-                        <option value="economica">Econômica</option>
-                        <option value="executiva">Executiva</option>
-                        <option value="primeira">Primeira Classe</option>
+                        <option value="1">Econômica</option>
+                        <option value="2">Executiva</option>
+                        <option value="3">Primeira Classe</option>
+                        <option value="4">First</option>
+                    </select>
+                </div>
+                <div class="flex flex-col">
+                    <label for="class" class="text-xs text-gray-500 mb-1">Ordenar por</label>
+                    <select name="sort_by" id="sort_by" class="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none">
+                        <option value="1">Melhores voos</option>
+                        <option value="2">Preço</option>
+                        <option value="3">Hora de partida</option>
+                        <option value="4">Hora de chegada</option>
+                        <option value="5">Duração</option>
                     </select>
                 </div>
                 <!-- Filtro de preço -->
