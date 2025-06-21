@@ -49,7 +49,7 @@ class FlightsController extends Controller
             ['path' => url()->current(), 'query' => $request->query()]
         );
 
-        return view('flights', ['flights' => $paginator]);
+        return view('flights', ['flights' => $paginator, 'title' => 'Voos']);
     }
 
     private function paginateArray(array $items, $perPage = 6, $page = null, $options = [])

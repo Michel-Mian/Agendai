@@ -70,7 +70,8 @@ class DashBoardController extends Controller
             'cotacao' => $cotacao,
             'historico' => $historico,
             'labels' => $labels,
-            'data' => $data
+            'data' => $data,
+            'title' => 'Dashboard',
         ]);
     }
 

@@ -9,6 +9,9 @@
             <!-- Filtro de Pesquisa -->
             @include('components/flights/searchFilter')
 
+            <!-- Modal de Filtro -->
+            @include('components/flights/modalFlights')
+
             <!-- Lista de Voos -->
             <div class="max-w-4xl mx-auto mb-0 w-full py-8">
                 @if(isset($flights) && count($flights))
