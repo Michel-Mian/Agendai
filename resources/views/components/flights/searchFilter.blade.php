@@ -89,14 +89,13 @@
                     </div>
                 </div>
             </div>
-            <div class="flex justify-end mt-4">
-                <button 
-                    type="submit" 
-                    class="bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold px-3 py-2 rounded-lg shadow hover:from-blue-700 hover:to-blue-600 transition flex items-center gap-2 text-base"
-                    aria-label="Pesquisar"
-                >
+            <div class="flex justify-end mt-4 gap-2">
+                <button type="submit" class="cursor-pointer bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold px-3 py-2 rounded-lg shadow hover:from-blue-700 hover:to-blue-600 transition flex items-center gap-2 text-base" aria-label="Pesquisar">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     Pesquisar
+                </button>
+                <button type="button" class="cursor-pointer bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold px-3 py-2 rounded-lg shadow hover:from-blue-700 hover:to-blue-600 transition flex items-center gap-2 text-base" id="open-filter-modal">
+                    <i class="fa-solid fa-filter"></i>
                 </button>
             </div>
         </form>
