@@ -12,7 +12,7 @@
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
         <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
         <link rel="stylesheet" href="{{ asset('css/myTrips.css') }}">
-        @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/dashBoard.js'])
+        @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/dashBoard.js', 'resources/js/searchFlights.js'])
 
     </head>
     <body>

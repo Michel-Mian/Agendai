@@ -11,14 +11,19 @@
 
             <!-- Lista de Voos -->
             <div class="max-w-4xl mx-auto mb-0 w-full py-8">
-                @if(isset($flights))
-                    @forelse($flights as $flight)
+                @if(isset($flights) && count($flights))
+                    @foreach($flights as $flight)
                         @include('components.flights.cardFlights', ['flight' => $flight])
-                    @empty
-                        <div class="text-center text-gray-500 py-8">
-                            Nenhum voo encontrado para os filtros selecionados.
-                        </div>
-                    @endforelse
+                        <!-- <pre>{{ print_r($flight, true) }}</pre> -->
+                    @endforeach
+
+                    <div class="mt-6">
+                        {{ $flights->links() }}
+                    </div>
+                @else
+                    <div class="text-center text-gray-500 py-8">
+                        Nenhum voo encontrado para os filtros selecionados.
+                    </div>
                 @endif
             </div>
         </div>
