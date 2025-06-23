@@ -569,6 +569,4 @@ window.applyMapFilters = function(filters) {
     }
 };
 
-window.initMap = initMap;
-
 console.log('Explore.js loaded successfully');
