@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\http\controllers\UserController;
 use Illuminate\Http\Request;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
-
+use App\Http\Controllers\TripController;
 
 Route::get('/', function () {
     return view('home');
@@ -24,6 +24,18 @@ Route::post('/reset-password', [UserController::class, 'resetPassword'])->middle
 Route::post('/change-password', [UserController::class, 'changePassword'])->middleware('auth')->name('password.change');
 
 Route::middleware(['auth'])->group(function (){
+    Route::get('/trip/create', [TripController::class, 'showStep1'])->name('trip.form.step1');
+    Route::post('/trip/step2', [TripController::class, 'handleStep1'])->name('trip.form.step2');
+    Route::get('/trip/details', [TripController::class, 'showStep2'])->name('trip.form.step2.view');
+    Route::post('/trip/preferences', [TripController::class, 'handleStep2'])->name('trip.form.step3');
+    Route::get('/trip/preferences', [TripController::class, 'showStep3'])->name('trip.form.step3.view');
+    Route::post('/trip/insurance', [TripController::class, 'handleStep3'])->name('trip.form.step4');
+    Route::get('/trip/insurance', [TripController::class, 'showStep4'])->name('trip.form.step4.view');
+    Route::post('/trip/flights', [TripController::class, 'handleStep4'])->name('trip.form.step5');
+    Route::get('/trip/flights', [TripController::class, 'showStep5'])->name('trip.form.step5.view');
+    Route::post('/trip/review', [TripController::class, 'handleStep5'])->name('trip.form.step6');
+    Route::get('/trip/review', [TripController::class, 'showStep6'])->name('trip.form.step6.view');
+    Route::post('/trip/finish', [TripController::class, 'finish'])->name('trip.form.finish');
     Route::get('/dashboard', [DashBoardController::class, 'dashboard'])->name('dashboard');
     Route::get('/myTrips', function() {
         return view('myTrips', ['title' => 'Minhas Viagens']);
