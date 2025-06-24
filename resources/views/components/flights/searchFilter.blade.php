@@ -10,19 +10,15 @@
                         <option value="2">Só ida</option>
                     </select>
                 </div>
-                <!-- Passageiros -->
-                <div class="flex flex-col">
-                    <label for="passengers" class="text-xs text-gray-500 mb-1">Passageiros</label>
-                    <input type="number" min="1" max="10" value="1" name="passengers" id="passengers" class="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none">
-                </div>
                 <!-- Classe -->
                 <div class="flex flex-col">
                     <label for="class" class="text-xs text-gray-500 mb-1">Classe</label>
                     <select name="class" id="class" class="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none">
+                        <option value="">Qualquer</option>
                         <option value="1">Econômica</option>
-                        <option value="2">Executiva</option>
-                        <option value="3">Primeira Classe</option>
-                        <option value="4">First</option>
+                        <option value="2">Premium Econômica</option>
+                        <option value="3">Executiva</option>
+                        <option value="4">Primeira Classe</option>
                     </select>
                 </div>
                 <div class="flex flex-col">

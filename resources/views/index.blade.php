@@ -14,11 +14,13 @@
         <link rel="stylesheet" href="{{ asset('css/myTrips.css') }}">
         @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/dashBoard.js', 'resources/js/searchFlights.js'])
 
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDWLH0DB_w7iFWxaPJHOl69rSP6YT3sp80_AQUI&libraries=places&callback=initMap"></script>
     </head>
     <body>
             <main class="">
                 @yield('content')
             </main>
+            
     </body>
     
 </html>
