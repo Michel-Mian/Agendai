@@ -87,6 +87,6 @@ Este projeto foi desenvolvido como parte do Trabalho de Conclusão de Curso (TCC
 
 ## 📷 Capturas de Tela
 
-> <img src="public/imgs/Flights.png" alt="Flights" width="200"/> <img src="public/imgs/dashBoard.png" alt="Dashboard" width="200"/> <img src="public/imgs/MyTrips.png" alt="MyTrips" width="200"/>
+> <img src="public/imgs/Flights.PNG" alt="Flights" width="200"/> <img src="public/imgs/dashBoard.PNG" alt="Dashboard" width="200"/> <img src="public/imgs/MyTrips.PNG" alt="MyTrips" width="200"/>
 
 ---
