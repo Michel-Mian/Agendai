@@ -1,6 +1,7 @@
 <!-- Logo do projeto -->
 <p align="center">
-  <img src="public/imgs/logoagendaibranco.png" alt="Logo do AgendAí" width="200"/>
+  <a href="https://www.youtube.com/watch?si=Yh4zWISCRkQa7F6-&v=r4HKf4ICAFA&feature=youtu.be"> <img src="public/imgs/logoagendaibranco.png" alt="Logo do AgendAí" width="300"/> </a>
+    <h3 color="grey">Clique na imagem!</h3>
 </p>
 
 <h1 align="center">🌍 AgendAí – Planeje Sua Viagem dos Sonhos</h1>
