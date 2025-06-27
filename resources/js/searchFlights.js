@@ -12,8 +12,24 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
+        const typeTrip2 = document.getElementById('type-trip');
+        const dateReturn2 = document.getElementById('date-return');
+
+        // essa função torna obsoleto o campo de data de retorno quando a viagem for só de ida
+        function toggleDateReturn2() {
+            if (typeTrip2.value == '2') { 
+                dateReturn2.disabled = true;
+                dateReturn2.value = '';
+            } else {
+                dateReturn2.disabled = false;
+            }
+        }
+
         typeTrip.addEventListener('change', toggleDateReturn);
         toggleDateReturn();
+        
+        typeTrip2.addEventListener('change', toggleDateReturn2);
+        toggleDateReturn2();
 
         document.getElementById('open-filter-modal').onclick = function() {
             document.getElementById('filter-modal').classList.remove('hidden');

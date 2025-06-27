@@ -80,7 +80,6 @@ class DashBoardController extends Controller
         $user = auth()->user();
         $dias = $request->query('dias', 60);
         $currency = $user->currency ?? 'BRL';
-        $token = 'ac8bc56a82869dcf2c33f484ae654568382832b29d360461ff126e318aeae19a';
 
         $response = Http::get("https://economia.awesomeapi.com.br/json/daily/{$currency}-USD/{$dias}");
         $historico = $response->successful() ? $response->json() : [];

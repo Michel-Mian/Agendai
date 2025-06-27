@@ -6,6 +6,7 @@
                 <div class="flex flex-col">
                     <label for="trip_type" class="text-xs text-gray-500 mb-1">Tipo</label>
                     <select name="type_trip" id="type_trip" class="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none">
+                        <option value="">Qualquer</option>
                         <option value="1">Ida e volta</option>
                         <option value="2">Só ida</option>
                     </select>
