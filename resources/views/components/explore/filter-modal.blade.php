@@ -130,22 +130,6 @@ const continents = [
     "África", "América", "América do Norte", "América do Sul", "Ásia", "Europa", "Oceania", "Antártida"
 ];
 
-// Função para inicializar autocomplete Google Places
-function initPlacesAutocomplete() {
-    const locationInput = document.getElementById('locationInput');
-    if (locationInput && typeof google !== 'undefined' && google.maps && google.maps.places) {
-        if (!locationInput._autocompleteInitialized) {
-            const autocomplete = new google.maps.places.Autocomplete(locationInput, {
-                types: ['(regions)'],
-            });
-            autocomplete.addListener('place_changed', function() {
-                if (typeof updateFilterCount === 'function') updateFilterCount();
-            });
-            locationInput._autocompleteInitialized = true;
-        }
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function() {
     // Lista de todos os tipos de lugares (expanded for more options)
     const placeTypes = [
