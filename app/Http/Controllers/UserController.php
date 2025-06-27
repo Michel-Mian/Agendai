@@ -83,8 +83,8 @@ class UserController extends Controller
             $currencies = $response->json();
         }
 
-        // Cotação (ajuste conforme já conversamos)
-        $token = 'SEU_TOKEN';
+        // Cotação
+        $token = env('AWESOME_API_TOKEN');
         $currency = $user->currency;
         if ($currency === 'BRL') {
             $cotacao = 1;

@@ -10,6 +10,8 @@ class FlightsController extends Controller
 {
     public function search(Request $request)
     {
+        $user = auth()->user();
+
         $apiKey = env('SERPAPI_KEY');
         $params = [
             'engine'      => 'google_flights',
@@ -20,11 +22,12 @@ class FlightsController extends Controller
             'max_price' => $request->price,
             'type' => $request->type_trip,
             'sort_by' => $request->sort_by,
-            'currency'    => 'BRL',
+            'currency'    => $user->currency ?? 'BRL',
             'hl' => 'pt-br',
             'travel_class' => $request->class,
             'api_key'     => $apiKey,
             'stops' => $request->stops,
+            'max_duration' => $this->convertionHoursToMinutes($request->max_duration),
             'outbound_times' => $this->timesToHoursString($request->departure_time),
             'return_times' => $this->timesToHoursString($request->arrival_time),
             'exclude_airlines' => is_array($request->exclude_airlines) ? implode(',', $request->exclude_airlines) : $request->exclude_airlines,
@@ -32,7 +35,7 @@ class FlightsController extends Controller
         ];
         //dd($params);
         $response = Http::get('https://serpapi.com/search', $params);
-        dd($response->json());
+        //dd($response->json());
         $json = $response->json();
 
         $flights = [];
@@ -123,7 +126,7 @@ class FlightsController extends Controller
             'EgyptAir'              => 'MS',
             'Royal Air Maroc'       => 'AT',
         ];
-        return view('flights', ['flights' => $paginator, 'title' => 'Voos', 'airlines' => $airlines]);
+        return view('flights', ['flights' => $paginator, 'title' => 'Voos', 'airlines' => $airlines, 'user' => $user]);
     }
 
     private function paginateArray(array $items, $perPage = 6, $page = null, $options = [])
@@ -144,13 +147,28 @@ class FlightsController extends Controller
     // Função auxiliar para converter horários para string de horas separadas por vírgula
     private function timesToHoursString($times)
     {
+        if (is_null($times) || $times === '') {
+            return null;
+        }
         if (is_array($times)) {
+            // Remove vazios
+            $times = array_filter($times, function($t) {
+                return $t !== null && $t !== '';
+            });
             $hours = array_map(function($t) {
                 return intval(explode(':', $t)[0]);
             }, $times);
-            return implode(',', $hours);
-        } elseif ($times) {
-            return intval(explode(':', $times)[0]);
+            if (count($hours) === 2 || count($hours) === 4) {
+                return implode(',', $hours);
+            }
+        }
+        return null;
+    }
+
+    private function convertionHoursToMinutes($hours)
+    {
+        if ($hours) {
+            return intval($hours) * 60;
         }
         return null;
     }

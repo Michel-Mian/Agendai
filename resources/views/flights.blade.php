@@ -15,9 +15,9 @@
             <!-- Lista de Voos -->
             <div class="max-w-4xl mx-auto mb-0 w-full py-8">
                 @if(isset($flights) && count($flights))
-                    @foreach($flights as $flight)
-                        @include('components.flights.cardFlights', ['flight' => $flight])
-                        <!-- <pre>{{ print_r($flight, true) }}</pre> -->
+                    @foreach($flights as $index => $flight)
+                        @include('components.flights.cardFlights', ['flight' => $flight, 'index' => $index, 'user' => $user])
+                         <!-- <pre>{{ print_r($flight, true) }}</pre>  -->
                     @endforeach
 
                     <div class="mt-6">
