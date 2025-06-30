@@ -16,7 +16,10 @@ class TripController extends Controller
     }
 
     public function showStep2() {
-        return view('trip_details');
+        $transportes = ['Carro', 'Ônibus', 'Avião', 'Trem'];
+        $estadias = ['Hotel', 'Hostel', 'Pousada', 'Airbnb', 'Camping'];
+
+        return view('trip_details', compact('transportes', 'estadias'));
     }
 
     public function handleStep2(Request $request) {
@@ -33,9 +36,19 @@ class TripController extends Controller
         return redirect()->route('trip.form.step4.view');
     }
 
-    public function showStep4() {
-        return view('trip_insurance');
-    }
+    public function showStep4()
+{
+    $scriptPath = base_path('scripts/webscraping/scraping.py');
+    $command = 'python "' . $scriptPath . '" 2>&1';
+    $output = shell_exec($command);
+    $frases = $output ? explode("\n", trim($output)) : ['Erro ao executar ou sem dados.'];
+
+    // Apenas para teste, pode deixar o $description vazio se quiser
+    $description = implode("\n\n", $frases); // ou substitua com outro texto
+    return view('trip_insurance', compact('frases', 'description'));
+}
+
+
 
     public function handleStep4(Request $request) {
         session()->put('trip.step4', $request->only(['budget', 'insurance_option']));

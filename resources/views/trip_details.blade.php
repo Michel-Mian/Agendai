@@ -1,6 +1,10 @@
 @extends('index')
 
 @section('content')
+    <div class="flex min-h-screen bg-gray-50">
+        @include('components/layout/sidebar')
+        <div class="flex-1 flex flex-col">
+            @include('components/layout/header')
 <div class="container mt-5">
     <form action="{{ route('trip.form.step3') }}" method="POST">
         @csrf
