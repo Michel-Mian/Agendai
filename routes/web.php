@@ -24,20 +24,27 @@ Route::post('/reset-password', [UserController::class, 'resetPassword'])->middle
 Route::post('/change-password', [UserController::class, 'changePassword'])->middleware('auth')->name('password.change');
 
 Route::middleware(['auth'])->group(function (){
+        // Step 1 - Mostrar formulário (GET)
     Route::get('/trip/create', [TripController::class, 'showStep1'])->name('trip.form.step1');
+    // Step 1 - Receber dados (POST)
     Route::post('/trip/step2', [TripController::class, 'handleStep1'])->name('trip.form.step2');
-    Route::get('/trip/details', [TripController::class, 'showStep2'])->name('trip.form.step2.view');
-    Route::post('/trip/preferences', [TripController::class, 'handleStep2'])->name('trip.form.step3');
-    Route::get('/trip/preferences', [TripController::class, 'showStep3'])->name('trip.form.step3.view');
-    Route::post('/trip/insurance', [TripController::class, 'handleStep3'])->name('trip.form.step4');
-    Route::get('/trip/insurance', [TripController::class, 'showStep4'])->name('trip.form.step4.view');
-    Route::post('/trip/insurance/select', [TripController::class, 'selectInsurance'])->name('trip.insurance.select');
-    Route::post('/trip/flights', [TripController::class, 'handleStep4'])->name('trip.form.step5');
-    Route::get('/trip/flights', [TripController::class, 'showStep5'])->name('trip.form.step5.view');
-    Route::post('/trip/review', [TripController::class, 'handleStep5'])->name('trip.form.step6');
-    Route::get('/trip/review', [TripController::class, 'showStep6'])->name('trip.form.step6.view');
-    Route::post('/trip/finish', [TripController::class, 'finish'])->name('trip.form.finish');
+    // Step 2 - Mostrar formulário (GET)
+    Route::get('/trip/step2', [TripController::class, 'showStep2'])->name('trip.form.step2.view');
+    // Step 2 - Receber dados (POST)
+    Route::post('/trip/step3', [TripController::class, 'handleStep2'])->name('trip.form.step3');
+    // Step 3 - Mostrar formulário (GET)
+    Route::get('/trip/step3', [TripController::class, 'showStep3'])->name('trip.form.step3.view');
+    // Step 3 - Receber dados (POST)
+    Route::post('/trip/step4', [TripController::class, 'handleStep3'])->name('trip.form.step4');
+    // Step 4 - Mostrar formulário (GET)
+    //Route::get('/trip/step4', [TripController::class, 'showStep4'])->name('trip.form.step4.view');
+    // E assim por diante para as outras etapas...
+    Route::get('/formulario', [TripController::class, 'mostrarFormulario'])->name('formulario.mostrar');
+    Route::post('/scraping-executar', [TripController::class, 'executarScraping'])->name('scraping.executar');
+    Route::post('/trip/scrape-insurance', [TripController::class, 'scrape'])->name('trip.scrape');
+    // Outras rotas protegidas...
     Route::get('/dashboard', [DashBoardController::class, 'dashboard'])->name('dashboard');
+    // ...
     Route::get('/myTrips', function() {
         return view('myTrips', ['title' => 'Minhas Viagens']);
     });
