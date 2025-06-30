@@ -6,78 +6,47 @@ use Illuminate\Http\Request;
 
 class TripController extends Controller
 {
-    public function showStep1() {
-        return view('initial_information');
+    // Exibe o formulário para o usuário preencher
+    public function mostrarFormulario()
+    {
+        return view('trip.form'); // Blade: resources/views/form.blade.php
     }
 
-    public function handleStep1(Request $request) {
-        session()->put('trip.step1', $request->only(['destination', 'adults', 'children', 'departure_date', 'return_date']));
-        return redirect()->route('trip.form.step2.view');
-    }
+    // Executa o scraping com os dados do formulário
+    public function executarScraping(Request $request)
+    {
+        // Validação básica dos campos
+        $request->validate([
+            'motivo' => 'required',
+            'destino' => 'required',
+            'data_ida' => 'required|date',
+            'data_volta' => 'required|date|after_or_equal:data_ida',
+            'qtd_passageiros' => 'required|integer|min:1|max:3',
+        ]);
 
-    public function showStep2() {
-        $transportes = ['Carro', 'Ônibus', 'Avião', 'Trem'];
-        $estadias = ['Hotel', 'Hostel', 'Pousada', 'Airbnb', 'Camping'];
-
-        return view('trip_details', compact('transportes', 'estadias'));
-    }
-
-    public function handleStep2(Request $request) {
-        session()->put('trip.step2', $request->only(['transportation', 'accommodation']));
-        return redirect()->route('trip.form.step3.view');
-    }
-
-    public function showStep3() {
-        return view('trip_preferences');
-    }
-
-    public function handleStep3(Request $request) {
-        session()->put('trip.step3', ['preference' => $request->input('preference')]);
-        return redirect()->route('trip.form.step4.view');
-    }
-
-    public function showStep4()
-{
-    $scriptPath = base_path('scripts/webscraping/scraping.py');
-    $command = 'python "' . $scriptPath . '" 2>&1';
-    $output = shell_exec($command);
-    $frases = $output ? explode("\n", trim($output)) : ['Erro ao executar ou sem dados.'];
-
-    // Apenas para teste, pode deixar o $description vazio se quiser
-    $description = implode("\n\n", $frases); // ou substitua com outro texto
-    return view('trip_insurance', compact('frases', 'description'));
-}
-
-
-
-    public function handleStep4(Request $request) {
-        session()->put('trip.step4', $request->only(['budget', 'insurance_option']));
-        return redirect()->route('trip.form.step5.view');
-    }
-
-    public function showStep5() {
-        return view('trip_flights');
-    }
-
-    public function handleStep5(Request $request) {
-        session()->put('trip.step5', ['flight_option' => $request->input('flight_option')]);
-        return redirect()->route('trip.form.step6.view');
-    }
-
-    public function showStep6() {
-        $trip = array_merge(
-            session('trip.step1', []),
-            session('trip.step2', []),
-            session('trip.step3', []),
-            session('trip.step4', []),
-            session('trip.step5', [])
+        // Monta o comando Python com os argumentos
+        $command = escapeshellcmd('python "' . base_path('scripts/webscraping/scraping.py') . '" ' .
+            $request->motivo . ' ' .
+            $request->destino . ' ' .
+            escapeshellarg($request->data_ida) . ' ' .
+            escapeshellarg($request->data_volta) . ' ' .
+            $request->qtd_passageiros . ' ' .
+            ($request->idade1 ?? '0') . ' ' .
+            ($request->idade2 ?? '0') . ' ' .
+            ($request->idade3 ?? '0')
         );
-        return view('trip_review', compact('trip'));
-    }
 
-    public function finish(Request $request) {
-        // Aqui você pode salvar tudo no banco de dados
-        session()->forget('trip');
-        return redirect()->route('explore'); // Ajuste conforme rota real
+        // Executa o script e coleta a saída
+        $output = shell_exec($command);
+
+        // Divide a saída em linhas
+        $frases = explode("\n", trim($output));
+
+        // Retorna a mesma view com os resultados
+        return view('trip.form', compact('frases'));
     }
 }
+
+
+
+
