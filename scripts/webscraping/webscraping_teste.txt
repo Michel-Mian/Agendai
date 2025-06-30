@@ -1,0 +1,208 @@
+#import requests
+#from bs4 import BeautifulSoup
+
+#pagina = requests.get('https://quotes.toscrape.com/')
+#dados_pagina = BeautifulSoup(pagina.text, 'html.parser')
+
+#todas_frases = dados_pagina.find_all('div', class_="quote")
+
+#for div in todas_frases:
+#    texto = div.find('span', class_="text").text
+#    print(texto)
+
+#------------------------------------------------------------------------------------------------------------------
+
+#from selenium import webdriver
+#from selenium.webdriver.chrome.options import Options
+#from bs4 import BeautifulSoup
+#import time
+
+# Configuração para rodar sem abrir janela (modo headless)
+#options = Options()
+#options.add_argument('--headless')
+#options.add_argument('--disable-gpu')
+#options.add_argument('--no-sandbox')
+#driver = webdriver.Chrome(options=options)
+
+# Acessar a página
+#url = 'https://www.segurospromo.com.br/seguro-viagem/europa/'
+#driver.get(url)
+
+# Esperar carregar o conteúdo dinâmico (ajustável)
+#time.sleep(5)
+
+# Pegar o HTML renderizado
+#html = driver.page_source
+#soup = BeautifulSoup(html, 'html.parser')
+
+# Selecionar todos os títulos <h3> dentro dos slides
+#frases = soup.select('div.swiper-slide h3')
+
+# Imprimir cada frase (será retornada no shell_exec do Laravel)
+#for frase in frases:
+#    print(frase.get_text(strip=True))
+
+#driver.quit()
+
+#------------------------------------------------------------------------------------------------------------------
+#from selenium import webdriver
+#from selenium.webdriver.chrome.service import Service
+#from selenium.webdriver.chrome.options import Options
+#from selenium.webdriver.common.by import By
+#import time
+
+# Caminho completo para o ChromeDriver
+#chrome_driver_path = r"C:/WebDriver/chromedriver-win64/chromedriver.exe"
+
+# Configurações do Chrome (headless = sem abrir janela)
+#options = Options()
+#options.add_argument("--headless")
+#options.add_argument("--disable-gpu")
+#options.add_argument("--no-sandbox")
+
+# Inicializa o serviço do ChromeDriver
+#service = Service(executable_path=chrome_driver_path)
+
+# Inicializa o navegador Chrome
+#driver = webdriver.Chrome(service=service, options=options)
+
+#try:
+    # Acessa a página para exemplo
+#    driver.get("https://quotes.toscrape.com/")
+
+#    time.sleep(2)  # Espera carregar
+
+    # Pega os 5 primeiros quotes da página
+#    quotes = driver.find_elements(By.CLASS_NAME, "quote")
+
+#    for q in quotes[:5]:
+#        texto = q.text.replace("\n", " | ")
+#        print(texto)
+
+#finally:
+#    driver.quit()
+#------------------------------------------------------------------------------------------------------------------
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, ElementClickInterceptedException
+import os
+import time
+
+# Inicia o driver
+driver = webdriver.Chrome()
+wait = WebDriverWait(driver, 20)
+
+# Função para salvar screenshot com verificação
+def salvar_screenshot(nome_arquivo):
+    caminho = os.path.join(os.path.dirname(__file__), nome_arquivo)
+    sucesso = driver.save_screenshot(caminho)
+    if sucesso:
+        print(f"[LOG] Screenshot salva em: {caminho}")
+    else:
+        print("[ERRO] Não foi possível salvar a screenshot")
+
+try:
+    driver.get("https://www.affinityseguro.com.br/home/")
+    print("[LOG] Página aberta")
+
+    # Categoria e destino
+    try:
+        print("[LOG] Selecionando categoria e destino via JS...")
+        categoria = wait.until(EC.presence_of_element_located((By.ID, "categoria")))
+        destino = wait.until(EC.presence_of_element_located((By.ID, "destino")))
+        driver.execute_script("arguments[0].value = '11'; arguments[0].dispatchEvent(new Event('change'));", categoria)
+        driver.execute_script("arguments[0].value = '8'; arguments[0].dispatchEvent(new Event('change'));", destino)
+        print("[LOG] Categoria e destino preenchidos")
+    except Exception as e:
+        print(f"[ERRO] Categoria/Destino: {e}")
+        salvar_screenshot("erro_categoria_destino.png")
+
+    # Datas
+    try:
+        print("[LOG] Preenchendo datas via JS...")
+        inicio = wait.until(EC.presence_of_element_located((By.ID, "data-inicio")))
+        fim = wait.until(EC.presence_of_element_located((By.ID, "data-final")))
+        driver.execute_script("arguments[0].removeAttribute('readonly'); arguments[0].value = '01/07/2025';", inicio)
+        driver.execute_script("arguments[0].removeAttribute('readonly'); arguments[0].value = '10/07/2025';", fim)
+        print("[LOG] Datas preenchidas")
+    except Exception as e:
+        print(f"[ERRO] Datas: {e}")
+        salvar_screenshot("erro_datas.png")
+
+    # Passageiros
+    try:
+        print("[LOG] Preenchendo passageiros via JS...")
+        passageiro = wait.until(EC.presence_of_element_located((By.ID, "inputFirst")))
+        driver.execute_script("arguments[0].value = '1';", passageiro)
+        print("[LOG] Passageiro preenchido")
+    except Exception as e:
+        print(f"[ERRO] Passageiros: {e}")
+        salvar_screenshot("erro_passageiro.png")
+
+    # Checkbox cancelamento
+    try:
+        cancelamento = wait.until(EC.presence_of_element_located((By.ID, "upgradeCancelamento")))
+        driver.execute_script("arguments[0].scrollIntoView(true);", cancelamento)
+        time.sleep(1)
+        driver.execute_script("arguments[0].click();", cancelamento)
+        print("[LOG] Checkbox cancelamento clicado")
+    except Exception as e:
+        print("[WARN] Checkbox cancelamento não clicável")
+        salvar_screenshot("erro_cancelamento.png")
+
+    # Botão Próximo
+    try:
+        botao_proximo = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button.btn-laranja")))
+        botao_proximo.click()
+        print("[LOG] Botão Próximo clicado")
+    except Exception as e:
+        print(f"[ERRO] Botão Próximo: {e}")
+        salvar_screenshot("erro_botao_proximo.png")
+
+    # Espera a etapa 2 aparecer
+    try:
+        wait.until(EC.visibility_of_element_located((By.ID, "step2")))
+        print("[LOG] Etapa 2 visível")
+    except TimeoutException:
+        print("[ERRO] Step2 não visível a tempo")
+        salvar_screenshot("erro_step2.png")
+
+    # Preencher nome, email, telefone
+    try:
+        print("[LOG] Preenchendo dados pessoais...")
+        driver.find_element(By.ID, "nomeCotacao").send_keys("Matheus Porcaro")
+        driver.find_element(By.ID, "emailCotacao").send_keys("teste@email.com")
+        driver.find_element(By.ID, "telefoneCotacao").send_keys("(11) 99999-9999")
+        print("[LOG] Dados pessoais preenchidos")
+    except Exception as e:
+        print(f"[ERRO] Dados pessoais: {e}")
+        salvar_screenshot("erro_dados_pessoais.png")
+
+    # Submeter o formulário
+    try:
+        submit = wait.until(EC.element_to_be_clickable((By.ID, "submit")))
+        driver.execute_script("arguments[0].scrollIntoView(true);", submit)
+        submit.click()
+        print("[LOG] Formulário enviado")
+    except Exception as e:
+        print(f"[ERRO] Botão Ver Preço: {e}")
+        salvar_screenshot("erro_submit_btn.png")
+
+    # Espera resultados carregarem (ajuste se necessário)
+    print("[LOG] Aguardando carregamento dos resultados...")
+    time.sleep(5)
+
+    # Aqui poderia extrair os planos, se houver
+    try:
+        print("[LOG] Tentando extrair planos (Exemplo)...")
+        planos = driver.find_elements(By.TAG_NAME, "h3")
+        for p in planos:
+            print("PLANO:", p.text)
+    except Exception as e:
+        print(f"[ERRO] Ao extrair planos: {e}")
+        salvar_screenshot("erro_extrair_planos.png")
+
+finally:
+    driver.quit()

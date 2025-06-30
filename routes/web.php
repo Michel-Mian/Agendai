@@ -31,6 +31,7 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/trip/preferences', [TripController::class, 'showStep3'])->name('trip.form.step3.view');
     Route::post('/trip/insurance', [TripController::class, 'handleStep3'])->name('trip.form.step4');
     Route::get('/trip/insurance', [TripController::class, 'showStep4'])->name('trip.form.step4.view');
+    Route::post('/trip/insurance/select', [TripController::class, 'selectInsurance'])->name('trip.insurance.select');
     Route::post('/trip/flights', [TripController::class, 'handleStep4'])->name('trip.form.step5');
     Route::get('/trip/flights', [TripController::class, 'showStep5'])->name('trip.form.step5.view');
     Route::post('/trip/review', [TripController::class, 'handleStep5'])->name('trip.form.step6');
