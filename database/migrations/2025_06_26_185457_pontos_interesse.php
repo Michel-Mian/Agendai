@@ -17,6 +17,7 @@ return new class extends Migration
             $table->time('hora_ponto_interesse')->nullable();
             $table->text('desc_ponto_interesse')->nullable();
             $table->string('nome_ponto_interesse', 100);
+            $table->string('placeid_ponto_interesse', 100);
             $table->decimal('latitude', 10, 8);
             $table->decimal('longitude', 11, 8);
             $table->string('categoria', 100)->nullable();
