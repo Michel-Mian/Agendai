@@ -45,4 +45,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.classList.add('hidden');
             }
         });
+
+        // Função para configurar o autocomplete de aeroportos
+        function setupAirportAutocomplete(inputId, suggestionsId) {
+            const input = document.getElementById(inputId);
+            const suggestions = document.getElementById(suggestionsId);
+
+            input.addEventListener('input', function () {
+                const query = this.value;
+                if (query.length < 2) {
+                    suggestions.innerHTML = '';
+                    return;
+                }
+                fetch(`/autocomplete-airports?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        let html = '';
+                        data.forEach(item => {
+                            html += `<div class="px-2 py-1 hover:bg-gray-100 cursor-pointer" data-iata="${item.iata_code}">${item.name} (${item.iata_code}) - ${item.city}</div>`;
+                        });
+                        suggestions.innerHTML = html;
+                    });
+            });
+
+            suggestions.addEventListener('click', function (e) {
+                if (e.target && e.target.dataset.iata) {
+                    input.value = e.target.dataset.iata;
+                    suggestions.innerHTML = '';
+                }
+            });
+
+            // Fecha sugestões ao clicar fora
+            document.addEventListener('click', function (e) {
+                if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+                    suggestions.innerHTML = '';
+                }
+            });
+        }
+
+        // Inicialize para os dois campos
+        setupAirportAutocomplete('dep_iata', 'dep_iata_suggestions');
+        setupAirportAutocomplete('arr_iata', 'arr_iata_suggestions');
 });

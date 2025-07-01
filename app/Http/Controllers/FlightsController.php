@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\Models\Airport;
 
 class FlightsController extends Controller
 {
@@ -171,5 +172,18 @@ class FlightsController extends Controller
             return intval($hours) * 60;
         }
         return null;
+    }
+
+    public function autocompleteAirports(Request $request)
+    {
+        $term = $request->get('q');
+
+    $results = Airport::where('name', 'like', "%{$term}%")
+        ->orWhere('city', 'like', "%{$term}%")
+        ->orWhere('iata_code', 'like', "%{$term}%")
+        ->limit(10)
+        ->get(['name', 'city', 'iata_code']);
+
+    return response()->json($results);
     }
 }
