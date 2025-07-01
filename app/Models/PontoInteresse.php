@@ -9,10 +9,12 @@ class PontoInteresse extends Model
 {
     use HasFactory;
 
+    protected $primaryKey = 'pk_id_ponto_interesse'; 
     protected $table = 'pontos_interesse';
 
     protected $fillable = [
         'nome_ponto_interesse',
+        'placeid_ponto_interesse',
         'desc_ponto_interesse',
         'latitude',
         'longitude',

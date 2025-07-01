@@ -39,6 +39,7 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/explore', [ExploreController::class, 'index'])->name('explore.index');
     Route::post('/explore', [ExploreController::class, 'store'])->name('explore.store');
     Route::get('/explore/itinerary', [ExploreController::class, 'show'])->name('explore.itinerary');
+    Route::delete('/explore/{id}', [ExploreController::class, 'destroy'])->name('explore.destroy');
     Route::put('/user/{id}/profile', [UserController::class, 'updateProfile'])->name('user.updateProfile');
     Route::put('/user/{id}/preferences', [UserController::class, 'updatePreferences'])->name('user.updatePreferences');
     Route::get('/dashboard/historico', [DashBoardController::class, 'historicoAjax'])->name('dashboard.historico');

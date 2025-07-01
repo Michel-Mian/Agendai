@@ -79,42 +79,20 @@
     </div>
 </div>
 
-<div id="placeDetailsModal"
-     class="fixed inset-0 flex items-center justify-center p-4 z-50 hidden"
-     style="background: rgba(17,24,39,0.3); backdrop-filter: blur(8px);">
-    <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto transform scale-95 opacity-0 transition-all duration-300 relative">
-        <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-10">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-        <div id="modalContent" class="p-8">
-            <h2 class="text-2xl font-bold mb-4 text-gray-800" id="detailedPlaceName">Nome do Local</h2>
-            <p class="text-gray-600 mb-2" id="detailedPlaceAddress">Endereço do Local</p>
-            <p class="text-gray-700 leading-relaxed" id="detailedPlaceDescription">
-                Descrição detalhada do local será carregada aqui. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-            </p>
-            <div id="detailedPlacePhotos" class="grid grid-cols-2 gap-4 mt-4">
-                </div>
-            <p class="text-gray-800 font-semibold mt-4" id="detailedPlaceRating">Avaliação: N/A</p>
-            <p class="text-gray-800 font-semibold" id="detailedPlaceType">Tipo: N/A</p>
-        </div>
-
-        <div class="p-8 border-t border-gray-200 flex flex-col sm:flex-row justify-end items-center gap-4">
-            <div class="flex items-center gap-2">
-                <label for="itineraryDate" class="text-gray-700 font-medium whitespace-nowrap">Data da visita:</label>
-                <input type="date" id="itineraryDate" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 p-2">
-            </div>
-            <div class="flex items-center gap-2">
-                <label for="itineraryTime" class="text-gray-700 font-medium whitespace-nowrap">Hora da visita:</label>
-                <input type="time" id="itineraryTime" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 p-2">
-            </div>
-
-            <button onclick="addToItinerary(currentDetailedPlace.place_id, document.getElementById('itineraryTime').value, document.getElementById('itineraryDate').value); closeModal();" class="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg w-full sm:w-auto">
-                ➕ Adicionar ao Itinerário
-            </button>
-        </div>
-    </div>
-</div>
+@include('components.explore.detailsmodal')
 <script>
+// Notificação simples (alert) para fallback
+if (typeof showNotification !== 'function') {
+    function showNotification(msg, type) {
+        // Você pode trocar por um toast mais bonito depois
+        let prefix = '';
+        if (type === 'success') prefix = '✔️ ';
+        else if (type === 'error') prefix = '❌ ';
+        else if (type === 'info') prefix = 'ℹ️ ';
+        alert(prefix + msg);
+    }
+}
+
 // Global variables
 let map;
 let markers = [];
@@ -128,226 +106,129 @@ window.dataFimViagem = @json($dataFim);
 // Variável para cache dos pontos do banco
 let pontosCache = [];
 
-// Nova função para sincronizar dados do banco com variável local
+/**
+ * Normaliza datas para o formato YYYY-MM-DD.
+ * @param {string} dateStr - Data em string (pode ser YYYY-MM-DD, DD/MM/YYYY, etc).
+ * @returns {string} Data normalizada no formato YYYY-MM-DD.
+ */
+function normalizeDate(dateStr) {
+    if (!dateStr) return '';
+    // Se já estiver no formato YYYY-MM-DD, retorna direto
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+    // Se estiver no formato DD/MM/YYYY, converte
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+        const [d, m, y] = dateStr.split('/');
+        return `${y}-${m}-${d}`;
+    }
+    // Tenta converter outros formatos usando Date
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+        return d.toISOString().slice(0, 10);
+    }
+    return dateStr; // fallback
+}
+
+/**
+ * Sincroniza os pontos do banco de dados com a variável local do itinerário.
+ * @param {Array} pontos - Lista de pontos de interesse vindos do backend.
+ */
 function syncItineraryWithDatabase(pontos) {
-    // Pega as datas únicas dos pontos (ordenadas)
-    const uniqueDates = [...new Set(pontos.map(p => p.data_ponto_interesse))].sort();
-    // Se não houver datas, usa a data de hoje como fallback
-    const today = new Date().toISOString().slice(0, 10);
-    const dateList = uniqueDates.length > 0 ? uniqueDates : [today];
-
-    // Limpa e monta o objeto itinerary por data
-    itinerary = {};
-    dateList.forEach(date => {
-        itinerary[date] = [];
-    });
-
-    // Converte os pontos do banco para o formato usado localmente
-    pontos.forEach(ponto => {
-        const date = ponto.data_ponto_interesse;
-        const localPlace = {
-            id: `db_${ponto.id}`,
-            name: ponto.nome_ponto_interesse,
-            description: ponto.desc_ponto_interesse || '',
-            lat: parseFloat(ponto.latitude),
-            lng: parseFloat(ponto.longitude),
-            type: ponto.categoria || 'attraction',
-            rating: 4.0,
-            address: ponto.desc_ponto_interesse || '',
-            time: ponto.hora_ponto_interesse || '',
-            database_id: ponto.id,
-            data_ponto_interesse: ponto.data_ponto_interesse
-        };
-        if (!itinerary[date]) itinerary[date] = [];
-        itinerary[date].push(localPlace);
-    });
-
-    // Atualiza o select do datePicker se quiser mostrar todas as datas
-    // (opcional: pode criar um select dinâmico de datas)
-    console.log('Itinerário sincronizado por data:', itinerary, dateList);
-}
-
-// Função para renderizar o itinerário de acordo com a data selecionada
-function renderItineraryForDate(selectedDate, pontos) {
-    currentDate = selectedDate;
-    const filtered = pontos.filter(p => p.data_ponto_interesse === selectedDate);
-    renderItinerary(filtered);
-}
-
-// --- Função para atualizar o itinerário do banco ---
-async function updateItineraryDisplay() {
-    if (!window.hasTrip) {
-        document.getElementById('itinerary-content') && (document.getElementById('itinerary-content').innerHTML = '');
-        document.getElementById('suggestions-list') && (document.getElementById('suggestions-list').innerHTML = '');
-        return;
-    }
     try {
-        const response = await fetch('/explore/itinerary');
-        console.log('Response:', response);
-        const pontos = await response.json();
-        console.log('Pontos recebidos do banco:', pontos);
-        pontosCache = pontos; // Atualiza cache global
-        syncItineraryWithDatabase(pontos);
-        // Renderiza o itinerário para a data selecionada
-        const datePicker = document.getElementById('datePicker');
-        const selectedDate = datePicker && datePicker.value ? datePicker.value : (pontos.length > 0 ? pontos[0].data_ponto_interesse : null);
-        if (selectedDate) {
-            renderItineraryForDate(selectedDate, pontos);
-        }
-        updateSuggestions();
+        // Pega as datas únicas dos pontos (ordenadas)
+        const uniqueDates = [...new Set(pontos.map(p => normalizeDate(p.data_ponto_interesse)))].sort();
+        // Se não houver datas, usa a data de hoje como fallback
+        const today = new Date().toISOString().slice(0, 10);
+        const dateList = uniqueDates.length > 0 ? uniqueDates : [today];
+
+        // Limpa e monta o objeto itinerary por data
+        itinerary = {};
+        dateList.forEach(date => {
+            itinerary[date] = [];
+        });
+
+        // Converte os pontos do banco para o formato usado localmente
+        pontos.forEach(ponto => {
+            const date = normalizeDate(ponto.data_ponto_interesse);
+            const localPlace = {
+                id: ponto.id,
+                name: ponto.nome_ponto_interesse,
+                description: ponto.desc_ponto_interesse || '',
+                lat: parseFloat(ponto.latitude),
+                lng: parseFloat(ponto.longitude),
+                type: ponto.categoria || 'attraction',
+                rating: 4.0,
+                address: ponto.desc_ponto_interesse || '',
+                time: ponto.hora_ponto_interesse || '',
+                database_id: ponto.id,
+                data_ponto_interesse: ponto.data_ponto_interesse
+            };
+            if (!itinerary[date]) itinerary[date] = [];
+            itinerary[date].push(localPlace);
+        });
     } catch (e) {
-        console.error('Erro ao buscar ou processar pontos:', e);
+        console.log('função syncItineraryWithDatabase falhou', e);
     }
 }
 
-function renderItinerary(pontos) {
-    const desktopContent = document.getElementById('itinerary-content');
-    if (!desktopContent) return;
-    
-    if (!pontos || pontos.length === 0) {
-        desktopContent.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-gray-400 py-8">
-           <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-               <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-           </svg>
-           <span class="font-medium mb-1">Nenhuma atividade ainda</span>
-           <span class="text-sm text-center">Clique nos marcadores do mapa para adicionar atividades ao seu roteiro</span>
-         </div>`;
-        return;
+/**
+ * Renderiza o itinerário para a data selecionada.
+ * @param {string} selectedDate - Data selecionada.
+ * @param {Array} pontos - Lista de pontos de interesse.
+ */
+function renderItineraryForDate(selectedDate, pontos) {
+    try {
+        currentDate = selectedDate;
+        const normalizedSelectedDate = normalizeDate(selectedDate);
+        const filtered = pontos.filter(p => normalizeDate(p.data_ponto_interesse) === normalizedSelectedDate);
+        renderItinerary(filtered);
+    } catch (e) {
+        console.log('função renderItineraryForDate falhou', e);
     }
-    
-    desktopContent.innerHTML = `<div class="space-y-4">${pontos.map((place, index) => `
-        <div class="p-4 border border-gray-200 rounded-lg bg-white hover:shadow-md transition-all duration-200 group">
-            <div class="flex items-start justify-between">
-                <div class="flex-1 cursor-pointer">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">${index + 1}</span>
-                        <h4 class="font-semibold text-gray-900">${place.nome_ponto_interesse}</h4>
-                    </div>
-                    <div class="text-gray-600 text-sm">${place.desc_ponto_interesse || ''}</div>
-                    <div class="text-gray-500 text-xs mt-1">${place.categoria || ''}</div>
-                    <div class="text-gray-500 text-xs mt-1">${place.hora_ponto_interesse || ''}</div>
-                </div>
-                <button onclick="removeFromDatabase(${place.id})" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-all duration-200">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-        </div>`).join('')}</div>`;
 }
 
-// Update suggestions para a data selecionada
+
+/**
+ * Atualiza as sugestões de pontos de interesse para a data selecionada.
+ * Usa os dados carregados do Google Places API e do backend.
+ */
 function updateSuggestions() {
-    const suggestionsList = document.getElementById('suggestions-list');
-    if (!suggestionsList) return;
-    const selectedDate = currentDate || (document.getElementById('datePicker') && document.getElementById('datePicker').value);
-    const pontosNomes = (itinerary[selectedDate] || []).map(p => p.name.toLowerCase());
-    const filteredPlaces = places.filter(place => {
-        return !pontosNomes.includes(place.name.toLowerCase());
-    }).slice(0, 5);
-    suggestionsList.innerHTML = filteredPlaces.map(place => `
-        <div class="p-3 border border-gray-200 rounded-xl hover:bg-cyan-50 cursor-pointer transition-all duration-200 hover:shadow-md" onclick="openPlaceDetailsModal('${place.id}')">
-            <div class="flex items-center justify-between">
-                <div class="flex-1">
-                    <h4 class="text-sm font-semibold text-gray-900 mb-1">${place.name}</h4>
-                    <div class="flex items-center gap-3">
-                        <span class="px-2 py-1 text-xs border rounded-full text-gray-600 border-gray-300 font-medium">
-                            ${getTypeLabel(place.type)}
-                        </span>
-                        <div class="flex items-center text-xs text-gray-500">
-                            <svg class="w-3 h-3 mr-1 fill-yellow-400 text-yellow-400" viewBox="0 0 24 24">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                            ${place.rating}
+    try {
+        const suggestionsList = document.getElementById('suggestions-list');
+        if (!suggestionsList) return;
+        const selectedDate = currentDate || (document.getElementById('datePicker') && document.getElementById('datePicker').value);
+        const pontosNomes = (itinerary[selectedDate] || []).map(p => p.name.toLowerCase());
+        const filteredPlaces = places.filter(place => {
+            return !pontosNomes.includes(place.name.toLowerCase());
+        }).slice(0, 5);
+        suggestionsList.innerHTML = filteredPlaces.map(place => `
+            <div class="p-3 border border-gray-200 rounded-xl hover:bg-cyan-50 cursor-pointer transition-all duration-200 hover:shadow-md" onclick="openPlaceDetailsModal('${place.id}')">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <h4 class="text-sm font-semibold text-gray-900 mb-1">${place.name}</h4>
+                        <div class="flex items-center gap-3">
+                            <span class="px-2 py-1 text-xs border rounded-full text-gray-600 border-gray-300 font-medium">
+                                ${getTypeLabel(place.type)}
+                            </span>
+                            <div class="flex items-center text-xs text-gray-500">
+                                <svg class="w-3 h-3 mr-1 fill-yellow-400 text-yellow-400" viewBox="0 0 24 24">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                ${place.rating}
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="w-8 h-8 bg-cyan-700 rounded-lg flex items-center justify-center">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
-                    </svg>
+                    <div class="w-8 h-8 bg-cyan-700 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                        </svg>
+                    </div>
                 </div>
             </div>
-        </div>
-    `).join('');
-}
-
-// Remover do itinerário (apenas frontend, não banco)
-function removeFromItinerary(placeIdentifierToRemove) {
-    const selectedDate = currentDate || (document.getElementById('datePicker') && document.getElementById('datePicker').value);
-    if (!selectedDate || !itinerary[selectedDate]) return;
-    const idx = itinerary[selectedDate].findIndex(p => p.id === placeIdentifierToRemove || p.place_id === placeIdentifierToRemove);
-    if (idx !== -1) {
-        const placeRemoved = itinerary[selectedDate][idx];
-        itinerary[selectedDate].splice(idx, 1);
-        updateItineraryDisplay();
-        updateSuggestions();
-        showNotification(`${placeRemoved.name} removido de ${selectedDate}`, 'info');
-        if (infoWindow) infoWindow.close();
-    } else {
-        console.warn("Local não encontrado no itinerário para remoção com ID:", placeIdentifierToRemove);
+        `).join('');
+    } catch (e) {
+        console.log('função updateSuggestions falhou', e);
     }
 }
-window.removeFromItinerary = removeFromItinerary;
-
-// Update itinerary display para a data selecionada
-function updateItineraryDisplay() {
-    const desktopContent = document.getElementById('itinerary-content');
-    const selectedDate = currentDate || (document.getElementById('datePicker') && document.getElementById('datePicker').value);
-    const currentDateItinerary = itinerary[selectedDate] || [];
-    const content = currentDateItinerary.length === 0
-        ? `<div class="flex flex-col items-center justify-center h-full text-gray-400 py-8">
-           <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-               <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-           </svg>
-           <span class="font-medium mb-1">Nenhuma atividade ainda</span>
-           <span class="text-sm text-center">Clique nos marcadores do mapa para adicionar atividades</span>
-         </div>`
-        : `<div class="space-y-4">
-           ${currentDateItinerary.map((place, index) => {
-                const placeIdForRemoval = place.database_id || place.id;
-                const placeIdForModal = place.id;
-                return `
-               <div class="p-4 border border-gray-200 rounded-lg bg-white hover:shadow-md transition-all duration-200 group">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1 cursor-pointer" onclick="openPlaceDetailsModal('${placeIdForModal}')">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <span class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                                    ${index + 1}
-                                    </span>
-                                    <h4 class="font-semibold text-gray-900">${place.name}</h4>
-                                </div>
-                                <p class="text-sm text-gray-600 mb-3">${place.description}</p>
-                                <div class="flex items-center gap-3">
-                                    <span class="px-2 py-1 text-xs rounded-full font-medium ${getTypeColorClass(place.type)}">
-                                    ${getTypeLabel(place.type)}
-                                    </span>
-                                    <div class="flex items-center text-sm text-gray-500">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    ${place.time ? place.time : 'Sem horário definido'}
-                                    </div>
-                                    <div class="flex items-center text-sm text-gray-500">
-                                    <svg class="w-3 h-3 mr-1 fill-yellow-400 text-yellow-400" viewBox="0 0 24 24">
-                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                    </svg>
-                                    ${place.rating}
-                                </div>
-                        </div>
-                        <button onclick="event.stopPropagation(); ${place.database_id ? `removeFromDatabase(${place.database_id})` : `removeFromItinerary('${placeIdForRemoval}')`}" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-all duration-200">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                        </button>
-                    </div>
-               </div>
-           `;
-           }).join('')}
-         </div>`;
-    desktopContent.innerHTML = content;
-}
-
 // --- Inicialização ---
 document.addEventListener('DOMContentLoaded', function() {
     // Step 3: Set min/max for both datepickers
@@ -363,15 +244,20 @@ document.addEventListener('DOMContentLoaded', function() {
             modalDatePicker.setAttribute('max', window.dataFimViagem);
         }
     }
-    // Adiciona event listener para o datePicker apenas uma vez
+
+    // Atualiza o itinerário ao carregar a página
+    updateItineraryDisplay();
+    setTimeout(() => {
+        updateSuggestions();
+    }, 1000);
+
+    // Atualiza o itinerário sempre que a data do datepicker mudar
     const datePicker = document.getElementById('datePicker');
     if (datePicker) {
         datePicker.addEventListener('change', function() {
-            currentDate = this.value;
-            updateItineraryDisplay(); 
+            updateItineraryDisplay();
         });
     }
-    updateItineraryDisplay();
 });
 
 // Initialize Google Map
@@ -403,9 +289,9 @@ window.initMap = function() {
         ]
     });
 
-    const service = new google.maps.places.PlacesService(map);
 
-    // Initial nearbySearch
+    // [GOOGLE PLACES API] Busca pontos turísticos próximos usando nearbySearch
+    const service = new google.maps.places.PlacesService(map);
     service.nearbySearch(
         {
             location: { lat: -22.9068, lng: -43.1729 }, // Rio de Janeiro
@@ -416,17 +302,18 @@ window.initMap = function() {
             if (status === google.maps.places.PlacesServiceStatus.OK) {
                 places = [];
                 results.forEach(place => {
+                    // [GOOGLE PLACES API] Cada 'place' vem da resposta da API Places
                     places.push({
                         id: place.place_id,
                         name: place.name,
-                        lat: place.geometry.location.lat(),
-                        lng: place.geometry.location.lng(),
+                        lat: place.geometry.location.lat(), // [GOOGLE PLACES API] latitude
+                        lng: place.geometry.location.lng(), // [GOOGLE PLACES API] longitude
                         type: getPlaceType(place.types),
                         rating: place.rating || 4.0,
                         address: place.vicinity,
                         opening_hours: place.opening_hours ? place.opening_hours.weekday_text : [],
                         description: place.vicinity || place.formatted_address || '',
-                        photos: place.photos ? place.photos.map(p => p.getUrl({ 'maxWidth': 400, 'maxHeight': 400 })) : [] // Adiciona URLs das fotos
+                        photos: place.photos ? place.photos.map(p => p.getUrl({ 'maxWidth': 400, 'maxHeight': 400 })) : [] // [GOOGLE PLACES API] URLs das fotos
                     });
                 });
                 addMarkersToMap();
@@ -452,9 +339,11 @@ async function getCoordinatesFromAddress(address) {
             reject('Endereço vazio');
             return;
         }
+        // [GOOGLE GEOCODING API] Busca coordenadas do endereço
         const geocoder = new google.maps.Geocoder();
         geocoder.geocode({ address: address }, (results, status) => {
             if (status === 'OK' && results[0]) {
+                // [GOOGLE GEOCODING API] Resultado encontrado
                 const location = results[0].geometry.location;
                 resolve({ lat: location.lat(), lng: location.lng() });
             } else {
@@ -507,6 +396,7 @@ function initPlacesAutocomplete() {
     const searchInput = document.getElementById('searchInput');
     // Helper to initialize autocomplete on a given input
     function setupAutocomplete(input) {
+        // [GOOGLE PLACES AUTOCOMPLETE] Inicializa autocomplete do Google Places no input
         if (input && typeof google !== 'undefined' && google.maps && google.maps.places) {
             if (!input._autocompleteInitialized) {
                 const autocomplete = new google.maps.places.Autocomplete(input, {
@@ -630,139 +520,6 @@ function getTypeLabel(type) {
     return labels[type] || type.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
 }
 
-// --- Funções do Modal ---
-async function openPlaceDetailsModal(placeId) {
-    infoWindow.close(); // Fecha a InfoWindow ao abrir o modal
-
-    const modal = document.getElementById('placeDetailsModal');
-    const modalContent = document.getElementById('modalContent');
-    modalContent.innerHTML = `
-        <div class="flex flex-col items-center justify-center py-8 ">
-            <svg class="animate-spin h-10 w-10 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <p class="text-gray-600 mt-4">Carregando detalhes...</p>
-        </div>
-    `;
-
-    modal.classList.remove('hidden');
-    // Animação de entrada
-    setTimeout(() => {
-        modal.querySelector('div').classList.remove('scale-95', 'opacity-0');
-        modal.querySelector('div').classList.add('scale-100', 'opacity-100');
-    }, 50);
-
-
-    const service = new google.maps.places.PlacesService(map);
-    const request = {
-        placeId: placeId,
-        fields: ['name', 'formatted_address', 'types', 'rating', 'user_ratings_total', 'photos', 'opening_hours', 'website', 'formatted_phone_number', 'reviews', 'geometry', 'vicinity']
-    };
-
-    service.getDetails(request, (placeDetails, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK) {
-            currentDetailedPlace = placeDetails; // Armazena o objeto completo para uso posterior
-
-            const photosHtml = placeDetails.photos ?
-                `<div class="flex space-x-2 overflow-x-auto pb-2">
-                    ${placeDetails.photos.slice(0, 5).map(photo => `<img src="${photo.getUrl({ 'maxWidth': 300, 'maxHeight': 200 })}" class="h-32 w-auto object-cover rounded-md shadow-sm" alt="Foto de ${placeDetails.name}">`).join('')}
-                </div>` : '';
-
-            const openingHoursHtml = placeDetails.opening_hours ?
-                `<div class="mt-4">
-                    <h4 class="font-semibold text-gray-800">Horário de Funcionamento:</h4>
-                    <ul class="text-sm text-gray-600 list-disc list-inside">
-                        ${placeDetails.opening_hours.weekday_text.map(day => `<li>${day}</li>`).join('')}
-                    </ul>
-                </div>` : '';
-
-            const reviewsHtml = placeDetails.reviews && placeDetails.reviews.length > 0 ?
-                `<div class="mt-4">
-                    <h4 class="font-semibold text-gray-800">Avaliações:</h4>
-                    <div class="space-y-3 mt-2 max-h-48 overflow-y-auto pr-2">
-                        ${placeDetails.reviews.slice(0, 3).map(review => `
-                            <div class="border-b border-gray-100 pb-3 last:border-b-0">
-                                <div class="flex items-center mb-1">
-                                    <span class="font-medium text-gray-700">${review.author_name}</span>
-                                    <div class="flex items-center text-xs text-gray-500 ml-2">
-                                        ${'⭐'.repeat(review.rating)}
-                                    </div>
-                                </div>
-                                <p class="text-xs text-gray-600">${review.text}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>` : '';
-
-            modalContent.innerHTML = `
-                <div class="bg-white rounded-lg">
-                    ${photosHtml}
-                    <div class="p-6">
-                        <h2 class="text-2xl font-bold text-gray-900 mb-2">${placeDetails.name}</h2>
-                        <p class="text-sm text-gray-600 mb-4">${placeDetails.formatted_address}</p>
-
-                        <div class="flex flex-wrap items-center gap-3 mb-4">
-                            <span class="px-3 py-1 text-xs rounded-full font-medium ${getTypeColorClass(getPlaceType(placeDetails.types))}">
-                                ${getTypeLabel(getPlaceType(placeDetails.types))}
-                            </span>
-                            ${placeDetails.rating ? `
-                            <div class="flex items-center text-sm text-gray-500">
-                                <svg class="w-4 h-4 mr-1 fill-yellow-400 text-yellow-400" viewBox="0 0 24 24">
-                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                </svg>
-                                ${placeDetails.rating} (${placeDetails.user_ratings_total || 0} avaliações)
-                            </div>` : ''}
-                            <span class="text-sm text-gray-500 font-medium">
-                                ${placeDetails.opening_hours ? placeDetails.opening_hours.weekday_text.join(' | ') : ''}
-                            </span>  
-                        </div>
-
-                        <p class="text-gray-700 mb-4">${placeDetails.vicinity || placeDetails.formatted_address || ''}</p>
-
-                        ${placeDetails.website ? `<p class="text-blue-600 hover:underline mb-2"><a href="${placeDetails.website}" target="_blank">Site Oficial</a></p>` : ''}
-                        ${placeDetails.formatted_phone_number ? `<p class="text-gray-700">Telefone: ${placeDetails.formatted_phone_number}</p>` : ''}
-
-                        ${openingHoursHtml}
-                        ${reviewsHtml}
-                    </div>
-                </div>
-            `;
-        } else {
-            modalContent.innerHTML = `
-                <div class="p-8 text-center text-red-500">
-                    <p>Não foi possível carregar os detalhes deste lugar.</p>
-                    <p class="text-sm text-gray-500">${status}</p>
-                </div>
-            `;
-            console.error('Erro ao carregar detalhes do lugar:', status);
-        }
-    });
-
-    // Step 4: Set modal datepicker value to selected itinerary date or trip start date
-    setTimeout(() => {
-        const modalDatePicker = document.getElementById('itineraryDate');
-        const mainDatePicker = document.getElementById('datePicker');
-        if (modalDatePicker && window.hasTrip && window.dataInicioViagem && window.dataFimViagem) {
-            modalDatePicker.setAttribute('min', window.dataInicioViagem);
-            modalDatePicker.setAttribute('max', window.dataFimViagem);
-            let selectedDate = mainDatePicker && mainDatePicker.value ? mainDatePicker.value : window.dataInicioViagem;
-            modalDatePicker.value = selectedDate;
-        }
-    }, 200); // Aguarda renderização do modal
-}
-
-function closeModal() {
-    const modal = document.getElementById('placeDetailsModal');
-    // Animação de saída
-    modal.querySelector('div').classList.remove('scale-100', 'opacity-100');
-    modal.querySelector('div').classList.add('scale-95', 'opacity-0');
-    setTimeout(() => {
-        modal.classList.add('hidden');
-        currentDetailedPlace = null; // Limpa o lugar detalhado
-    }, 300); // Deve corresponder à duração da transição CSS
-}
-
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {
 
@@ -851,19 +608,89 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-console.log('Explore.js loaded successfully');
-</script>
-<script>
+// --- Função para atualizar o itinerário do banco ---
+/**
+ * Atualiza o itinerário exibido na tela buscando os dados do backend (API interna Laravel).
+ * Chama a rota /explore/itinerary (GET) e atualiza o DOM.
+ * @returns {Promise<void>}
+ */
+async function updateItineraryDisplay() {
+    if (!window.hasTrip) {
+        document.getElementById('itinerary-content') && (document.getElementById('itinerary-content').innerHTML = '');
+        document.getElementById('suggestions-list') && (document.getElementById('suggestions-list').innerHTML = '');
+        return;
+    }
+    try {
+        const response = await fetch('/explore/itinerary');
+        if (!response || !response.ok) {
+            console.error('Falha ao buscar /explore/itinerary: resposta nula, indefinida ou status não OK');
+            return;
+        }
+        let pontos;
+        try {
+            pontos = await response.json();
+        } catch (jsonErr) {
+            console.error('Falha ao converter resposta em JSON:', jsonErr);
+            return;
+        }
+        pontosCache = pontos; // Atualiza cache global
+        // Filtra pontos para a data selecionada
+        const datePicker = document.getElementById('datePicker');
+        const selectedDate = datePicker && datePicker.value ? datePicker.value : (pontos && pontos.length > 0 ? normalizeDate(pontos[0].data_ponto_interesse) : null);
+        if (selectedDate) {
+            const pontosFiltrados = pontos.filter(p => normalizeDate(p.data_ponto_interesse) === normalizeDate(selectedDate));
+            const desktopContent = document.getElementById('itinerary-content');
+            if (desktopContent) {
+                if (!pontosFiltrados || pontosFiltrados.length === 0) {
+                    desktopContent.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-gray-400 py-8">
+                       <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                       </svg>
+                       <span class="font-medium mb-1">Nenhuma atividade ainda</span>
+                       <span class="text-sm text-center">Clique nos marcadores do mapa para adicionar atividades ao seu roteiro</span>
+                     </div>`;
+                } else {
+                    desktopContent.innerHTML = `<div class="space-y-4">${pontosFiltrados.map((place, index) => `
+                        <div class="p-4 border border-gray-200 rounded-lg bg-white hover:shadow-md transition-all duration-200 group">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1 cursor-pointer" onclick="openPlaceDetailsModal('${place.placeid_ponto_interesse}', true, ${place.pk_id_ponto_interesse})">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">${index + 1}</span>
+                                    </div>
+                                    <div class="text-gray-900 font-semibold text-sm">${place.nome_ponto_interesse || ''}</div>
+                                    <div class="text-gray-500 text-xs mt-1">${place.desc_ponto_interesse || ''}</div>
+                                    <div class="text-gray-500 text-xs mt-1">${place.hora_ponto_interesse || ''}</div>
+                                </div>
+                                <button onclick="removeFromDatabase(${place.id})" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-all duration-200">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>`).join('')}</div>`;
+                }
+            }
+        }
+        updateSuggestions();
+    } catch (e) {
+        console.log('função updateItineraryDisplay falhou', e);
+        console.error('Erro ao buscar ou processar pontos:', e);
+    }
+}
+
+/**
+ * Adiciona um ponto de interesse ao itinerário do usuário.
+ * Faz POST para a API interna Laravel (/explore).
+ * @param {string} placeId - ID do local (Google ou banco).
+ * @param {string} selectedTime - Hora selecionada.
+ * @param {string} selectedDate - Data selecionada.
+ * @returns {Promise<void>}
+ */
 async function addToItinerary(placeId, selectedTime, selectedDate) {
     if (!window.hasTrip) {
         alert('Crie uma viagem antes de adicionar pontos!');
         return;
     }
-    let place = places.find(p => p.id === placeId) || currentDetailedPlace;
-    if (!place) {
-        console.error('Place não encontrado');
-        return;
-    }
+    const place = currentDetailedPlace; 
     const data = {
         nome_ponto_interesse: place.name,
         desc_ponto_interesse: place.description || place.vicinity || '',
@@ -871,7 +698,8 @@ async function addToItinerary(placeId, selectedTime, selectedDate) {
         longitude: place.lng || (place.geometry && place.geometry.location.lng ? place.geometry.location.lng() : null),
         categoria: place.type || '',
         hora_ponto_interesse: selectedTime,
-        data_ponto_interesse: selectedDate || ''
+        data_ponto_interesse: selectedDate || '',
+        placeid_ponto_interesse: place.place_id || place.placeId || place.id || place.placeid_ponto_interesse || placeId || '',
     };
     const csrfToken = document.querySelector('meta[name="csrf-token"]');
     if (!csrfToken) {
@@ -893,46 +721,40 @@ async function addToItinerary(placeId, selectedTime, selectedDate) {
         try {
             result = JSON.parse(responseText);
         } catch (e) {
-            showNotification('Erro ao adicionar ponto: resposta inválida do servidor', 'error');
             return;
         }
-        if (response.ok) {
-            // Atualiza o cache local imediatamente para a data selecionada
-            const newPonto = {
-                id: result.id ? `db_${result.id}` : `db_${Math.random()}`,
-                name: data.nome_ponto_interesse,
-                description: data.desc_ponto_interesse,
-                lat: data.latitude,
-                lng: data.longitude,
-                type: data.categoria,
-                rating: place.rating || 4.0,
-                address: data.desc_ponto_interesse,
-                time: data.hora_ponto_interesse,
-                database_id: result.id || null,
-                data_ponto_interesse: data.data_ponto_interesse
-            };
-            if (!itinerary[data.data_ponto_interesse]) itinerary[data.data_ponto_interesse] = [];
-            itinerary[data.data_ponto_interesse].push(newPonto);
-            pontosCache.push({
-                id: result.id || null,
-                nome_ponto_interesse: data.nome_ponto_interesse,
-                desc_ponto_interesse: data.desc_ponto_interesse,
-                latitude: data.latitude,
-                longitude: data.longitude,
-                categoria: data.categoria,
-                hora_ponto_interesse: data.hora_ponto_interesse,
-                data_ponto_interesse: data.data_ponto_interesse
-            });
-            updateItineraryDisplay();
-            updateSuggestions();
-            showNotification('Ponto adicionado com sucesso!', 'success');
-        } else {
-            showNotification('Erro ao adicionar ponto: ' + (result.error || 'Erro desconhecido'), 'error');
-        }
+        updateItineraryDisplay();
     } catch (error) {
         showNotification('Erro ao adicionar ponto: ' + error.message, 'error');
     }
 }
 window.addToItinerary = addToItinerary;
+
+/**
+ * Remove um ponto de interesse do itinerário do usuário.
+ * Faz DELETE para a API interna Laravel (/explore/{id}).
+ * @param {number} pontoId - ID do ponto de interesse no banco de dados.
+ */
+function removePontoFromItinerary(pontoId) {
+    fetch(`/explore/${pontoId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Atualize o itinerário na tela, removendo o ponto
+            updateItineraryDisplay();
+        } else {
+            showNotification(data.error || 'Erro ao remover ponto', 'error');
+        }
+    })
+    .catch(() => showNotification('Erro ao remover ponto', 'error'));
+    closeModal();
+    updateItineraryDisplay();
+}
 </script>
 @endsection
