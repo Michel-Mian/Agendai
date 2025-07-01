@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashBoardController;
 use App\Http\Controllers\FlightsController;
+use App\Http\Controllers\FormController;
 use Illuminate\Support\Facades\Route;
 use App\http\controllers\UserController;
 use Illuminate\Http\Request;
@@ -37,5 +38,6 @@ Route::middleware(['auth'])->group(function (){
     Route::put('/user/{id}/profile', [UserController::class, 'updateProfile'])->name('user.updateProfile');
     Route::put('/user/{id}/preferences', [UserController::class, 'updatePreferences'])->name('user.updatePreferences');
     Route::get('/dashboard/historico', [DashBoardController::class, 'historicoAjax'])->name('dashboard.historico');
+    Route::get('/formTrip', [FormController::class, 'create'])->name('createTrip');
+    Route::get('autocomplete-airports', [FlightsController::class, 'autocompleteAirports'])->name('autocomplete.airports');
 });
-
