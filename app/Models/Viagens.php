@@ -10,9 +10,33 @@ class Viagens extends Model
     public $incrementing = true; 
     public $keyType = 'int';
     
-    // Fazer o relacionamento com User
+    // Relação com o usuário (User)
     public function user()
     {
         return $this->belongsTo(User::class, 'fk_id_usuario', 'id');
+    }
+
+    // Relação com os pontos de interesse (PontoInteresse)
+    public function pontosInteresse()
+    {
+        return $this->hasMany(PontoInteresse::class, 'fk_id_viagem', 'pk_id_viagem');
+    }
+
+    // Relação com os objetivos (Objetivos)
+    public function objetivos()
+    {
+        return $this->hasMany(Objetivos::class, 'fk_id_viagem', 'pk_id_viagem');
+    }
+
+    // Relação com os viajantes (Viajantes)
+    public function viajantes()
+    {
+        return $this->hasMany(Viajantes::class, 'fk_id_viagem', 'pk_id_viagem');
+    }
+
+    // Relação com os voos (Voos)
+    public function voos()
+    {
+        return $this->hasMany(Voos::class, 'fk_id_viagem', 'pk_id_viagem');
     }
 }
