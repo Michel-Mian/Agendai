@@ -47,6 +47,14 @@ class UserController extends Controller
             'name' => 'required',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|confirmed|min:8',
+        ], [
+            'name.required' => 'O nome é obrigatório.',
+            'email.required' => 'O e-mail é obrigatório.',
+            'email.email' => 'Digite um e-mail válido.',
+            'email.unique' => 'Este e-mail já está cadastrado.',
+            'password.required' => 'A senha é obrigatória.',
+            'password.confirmed' => 'A confirmação da senha não confere.',
+            'password.min' => 'A senha deve ter pelo menos :min caracteres.',
         ]);
 
         $user = new User();
@@ -334,5 +342,22 @@ class UserController extends Controller
         $user->save();
 
         return redirect()->back()->with('success', 'Preferences updated successfully!');
+    }
+
+    function updatePreferences(Request $request, $id)
+    {
+        $user = $this->getUser($id);
+
+        $request->validate([
+            'currency' => 'required',
+            // outros campos de preferência...
+        ]);
+
+        $user->currency = $request->currency;
+        // $user->language = $request->language;
+        // $user->theme = $request->theme;
+        $user->save();
+
+        return redirect()->back()->with('success', 'Preferências atualizadas com sucesso!');
     }
 }

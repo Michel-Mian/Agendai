@@ -50,7 +50,6 @@ class DashBoardController extends Controller
             'XCD', 'XOF', 'XPF', 'XRP', 'YER', 'ZAR', 'ZMK', 'ZWL', 'XAU', 'BRLPTAX',
             'XAG', 'BRETT', 'SOL', 'BNB'
         ];
-
         // Check if the currency is supported and fetch its exchange rate
         if (!in_array($currency, $supported)) {
             $cotacao = null;
@@ -78,7 +77,6 @@ class DashBoardController extends Controller
             $labels[] = date('d/m/Y', $item['timestamp']);
             $data[] = (float) $item['bid'];
         }
-
         // Render the dashboard view with all data
         return view('dashboard', [
             'user' => $user,
@@ -102,7 +100,6 @@ class DashBoardController extends Controller
         $user = auth()->user();
         $dias = $request->query('dias', 60);
         $currency = $user->currency ?? 'BRL';
-
         // Fetch historical data
         $response = Http::get("https://economia.awesomeapi.com.br/json/daily/{$currency}-USD/{$dias}");
         $historico = $response->successful() ? $response->json() : [];
