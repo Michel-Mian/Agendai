@@ -343,21 +343,4 @@ class UserController extends Controller
 
         return redirect()->back()->with('success', 'Preferences updated successfully!');
     }
-
-    function updatePreferences(Request $request, $id)
-    {
-        $user = $this->getUser($id);
-
-        $request->validate([
-            'currency' => 'required',
-            // outros campos de preferência...
-        ]);
-
-        $user->currency = $request->currency;
-        // $user->language = $request->language;
-        // $user->theme = $request->theme;
-        $user->save();
-
-        return redirect()->back()->with('success', 'Preferências atualizadas com sucesso!');
-    }
 }
