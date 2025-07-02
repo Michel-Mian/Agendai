@@ -12,15 +12,14 @@
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
         <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
         <link rel="stylesheet" href="{{ asset('css/myTrips.css') }}">
-        @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/dashBoard.js'])
-        
         <meta name="csrf-token" content="{{ csrf_token() }}">
-
+        @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/dashBoard.js', 'resources/js/searchFlights.js'])
     </head>
     <body>
             <main class="">
                 @yield('content')
             </main>
+            
             <!--Google Maps API-->
             <script
             src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDWLH0DB_w7iFWxaPJHOl69rSP6YT3sp80&libraries=places&callback=initMap" async defer>
