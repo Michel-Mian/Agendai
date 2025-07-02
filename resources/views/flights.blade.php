@@ -8,12 +8,26 @@
 
             <!-- Filtro de Pesquisa -->
             @include('components/flights/searchFilter')
+            
+            <!-- Modal de Filtro -->
+            @include('components/flights/modalFlights')
 
             <!-- Lista de Voos -->
             <div class="max-w-4xl mx-auto mb-0 w-full py-8">
-                @include('components/flights/cardFlights')
-                @include('components/flights/cardFlights')
-                @include('components/flights/cardFlights')
+                @if(isset($flights) && count($flights))
+                    @foreach($flights as $index => $flight)
+                        @include('components.flights.cardFlights', ['flight' => $flight, 'index' => $index, 'user' => $user])
+                         <!-- <pre>{{ print_r($flight, true) }}</pre>  -->
+                    @endforeach
+
+                    <div class="mt-6">
+                        {{ $flights->links() }}
+                    </div>
+                @else
+                    <div class="text-center text-gray-500 py-8">
+                        Nenhum voo encontrado para os filtros selecionados.
+                    </div>
+                @endif
             </div>
         </div>
     </div>
