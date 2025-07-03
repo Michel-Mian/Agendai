@@ -24,27 +24,10 @@ Route::post('/reset-password', [UserController::class, 'resetPassword'])->middle
 Route::post('/change-password', [UserController::class, 'changePassword'])->middleware('auth')->name('password.change');
 
 Route::middleware(['auth'])->group(function (){
-        // Step 1 - Mostrar formulário (GET)
-    Route::get('/trip/create', [TripController::class, 'showStep1'])->name('trip.form.step1');
-    // Step 1 - Receber dados (POST)
-    Route::post('/trip/step2', [TripController::class, 'handleStep1'])->name('trip.form.step2');
-    // Step 2 - Mostrar formulário (GET)
-    Route::get('/trip/step2', [TripController::class, 'showStep2'])->name('trip.form.step2.view');
-    // Step 2 - Receber dados (POST)
-    Route::post('/trip/step3', [TripController::class, 'handleStep2'])->name('trip.form.step3');
-    // Step 3 - Mostrar formulário (GET)
-    Route::get('/trip/step3', [TripController::class, 'showStep3'])->name('trip.form.step3.view');
-    // Step 3 - Receber dados (POST)
-    Route::post('/trip/step4', [TripController::class, 'handleStep3'])->name('trip.form.step4');
-    // Step 4 - Mostrar formulário (GET)
-    //Route::get('/trip/step4', [TripController::class, 'showStep4'])->name('trip.form.step4.view');
-    // E assim por diante para as outras etapas...
-    Route::get('/formulario', [TripController::class, 'mostrarFormulario'])->name('formulario.mostrar');
-    Route::post('/scraping-executar', [TripController::class, 'executarScraping'])->name('scraping.executar');
-    Route::post('/trip/scrape-insurance', [TripController::class, 'scrape'])->name('trip.scrape');
-    // Outras rotas protegidas...
+    Route::get('/trip/form', [TripController::class, 'showForm'])->name('show.Form');
+    Route::post('/trip/insurance', [TripController::class, 'runScraping'])->name('run.Scraping');
+
     Route::get('/dashboard', [DashBoardController::class, 'dashboard'])->name('dashboard');
-    // ...
     Route::get('/myTrips', function() {
         return view('myTrips', ['title' => 'Minhas Viagens']);
     });
