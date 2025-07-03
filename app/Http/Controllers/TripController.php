@@ -6,44 +6,85 @@ use Illuminate\Http\Request;
 
 class TripController extends Controller
 {
-    // Exibe o formulário para o usuário preencher
-    public function mostrarFormulario()
+    public function showForm()
     {
-        return view('trip.form'); // Blade: resources/views/form.blade.php
+        return view('trip.form'); // resources/views/trip/form.blade.php
     }
 
-    // Executa o scraping com os dados do formulário
-    public function executarScraping(Request $request)
+    public function runScraping(Request $request)
     {
-        // Validação básica dos campos
         $request->validate([
-            'motivo' => 'required',
-            'destino' => 'required',
+            'motivo' => 'required|in:1,2,3,4',
+            'destino' => 'required|in:1,2,3,4,5,6,7,11',
             'data_ida' => 'required|date',
             'data_volta' => 'required|date|after_or_equal:data_ida',
-            'qtd_passageiros' => 'required|integer|min:1|max:3',
+            'qtd_passageiros' => 'required|integer|min:1|max:8',
+            'idade1' => 'required|integer|min:0|max:120',
         ]);
 
-        // Monta o comando Python com os argumentos
-        $command = escapeshellcmd('python "' . base_path('scripts/webscraping/scraping.py') . '" ' .
+        $qtd = (int) $request->qtd_passageiros;
+
+        // Coletar idades conforme qtd
+        $idades = [];
+        for ($i = 1; $i <= 8; $i++) {
+            if ($i <= $qtd) {
+                $request->validate([
+                    'idade' . $i => 'required|integer|min:0|max:120',
+                ]);
+                $idades[] = $request->input('idade' . $i);
+            } else {
+                $idades[] = '0'; // padding para o Python
+            }
+        }
+
+        $command = escapeshellcmd('python "' . base_path('scripts/webscraping/scrapingESV.py') . '" ' .
             $request->motivo . ' ' .
             $request->destino . ' ' .
             escapeshellarg($request->data_ida) . ' ' .
             escapeshellarg($request->data_volta) . ' ' .
-            $request->qtd_passageiros . ' ' .
-            ($request->idade1 ?? '0') . ' ' .
-            ($request->idade2 ?? '0') . ' ' .
-            ($request->idade3 ?? '0')
+            $qtd . ' ' .
+            implode(' ', $idades)
         );
 
-        // Executa o script e coleta a saída
-        $output = shell_exec($command);
+    $output = shell_exec($command);
+    $linhas = explode("\n", trim($output));
 
-        // Divide a saída em linhas
-        $frases = explode("\n", trim($output));
+    $frases = [];
+    $seguroAtual = [];
 
-        // Retorna a mesma view com os resultados
-        return view('trip.form', compact('frases'));
+    foreach ($linhas as $linha) {
+        if (trim($linha) === '=====') {
+            if (!empty($seguroAtual)) {
+                $frases[] = $seguroAtual;
+                $seguroAtual = [];
+            }
+        } else {
+            $seguroAtual[] = $linha;
+        }
+    }
+
+    if (!empty($seguroAtual)) {
+        $frases[] = $seguroAtual;
+    }
+
+    foreach ($frases as &$seguro) {
+        $link = '';
+
+        if (filter_var(end($seguro), FILTER_VALIDATE_URL)) {
+            $link = array_pop($seguro);
+        }
+
+        $seguro = [
+            'site' => array_shift($seguro),
+            'dados' => $seguro,
+            'link' => $link,
+        ];
+    }
+    unset($seguro);
+
+    return view('trip.form', compact('frases'));
+
+
     }
 }
 
