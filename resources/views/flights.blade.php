@@ -8,7 +8,7 @@
 
             <!-- Filtro de Pesquisa -->
             @include('components/flights/searchFilter')
-
+            
             <!-- Modal de Filtro -->
             @include('components/flights/modalFlights')
 

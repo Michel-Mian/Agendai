@@ -4,3 +4,5 @@ import './myTrips';
 import './myProfile';
 import './dashBoard';
 import './formTrip';
+import './explore';
+import './filter';

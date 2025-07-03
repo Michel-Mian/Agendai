@@ -9,11 +9,11 @@
         <div class="w-full max-w-3xl mx-auto mt-12">
             <!-- Barra de progresso -->
             <div class="flex justify-between items-center mb-12 px-4">
-                @foreach(['Informações iniciais', 'Detalhes da viagem', 'Preferências', 'Informações orçamentárias', 'Voos'] as $i => $etapa)
+                @foreach(['Informações iniciais', 'Detalhes da viagem', 'Preferências', 'Informações orçamentárias', 'Voos', 'Revisão final'] as $i => $etapa)
                     <div class="flex-1 flex items-center relative">
                         <div class="step-indicator @if($i==0) active @endif" id="step-indicator-{{ $i+1 }}">{{ $i+1 }}</div>
                         <span class="step-label">{{ $etapa }}</span>
-                        @if($i < 4)
+                        @if($i < 5)
                             <div class="step-line"></div>
                         @endif
                     </div>
@@ -21,24 +21,25 @@
             </div>
 
             <div class="bg-white rounded-2xl shadow-xl p-10 mb-10 animate-fade-in">
-                <form id="multiStepForm">
+                <form id="multiStepForm" method="POST" action="{{ route('formTrip.store') }}">
+                    @csrf
                     <!-- Passo 1 -->
                     <div class="form-step active">
                         <h2 class="text-2xl font-extrabold text-gray-800 mb-6">Informações iniciais</h2>
                         <div class="mb-6">
                             <label class="block text-gray-600 font-semibold mb-2">Qual seu destino?</label>
-                            <input type="text" id="locationInput" class="input" placeholder="Digite o destino dos sonhos...">
+                            <input type="text" id="searchInput" name="searchInput" class="input" placeholder="Digite o destino dos sonhos...">
                         </div>
                         <div class="flex gap-6 mb-6">
                             <div class="flex-1">
-                                <label class="block text-gray-600 font-semibold mb-2">Nº de adultos:</label>
-                                <select class="input">
+                                <label class="block text-gray-600 font-semibold mb-2">Nº de pessoas:</label>
+                                <select class="input" name="num_pessoas">
                                     <option>1</option><option>2</option><option>3</option><option>4+</option>
                                 </select>
                             </div>
                             <div class="flex-1">
                                 <label class="block text-gray-600 font-semibold mb-2">Nº de crianças:</label>
-                                <select class="input">
+                                <select class="input" name="num_criancas">
                                     <option>0</option><option>1</option><option>2</option><option>3+</option>
                                 </select>
                             </div>
@@ -46,11 +47,11 @@
                         <div class="flex gap-6 mb-8">
                             <div class="flex-1">
                                 <label class="block text-gray-600 font-semibold mb-2">Data de ida:</label>
-                                <input type="date" class="input">
+                                <input type="date" class="input" name="date_departure" id="date_departure">
                             </div>
                             <div class="flex-1">
                                 <label class="block text-gray-600 font-semibold mb-2">Data de volta:</label>
-                                <input type="date" class="input">
+                                <input type="date" class="input" name="date_return" id="date_return">
                             </div>
                         </div>
                         <div class="flex justify-end">
@@ -69,13 +70,31 @@
                                 <option>Avião</option>
                             </select>
                         </div>
-                        <div class="mb-8">
-                            <label class="block text-gray-600 font-semibold mb-2">Qual será a forma de estadia?</label>
-                            <select class="input">
-                                <option>Hotel</option>
-                                <option>Pousada</option>
-                                <option>Casa alugada</option>
-                            </select>
+                        <div id="dep_iata_container" class="hidden flex gap-6 mb-8">
+                            <div class="mb-8 relative">
+                                <label class="block text-gray-600 font-semibold mb-2">Qual cidade/aeroporto deseja decolar?</label>
+                                <input 
+                                    type="text" 
+                                    name="dep_iata" 
+                                    id="dep_iata"
+                                    placeholder="ex: Guarulhos"
+                                    class="input airport-autocomplete"
+                                    autocomplete="off"
+                                >
+                                <div id="dep_iata_suggestions" class="absolute left-0 top-full w-full bg-white border border-gray-200 rounded max-h-40 overflow-y-auto shadow"></div>
+                            </div>
+                            <div class="mb-8 relative">
+                                <label class="block text-gray-600 font-semibold mb-2">Qual cidade/aeroporto deseja pousar?</label>
+                                <input 
+                                    type="text" 
+                                    name="arr_iata" 
+                                    id="arr_iata"
+                                    placeholder="ex: John F. Kennedy"
+                                    class="input airport-autocomplete"
+                                    autocomplete="off"
+                                >
+                                <div id="arr_iata_suggestions" class="absolute left-0 top-full w-full bg-white border border-gray-200 rounded max-h-40 overflow-y-auto shadow"></div>
+                            </div>
                         </div>
                         <div class="flex justify-between">
                             <button type="button" class="prev-btn btn-secondary">← Voltar</button>
@@ -146,107 +165,33 @@
                     <div class="form-step">
                         <h2 class="text-2xl font-extrabold text-gray-800 mb-6">Voos</h2>
                         <p class="mb-4 text-gray-600">Escolha sua passagem aérea</p>
-                        @php
-                            $flights = [
-                                [
-                                    'airline_logo' => 'https://upload.wikimedia.org/wikipedia/commons/2/2e/Logo_LATAM.svg',
-                                    'airline' => 'LATAM',
-                                    'travel_class' => 'Econômica',
-                                    'departure_time' => '08:30',
-                                    'departure_code' => 'GRU',
-                                    'arrival_time' => '10:45',
-                                    'arrival_code' => 'SDU',
-                                    'duration' => '2h 15m',
-                                    'type' => 'Direto',
-                                    'price' => '450,00',
-                                    'selected' => false,
-                                    'extras' => ['wifi', 'entretenimento', 'lanche'],
-                                ],
-                                [
-                                    'airline_logo' => 'https://logodownload.org/wp-content/uploads/2019/06/gol-logo-0.png',
-                                    'airline' => 'GOL',
-                                    'travel_class' => 'Econômica',
-                                    'departure_time' => '14:20',
-                                    'departure_code' => 'GRU',
-                                    'arrival_time' => '16:30',
-                                    'arrival_code' => 'SDU',
-                                    'duration' => '2h 10m',
-                                    'type' => 'Direto',
-                                    'price' => '380,00',
-                                    'selected' => true,
-                                    'extras' => ['wifi', 'lanche'],
-                                ],
-                                [
-                                    'airline_logo' => 'https://logodownload.org/wp-content/uploads/2019/08/azul-linhas-aereas-logo-0.png',
-                                    'airline' => 'Azul',
-                                    'travel_class' => 'Econômica',
-                                    'departure_time' => '19:15',
-                                    'departure_code' => 'GRU',
-                                    'arrival_time' => '21:25',
-                                    'arrival_code' => 'SDU',
-                                    'duration' => '2h 10m',
-                                    'type' => 'Direto',
-                                    'price' => '420,00',
-                                    'selected' => false,
-                                    'extras' => ['wifi', 'entretenimento'],
-                                ],
-                            ];
-                        @endphp
-                        <div class="space-y-4">
-                            @foreach($flights as $index => $flight)
-                                <div class="flex items-center bg-white rounded-xl px-6 py-5 border transition-all
-                                    @if($flight['selected']) border-2 border-blue-500 ring-2 ring-blue-100 @else border border-gray-200 hover:border-blue-300 @endif
-                                ">
-                                    <!-- Companhia -->
-                                    <div class="flex flex-col items-center w-24">
-                                        <img src="{{ $flight['airline_logo'] }}" alt="Logo" class="h-6 mb-1">
-                                        <span class="text-xs font-semibold text-gray-700">{{ $flight['airline'] }}</span>
-                                        <span class="text-xs text-gray-400">{{ $flight['travel_class'] }}</span>
-                                    </div>
-                                    <!-- Horário de saída -->
-                                    <div class="flex flex-col items-center w-20">
-                                        <span class="text-base font-bold text-gray-900">{{ $flight['departure_time'] }}</span>
-                                        <span class="text-xs text-gray-500">{{ $flight['departure_code'] }}</span>
-                                    </div>
-                                    <!-- Duração -->
-                                    <div class="flex flex-col items-center w-20">
-                                        <span class="text-xs text-gray-500">{{ $flight['duration'] }}</span>
-                                        <span class="text-xs text-gray-400">{{ $flight['type'] }}</span>
-                                    </div>
-                                    <!-- Horário de chegada -->
-                                    <div class="flex flex-col items-center w-20">
-                                        <span class="text-base font-bold text-gray-900">{{ $flight['arrival_time'] }}</span>
-                                        <span class="text-xs text-gray-500">{{ $flight['arrival_code'] }}</span>
-                                    </div>
-                                    <!-- Extras -->
-                                    <div class="flex flex-col gap-1 w-32 pl-4">
-                                        <div class="flex gap-2 text-xs text-gray-500">
-                                            @if(in_array('wifi', $flight['extras']))
-                                                <i class="fa-solid fa-wifi"></i>
-                                            @endif
-                                            @if(in_array('entretenimento', $flight['extras']))
-                                                <i class="fa-solid fa-tv"></i>
-                                            @endif
-                                            @if(in_array('lanche', $flight['extras']))
-                                                <i class="fa-solid fa-utensils"></i>
-                                            @endif
-                                        </div>
-                                        <span class="text-xs text-gray-400">
-                                            {{ in_array('lanche', $flight['extras']) ? 'Lanche' : ' ' }}
-                                        </span>
-                                    </div>
-                                    <!-- Preço -->
-                                    <div class="flex flex-col items-end flex-1">
-                                        <span class="text-blue-600 text-xl font-bold">R$ {{ $flight['price'] }}</span>
-                                        <span class="text-xs text-gray-500">por pessoa</span>
-                                        <span class="text-xs text-gray-400 mt-1">23kg incluído</span>
-                                    </div>
-                                </div>
-                            @endforeach
+                        <div class="space-y-4" id="flights-container">
+                            @if(isset($flights) && count($flights))
+                                @foreach($flights as $index => $flight)
+                                    @include('components.flights.cardFlights', ['flight' => $flight, 'index' => $index, 'user' => Auth::user()])
+                                @endforeach
+                            @else
+                                <div class="text-gray-500">Nenhum voo encontrado para os critérios informados.</div>
+                            @endif
                         </div>
                         <div class="flex justify-between mt-8">
                             <button type="button" class="prev-btn btn-secondary">← Voltar</button>
-                            <button type="button" class="btn-primary">Consultar →</button>
+                            <button type="button" class="next-btn btn-primary">Próximo →</button>
+                        </div>
+                    </div>
+
+                    <!-- Passo 6: Revisão final -->
+                    <div class="form-step">
+                        <h2 class="text-2xl font-extrabold text-gray-800 mb-6">Revisão final</h2>
+                        <div class="bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl p-6 text-white mb-6">
+                            <h3 class="text-xl font-bold mb-4">Confira seus dados:</h3>
+                            <ul class="space-y-2 text-base" id="reviewList">
+                                <!-- Os dados preenchidos aparecerão aqui via JS -->
+                            </ul>
+                        </div>
+                        <div class="flex justify-between">
+                            <button type="button" class="prev-btn btn-secondary">← Voltar</button>
+                            <button type="submit" class="btn-primary">Finalizar</button>
                         </div>
                     </div>
                 </form>
@@ -302,15 +247,16 @@ body { font-family: 'Inter', sans-serif; }
     background: #fff;
 }
 .btn-primary {
-    background: linear-gradient(90deg, #22c55e, #0ea5e9);
+    background: linear-gradient(90deg, #2563eb, #2563eb, #3b82f6, #2563eb);
+    background-image: linear-gradient(to right, #2563eb, #3b82f6);
     color: #fff; padding: 10px 32px; border-radius: 8px;
     font-weight: 700; font-size: 1rem; border: none;
-    box-shadow: 0 2px 8px #0ea5e933;
+    box-shadow: 0 2px 8px #2563eb33;
     transition: background 0.2s, transform 0.2s;
     cursor: pointer;
 }
 .btn-primary:hover {
-    background: linear-gradient(90deg, #0ea5e9, #22c55e);
+    background-image: linear-gradient(to right, #3b82f6, #2563eb);
     transform: translateY(-2px) scale(1.03);
 }
 .btn-secondary {
