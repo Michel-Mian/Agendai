@@ -42,7 +42,7 @@
                 </a>
             </li>
             <li>
-                <a href="#" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
+                <a href="/explore" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
                     <i class="fa-solid fa-earth-americas"></i>
                     <span class="nav-text">Explorar</span>
                 </a>
@@ -54,6 +54,7 @@
     <div class="border-t border-gray-200 p-4">
         <div class="relative">
             <button id="profile-button" class="flex items-center space-x-3 w-full rounded-lg hover:bg-gray-50 transition-colors profile-toggle">
+
                 @if(Auth::check())
                     <img src="{{ Auth::user()->profile_photo_url ? asset(Auth::user()->profile_photo_url) : asset('imgs/default-profile.png') }}"
                          alt="Foto do perfil" 
@@ -63,6 +64,7 @@
                          alt="Foto do perfil" 
                          class="w-8 h-8 rounded-full object-cover">
                 @endif
+                
                 <div class="flex-1 text-left profile-info">
                     @if(Auth::check())
                         <p class="text-sm font-medium text-gray-900">{{ Auth::user()->name }}</p>

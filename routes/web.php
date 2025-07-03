@@ -5,6 +5,7 @@ use App\Http\Controllers\FlightsController;
 use App\Http\Controllers\FormController;
 use Illuminate\Support\Facades\Route;
 use App\http\controllers\UserController;
+use App\http\controllers\ExploreController;
 use Illuminate\Http\Request;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
@@ -35,9 +36,16 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/flights', [FlightsController::class, 'search'])->name('flights.search');
     Route::get('/config/{id}/edit', [UserController::class, 'editConfig']);
     Route::put('/config/{id}/edit', [UserController::class, 'updateConfig']);
+    Route::get('/explore', [ExploreController::class, 'index'])->name('explore.index');
+    Route::post('/explore', [ExploreController::class, 'store'])->name('explore.store');
+    Route::get('/explore/itinerary', [ExploreController::class, 'show'])->name('explore.itinerary');
+    Route::delete('/explore/{id}', [ExploreController::class, 'destroy'])->name('explore.destroy');
     Route::put('/user/{id}/profile', [UserController::class, 'updateProfile'])->name('user.updateProfile');
     Route::put('/user/{id}/preferences', [UserController::class, 'updatePreferences'])->name('user.updatePreferences');
     Route::get('/dashboard/historico', [DashBoardController::class, 'historicoAjax'])->name('dashboard.historico');
     Route::get('/formTrip', [FormController::class, 'create'])->name('createTrip');
+    Route::post('/formTrip', [FormController::class, 'search'])->name('formTrip.store');
     Route::get('autocomplete-airports', [FlightsController::class, 'autocompleteAirports'])->name('autocomplete.airports');
+    Route::get('/formTrip/flights', [FormController::class, 'searchAjax'])->name('formTrip.flights.ajax');
+    Route::get('/formTrip/card-flight', [FormController::class, 'cardFlightAjax'])->name('formTrip.cardFlight.ajax');
 });
