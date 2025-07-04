@@ -121,7 +121,7 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
                 <div class="p-8 border-t border-gray-200 flex flex-col sm:flex-row justify-end items-center gap-4">
                     ${fromItinerary
                         ? `<button onclick=\"removePontoFromItinerary('${databaseId}')\" class=\"px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-pink-500 rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg w-full sm:w-auto\">🗑️ Remover do Itinerário</button>`
-                        : `
+                        : (window.hasTrip ? `
                         <div class=\"flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto\">
                             <div class=\"flex items-center gap-2\">
                                 <label for=\"itineraryDate\" class=\"text-gray-700 font-medium whitespace-nowrap\">Data da visita:</label>
@@ -134,7 +134,7 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
                         </div>
                         <button onclick=\"addToItinerary(currentDetailedPlace && currentDetailedPlace.place_id, document.getElementById('itineraryTime').value, document.getElementById('itineraryDate').value); closeModal();\" class=\"px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg w-full sm:w-auto\">
                             ➕ Adicionar ao Itinerário
-                        </button>`
+                        </button>` : `<div class=\"w-full text-center text-gray-400 text-base\">Crie uma viagem para adicionar este local ao itinerário.</div>`)
                     }
                 </div>
             `;

@@ -12,7 +12,7 @@ class ExploreController extends Controller
     public function index()
     {
         // Para desenvolvimento - remove em produção
-        session(['trip_id' => 1]);
+        // session(['trip_id' => 1]);
         
         $dataInicio = null;
         $dataFim = null;

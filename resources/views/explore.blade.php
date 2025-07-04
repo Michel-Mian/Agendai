@@ -13,27 +13,67 @@
         <div class="relative flex-1 overflow-hidden">
             <div id="map" class="absolute inset-0 w-full h-full rounded-xl"></div>
 
-            <div class="absolute right-6 top-6 bottom-6 hidden lg:flex w-96 flex-shrink-0 overflow-hidden z-10 shadow-lg rounded-2xl">
+            <!-- Botão para abrir o menu flutuante -->
+            <button id="openFloatingMenuBtn"
+                class="fixed right-6 top-[120px] z-20 bg-white border border-gray-300 shadow-lg rounded-lg p-3 flex items-center justify-center hover:bg-blue-50 transition-all duration-200"
+                onclick="openFloatingMenu()">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+
+            <!-- Menu flutuante -->
+            <div id="floatingMenu"
+                class="absolute right-6 top-6 bottom-6 w-96 flex-shrink-0 overflow-hidden z-30 shadow-lg rounded-2xl bg-white border border-gray-200 transition-transform duration-300"
+                style="transform: translateX(110%);">
                 <div class="flex flex-col h-full w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
                     <div class="mb-6 flex-shrink-0 px-4 pt-4">
-                        <div class="relative my-4">
-                            <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
-                            <input
-                                type="text"
-                                id="searchInput"
-                                placeholder="Pesquisar lugares..."
-                                class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm transition-all duration-200"
-                            />
+                        <div class="my-4 flex items-center gap-2">
+                            <div class="relative flex-1">
+                                <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                                <input
+                                    type="text"
+                                    id="searchInput"
+                                    placeholder="Pesquisar lugares..."
+                                    class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm transition-all duration-200"
+                                />
+                            </div>
+                            <button onclick="closeFloatingMenu()" class="flex-shrink-0 bg-white rounded-md p-2 hover:bg-blue-50 focus:outline-none ">
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         </div>
 
-                        <div class="flex flex-wrap justify-center">
+                        <div class="flex flex-wrap justify-center items-center gap-1">
                             @include('components.explore.filter-modal')
+                            @if($hasTrip)
+                                <button type="button" onclick="updateItineraryDisplay()"
+                                    class="ml-2 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-blue-50 hover:border-blue-500 transition-all duration-150 text-sm font-medium shadow-sm flex items-center gap-1">
+                                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582M20 20v-5h-.581M5 9A7 7 0 0112 5a7 7 0 017 7v3a7 7 0 01-7 7 7 7 0 01-7-7V9z" />
+                                    </svg>
+                                </button>
+                            @endif
                         </div>
                     </div>
                     @if(!$hasTrip)
-                        <button id="createTripButton" ...>Criar viagem</button>
+                        <div class="flex flex-col justify-center items-center h-[450px] my-8">
+                            <a href="" id="createTripButton"
+                            class="block">
+                                <div class="flex flex-col items-center justify-center h-72 rounded-xl border-2 border-dashed border-gray-300 bg-white transition-all duration-200 cursor-pointer py-8 select-none hover:border-blue-500">
+                                    <span class="flex items-center justify-center w-14 h-14 mb-4 rounded-full bg-gray-100">
+                                        <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                                        </svg>
+                                    </span>
+                                    <span class="text-2xl font-extrabold text-gray-800 tracking-wide mb-2">Criar viagem</span>
+                                    <span class="text-base text-gray-500 text-center max-w-xs mt-2">Você ainda não criou uma viagem.<br><span class='text-gray-400'>Crie uma viagem para liberar o itinerário e começar a planejar seu roteiro!</span></span>
+                                </div>
+                            </a>
+                        </div>
                     @else
                     <div class="p-6 flex-1 flex flex-col overflow-hidden">
                         <div class="flex items-center gap-3 border-b mb-4 pb-3 flex-shrink-0">
@@ -79,7 +119,11 @@
     </div>
 </div>
 
-@include('components.explore.detailsmodal')
+@php $hasTrip = session()->has('trip_id'); @endphp
+@includeWhen($hasTrip, 'components.explore.detailsmodal')
+@unless($hasTrip)
+    @include('components.explore.detailsmodal')
+@endunless
 <script>
 // Notificação simples (alert) para fallback
 if (typeof showNotification !== 'function') {
@@ -756,5 +800,19 @@ function removePontoFromItinerary(pontoId) {
     closeModal();
     updateItineraryDisplay();
 }
+// --- Floating menu open/close logic ---
+function openFloatingMenu() {
+    document.getElementById('floatingMenu').style.transform = 'translateX(0)';
+    document.getElementById('openFloatingMenuBtn').style.display = 'none';
+}
+function closeFloatingMenu() {
+    document.getElementById('floatingMenu').style.transform = 'translateX(110%)';
+    document.getElementById('openFloatingMenuBtn').style.display = 'flex';
+}
+// Esconde o menu por padrão em telas pequenas
+window.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('floatingMenu').style.transform = 'translateX(110%)';
+    document.getElementById('openFloatingMenuBtn').style.display = 'flex';
+});
 </script>
 @endsection
