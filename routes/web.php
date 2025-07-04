@@ -8,7 +8,7 @@ use App\http\controllers\UserController;
 use App\http\controllers\ExploreController;
 use Illuminate\Http\Request;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
-
+use App\Http\Controllers\TripController;
 
 Route::get('/', function () {
     return view('home');
@@ -27,6 +27,9 @@ Route::post('/reset-password', [UserController::class, 'resetPassword'])->middle
 Route::post('/change-password', [UserController::class, 'changePassword'])->middleware('auth')->name('password.change');
 
 Route::middleware(['auth'])->group(function (){
+    Route::get('/trip/form', [TripController::class, 'showForm'])->name('show.Form');
+    Route::post('/trip/insurance', [TripController::class, 'runScraping'])->name('run.Scraping');
+
     Route::get('/dashboard', [DashBoardController::class, 'dashboard'])->name('dashboard');
     Route::get('/myTrips', function() {
         return view('myTrips', ['title' => 'Minhas Viagens']);
