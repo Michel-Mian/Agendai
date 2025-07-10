@@ -13,7 +13,7 @@
             @include('components/flights/modalFlights')
 
             <!-- Lista de Voos -->
-            <div class="max-w-4xl mx-auto mb-0 w-full py-8">
+            <div class="max-w-4xl mx-auto mb-0 w-full py-8" id="flights-container">
                 @if(isset($flights) && count($flights))
                     @foreach($flights as $index => $flight)
                         @include('components.flights.cardFlights', ['flight' => $flight, 'index' => $index, 'user' => $user])

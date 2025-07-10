@@ -11,7 +11,7 @@ class TripController extends Controller
         return view('trip.form'); // resources/views/trip/form.blade.php
     }
 
-    public function runScraping(Request $request)
+    public function scrapingAjax(Request $request)
     {
         $request->validate([
             'motivo' => 'required|in:1,2,3,4',
@@ -19,22 +19,13 @@ class TripController extends Controller
             'data_ida' => 'required|date',
             'data_volta' => 'required|date|after_or_equal:data_ida',
             'qtd_passageiros' => 'required|integer|min:1|max:8',
-            'idade1' => 'required|integer|min:0|max:120',
+            'idades' => 'required|array',
         ]);
 
         $qtd = (int) $request->qtd_passageiros;
-
-        // Coletar idades conforme qtd
-        $idades = [];
-        for ($i = 1; $i <= 8; $i++) {
-            if ($i <= $qtd) {
-                $request->validate([
-                    'idade' . $i => 'required|integer|min:0|max:120',
-                ]);
-                $idades[] = $request->input('idade' . $i);
-            } else {
-                $idades[] = '0'; // padding para o Python
-            }
+        $idades = $request->idades;
+        for ($i = count($idades); $i < 8; $i++) {
+            $idades[] = '0';
         }
 
         $command = escapeshellcmd('python "' . base_path('scripts/webscraping/scrapingESV.py') . '" ' .
@@ -46,45 +37,41 @@ class TripController extends Controller
             implode(' ', $idades)
         );
 
-    $output = shell_exec($command);
-    $linhas = explode("\n", trim($output));
+        $output = shell_exec($command);
+        $linhas = explode("\n", trim($output));
 
-    $frases = [];
-    $seguroAtual = [];
+        $frases = [];
+        $seguroAtual = [];
 
-    foreach ($linhas as $linha) {
-        if (trim($linha) === '=====') {
-            if (!empty($seguroAtual)) {
-                $frases[] = $seguroAtual;
-                $seguroAtual = [];
+        foreach ($linhas as $linha) {
+            if (trim($linha) === '=====') {
+                if (!empty($seguroAtual)) {
+                    $frases[] = $seguroAtual;
+                    $seguroAtual = [];
+                }
+            } else {
+                $seguroAtual[] = $linha;
             }
-        } else {
-            $seguroAtual[] = $linha;
-        }
-    }
-
-    if (!empty($seguroAtual)) {
-        $frases[] = $seguroAtual;
-    }
-
-    foreach ($frases as &$seguro) {
-        $link = '';
-
-        if (filter_var(end($seguro), FILTER_VALIDATE_URL)) {
-            $link = array_pop($seguro);
         }
 
-        $seguro = [
-            'site' => array_shift($seguro),
-            'dados' => $seguro,
-            'link' => $link,
-        ];
-    }
-    unset($seguro);
+        if (!empty($seguroAtual)) {
+            $frases[] = $seguroAtual;
+        }
 
-    return view('trip.form', compact('frases'));
+        $result = [];
+        foreach ($frases as $seguro) {
+            $link = '';
+            if (filter_var(end($seguro), FILTER_VALIDATE_URL)) {
+                $link = array_pop($seguro);
+            }
+            $result[] = [
+                'site' => array_shift($seguro),
+                'dados' => $seguro,
+                'link' => $link,
+            ];
+        }
 
-
+        return response()->json(['frases' => $result]);
     }
 }
 

@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const steps = document.querySelectorAll('.form-step');
     const nextBtns = document.querySelectorAll('.next-btn');
     const prevBtns = document.querySelectorAll('.prev-btn');
-    let meioLocomocao = '';
+    let meioLocomocao = document.querySelectorAll('.form-step')[1].querySelector('select').value;
 
     function showStep(idx) {
         steps.forEach((step, i) => {
@@ -41,63 +41,89 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    async function searchFlights() {
+        console.log('Chamando searchFlights', currentStep, meioLocomocao);
+        if (meioLocomocao === 'Avião') {
+            document.querySelectorAll('.form-step')[4].classList.remove('hidden');
+            const data = {
+                dep_iata: document.getElementById('dep_iata')?.value || '',
+                arr_iata: document.getElementById('arr_iata')?.value || '',
+                date_departure: document.getElementById('date_departure')?.value || '',
+                date_return: document.getElementById('date_return')?.value || '',
+            };
+            const container = document.getElementById('flights-container');
+            container.innerHTML = '<div class="text-gray-500">Carregando voos...</div>';
+            // Timeout de 8 segundos para evitar travamento
+            let timeout = false;
+            const timer = setTimeout(() => {
+                timeout = true;
+                container.innerHTML = '<div class="text-red-500">Tempo esgotado ao buscar voos.</div>';
+            }, 8000);
+            try {
+                const resVoos = await fetch('/formTrip/flights?' + new URLSearchParams(data));
+                if (timeout) return;
+                clearTimeout(timer);
+                const result = await resVoos.json();
+                container.innerHTML = '';
+                if (result.flights && result.flights.length) {
+                    for (let i = 0; i < result.flights.length; i++) {
+                        const flight = result.flights[i];
+                        const resCard = await fetch('/formTrip/card-flight?' + new URLSearchParams({
+                            flight: JSON.stringify(flight),
+                            index: i
+                        }));
+                        const cardData = await resCard.json();
+                        container.innerHTML += cardData.html;
+                    }
+                } else {
+                    container.innerHTML = '<div class="text-gray-500">Nenhum voo encontrado para os critérios informados.</div>';
+                }
+            } catch (e) {
+                if (!timeout) container.innerHTML = '<div class="text-red-500">Erro ao buscar voos.</div>';
+            }
+        } else {
+            document.querySelectorAll('.form-step')[4].classList.add('hidden');
+        }
+    }
+
     nextBtns.forEach((btn, idx) => {
         btn.addEventListener('click', async function() {
-            if (currentStep === 3) {
-                const meioSelect = document.querySelectorAll('.form-step')[1].querySelector('select');
-                const meio = meioSelect.value;
-                meioLocomocao = meio;
+            const seguro = document.getElementById('seguroViagem');
+            const meioSelect = document.querySelectorAll('.form-step')[1].querySelector('select');
+            meioLocomocao = meioSelect.value; // sempre atualize aqui!
 
-                // Se for avião, mostra a etapa 5
-                if (meio === 'Avião') {
-                    document.querySelectorAll('.form-step')[4].classList.remove('hidden');
-                } else {
-                    document.querySelectorAll('.form-step')[4].classList.add('hidden');
-                }
-
-                // Colete os dados necessários do formulário
-                const data = {
-                    dep_iata: document.getElementById('dep_iata')?.value || '',
-                    arr_iata: document.getElementById('arr_iata')?.value || '',
-                    date_departure: document.getElementById('date_departure')?.value || '',
-                    date_return: document.getElementById('date_return')?.value || '',
-                };
-
-                try {
-                    // Busque os voos
-                    const resVoos = await fetch('/formTrip/flights?' + new URLSearchParams(data));
-                    const result = await resVoos.json();
-
-                    // Renderize os voos na etapa 5
-                    const container = document.getElementById('flights-container');
-                    container.innerHTML = '';
-
-                    if (result.flights && result.flights.length) {
-                        for (let i = 0; i < result.flights.length; i++) {
-                            const flight = result.flights[i];
-                            const resCard = await fetch('/formTrip/card-flight?' + new URLSearchParams({
-                                flight: JSON.stringify(flight),
-                                index: i
-                            }));
-                            const cardData = await resCard.json();
-                            container.innerHTML += cardData.html;
-                        }
-                    } else {
-                        container.innerHTML = '<div class="text-gray-500">Nenhum voo encontrado para os critérios informados.</div>';
-                    }
-                } catch (e) {
-                    // Se der erro, mostra mensagem e permite avançar
-                    const container = document.getElementById('flights-container');
-                    container.innerHTML = '<div class="text-red-500">Erro ao buscar voos.</div>';
+            // Etapa 3: decidir para onde ir
+            if (currentStep === 2) {
+                if (seguro && seguro.value === 'Não' && meioLocomocao !== 'Avião') {
+                    currentStep += 3;
+                } else if (seguro && seguro.value === 'Não' && meioLocomocao === 'Avião') {
+                    currentStep += 2;
+                    await searchFlights();
+                } else if (seguro && seguro.value === 'Sim') {
+                    currentStep++;
+                    // Chama a busca de seguros automaticamente ao entrar na etapa 4
+                    setTimeout(() => {
+                        const btnBuscar = document.getElementById('buscar-seguros');
+                        if (btnBuscar) btnBuscar.click();
+                    }, 100);
                 }
             }
-
-            // Avanço de etapa
-            if (currentStep === 3 && meioLocomocao !== 'Avião') {
-                currentStep += 2;
-            } else {
+            // Etapa 4: se veio para cá, seguro = Sim
+            else if (currentStep === 3) {
+                if (meioLocomocao !== 'Avião') {
+                    // Pula voos, vai para revisão
+                    currentStep += 2;
+                } else {
+                    // Vai para voos normalmente
+                    currentStep++;
+                    await searchFlights(); // <-- CHAME AQUI!
+                }
+            }
+            // Etapa 5: voos
+            else {
                 currentStep++;
             }
+
             if (currentStep >= steps.length) currentStep = steps.length - 1;
             showStep(currentStep);
             if (currentStep === 5) preencherRevisao();
@@ -121,16 +147,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!reviewList) return;
         const destino = document.getElementById('searchInput').value;
         const adultos = document.querySelectorAll('.form-step')[0].querySelectorAll('select')[0].value;
-        const criancas = document.querySelectorAll('.form-step')[0].querySelectorAll('select')[1].value;
         const dataIda = document.querySelectorAll('.form-step')[0].querySelectorAll('input[type="date"]')[0].value;
         const dataVolta = document.querySelectorAll('.form-step')[0].querySelectorAll('input[type="date"]')[1].value;
         const meio = document.querySelectorAll('.form-step')[1].querySelector('select').value;
-        const estadia = document.querySelectorAll('.form-step')[1].querySelectorAll('select')[1].value;
         const orcamento = document.querySelectorAll('.form-step')[3].querySelector('input[type="number"]').value;
-        let seguro = '';
-        document.querySelectorAll('.insurance-btn').forEach(btn => {
-            if (btn.classList.contains('selected')) seguro = btn.innerText.trim();
-        });
         let voo = '';
         if (meio === 'Avião') {
             document.querySelectorAll('.space-y-4 > div').forEach((div, i) => {
@@ -142,13 +162,10 @@ document.addEventListener('DOMContentLoaded', function() {
         reviewList.innerHTML = `
             <li><b>Destino:</b> ${destino}</li>
             <li><b>Adultos:</b> ${adultos}</li>
-            <li><b>Crianças:</b> ${criancas}</li>
             <li><b>Data de ida:</b> ${dataIda}</li>
             <li><b>Data de volta:</b> ${dataVolta}</li>
             <li><b>Meio de locomoção:</b> ${meio}</li>
-            <li><b>Estadia:</b> ${estadia}</li>
             <li><b>Orçamento:</b> R$ ${orcamento}</li>
-            <li><b>Seguro:</b> ${seguro}</li>
             ${meio === 'Avião' ? `<li><b>Voo escolhido:</b> ${voo}</li>` : ''}
         `;
     }
@@ -210,12 +227,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const meioSelect = document.querySelectorAll('.form-step')[1].querySelector('select');
     const depIataContainer = document.getElementById('dep_iata_container');
+    const seguro = document.getElementById('seguroViagem');
+    const insuranceOptions = document.getElementById('insurance-options');
 
     meioSelect.addEventListener('change', function() {
+        meioLocomocao = this.value;
         if (this.value === 'Avião') {
             depIataContainer.classList.remove('hidden');
         } else {
             depIataContainer.classList.add('hidden');
+        }
+    });
+
+    seguro.addEventListener('change', function() {
+        if (this.value === 'Sim') {
+            insuranceOptions.classList.remove('hidden');
+        } else {
+            insuranceOptions.classList.add('hidden');
         }
     });
 
@@ -225,4 +253,58 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         depIataContainer.classList.add('hidden');
     }
+
+    const selectPessoas = document.getElementById('num_pessoas');
+    const idadesContainer = document.getElementById('idades-container');
+
+    function renderCamposIdade(qtd) {
+        idadesContainer.innerHTML = '';
+        for (let i = 1; i <= qtd; i++) {
+            const div = document.createElement('div');
+            div.className = 'flex-1';
+            div.innerHTML = `
+                <label class="block text-gray-600 font-semibold mb-2">Idade do viajante ${i}:</label>
+                <input type="number" name="idade${i}" id="txtIdadePassageiro${i}" min="0" max="120" class="input" required>
+            `;
+            idadesContainer.appendChild(div);
+        }
+    }
+
+    // Inicializa com o valor padrão
+    renderCamposIdade(selectPessoas.value);
+
+    selectPessoas.addEventListener('change', function() {
+        let qtd = parseInt(this.value);
+        if (isNaN(qtd) || qtd < 1) qtd = 1;
+        renderCamposIdade(qtd);
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const flightsContainer = document.getElementById('flights-container');
+    if (flightsContainer) {
+        flightsContainer.addEventListener('change', function(e) {
+            if (e.target.classList.contains('select-flight-checkbox')) {
+                // Desmarca todos os outros checkboxes
+                document.querySelectorAll('.select-flight-checkbox').forEach(cb => {
+                    if (cb !== e.target) cb.checked = false;
+                });
+                // Remove destaque de todos os cards
+                document.querySelectorAll('.flight-card').forEach(card => card.classList.remove('border-4', 'border-blue-600'));
+                // Se marcado, destaca o card e salva o índice
+                if (e.target.checked) {
+                    const card = e.target.closest('.flight-card');
+                    card.classList.add('border-4', 'border-blue-600');
+                    document.getElementById('selected_flight_index').value = e.target.dataset.index;
+                } else {
+                    document.getElementById('selected_flight_index').value = '';
+                }
+            }
+        });
+    }
+});
+document.getElementById('multiStepForm').addEventListener('submit', function (e) {
+    console.log('submit!');
+    // e.preventDefault(); // comente esta linha para testar
+    // this.submit(); // comente esta linha para testar
 });
