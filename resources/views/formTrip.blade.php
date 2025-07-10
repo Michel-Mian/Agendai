@@ -6,10 +6,10 @@
     <div class="flex-1 flex flex-col">
         @include('components/layout/header')
 
-        <div class="w-full max-w-3xl mx-auto mt-12">
+        <div class="w-full max-w-4xl mx-auto mt-12">
             <!-- Barra de progresso -->
             <div class="flex justify-between items-center mb-12 px-4">
-                @foreach(['Informações iniciais', 'Detalhes da viagem', 'Preferências', 'Informações orçamentárias', 'Voos', 'Revisão final'] as $i => $etapa)
+                @foreach(['Informações iniciais', 'Detalhes da viagem', 'Preferências', 'Seguros', 'Voos', 'Revisão final'] as $i => $etapa)
                     <div class="flex-1 flex items-center relative">
                         <div class="step-indicator @if($i==0) active @endif" id="step-indicator-{{ $i+1 }}">{{ $i+1 }}</div>
                         <span class="step-label">{{ $etapa }}</span>
@@ -19,7 +19,6 @@
                     </div>
                 @endforeach
             </div>
-
             <div class="bg-white rounded-2xl shadow-xl p-10 mb-10 animate-fade-in">
                 <form id="multiStepForm" method="POST" action="{{ route('formTrip.store') }}">
                     @csrf
@@ -33,17 +32,19 @@
                         <div class="flex gap-6 mb-6">
                             <div class="flex-1">
                                 <label class="block text-gray-600 font-semibold mb-2">Nº de pessoas:</label>
-                                <select class="input" name="num_pessoas">
-                                    <option>1</option><option>2</option><option>3</option><option>4+</option>
-                                </select>
-                            </div>
-                            <div class="flex-1">
-                                <label class="block text-gray-600 font-semibold mb-2">Nº de crianças:</label>
-                                <select class="input" name="num_criancas">
-                                    <option>0</option><option>1</option><option>2</option><option>3+</option>
+                                <select class="input" name="num_pessoas" id="num_pessoas">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
                                 </select>
                             </div>
                         </div>
+                        <div id="idades-container" class="flex gap-4 mb-6"></div>
                         <div class="flex gap-6 mb-8">
                             <div class="flex-1">
                                 <label class="block text-gray-600 font-semibold mb-2">Data de ida:</label>
@@ -62,6 +63,10 @@
                     <!-- Passo 2 -->
                     <div class="form-step">
                         <h2 class="text-2xl font-extrabold text-gray-800 mb-6">Detalhes da viagem</h2>
+                        <div class="mb-6">
+                            <label class="block text-gray-600 font-semibold mb-2">Qual seu orçamento total?</label>
+                            <input type="number" class="input" placeholder="R$">
+                        </div>
                         <div class="mb-6">
                             <label class="block text-gray-600 font-semibold mb-2">Qual será o meio de locomoção?</label>
                             <select class="input">
@@ -96,6 +101,41 @@
                                 <div id="arr_iata_suggestions" class="absolute left-0 top-full w-full bg-white border border-gray-200 rounded max-h-40 overflow-y-auto shadow"></div>
                             </div>
                         </div>
+                        <div class="mb-6">
+                            <label class="block text-gray-600 font-semibold mb-2">Deseja contratar um seguro?</label>
+                            <select class="input" id="seguroViagem" name="seguroViagem">
+                                <option value="Não">Não</option>
+                                <option value="Sim">Sim</option>
+                            </select>
+                        </div>
+                        <div class="hidden flex gap-6 mb-8" id="insurance-options"> 
+                            <div class="mb-8 relative">
+                                <label for="motivo" class="block text-gray-600 font-semibold mb-2">Motivo da Viagem:</label>
+                                <select name="motivo" id="MainContent_Cotador_ddlMotivoDaViagem" required
+                                    class="input">
+                                    <option value="">SELECIONE O MOTIVO DA VIAGEM</option>
+                                    <option value="1" {{ old('motivo') == '1' ? 'selected' : '' }}>LAZER/NEGÓCIO</option>
+                                    <option value="2" {{ old('motivo') == '2' ? 'selected' : '' }}>MULTI-VIAGENS</option>
+                                    <option value="3" {{ old('motivo') == '3' ? 'selected' : '' }}>ANUAL</option>
+                                    <option value="4" {{ old('motivo') == '4' ? 'selected' : '' }}>ESTUDANTE</option>
+                                </select>
+                            </div>
+                            <div class="mb-8 relative">
+                                <label for="destino" class="block text-gray-600 font-semibold mb-2">Destino:</label>
+                                <select name="destino" id="MainContent_Cotador_selContinente" required
+                                    class="input">
+                                    <option value="">Selecione o destino</option>
+                                    <option value="5" {{ old('destino') == '5' ? 'selected' : '' }}>África</option>
+                                    <option value="1" {{ old('destino') == '1' ? 'selected' : '' }}>América do Norte</option>
+                                    <option value="4" {{ old('destino') == '4' ? 'selected' : '' }}>América do Sul</option>
+                                    <option value="6" {{ old('destino') == '6' ? 'selected' : '' }}>Ásia</option>
+                                    <option value="3" {{ old('destino') == '3' ? 'selected' : '' }}>Caribe / México</option>
+                                    <option value="2" {{ old('destino') == '2' ? 'selected' : '' }}>Europa</option>
+                                    <option value="7" {{ old('destino') == '7' ? 'selected' : '' }}>Oceania</option>
+                                    <option value="11" {{ old('destino') == '11' ? 'selected' : '' }}>Oriente Médio</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="flex justify-between">
                             <button type="button" class="prev-btn btn-secondary">← Voltar</button>
                             <button type="button" class="next-btn btn-primary">Próximo →</button>
@@ -121,39 +161,9 @@
 
                     <!-- Passo 4 -->
                     <div class="form-step">
-                        <h2 class="text-2xl font-extrabold text-gray-800 mb-6">Informações orçamentárias</h2>
-                        <div class="mb-6">
-                            <label class="block text-gray-600 font-semibold mb-2">Qual seu orçamento total?</label>
-                            <input type="number" class="input" placeholder="R$">
-                        </div>
+                        <h2 class="text-2xl font-extrabold text-gray-800 mb-6">Seguros</h2>
                         <div class="mb-8">
-                            <label class="block text-gray-600 font-semibold mb-2">Escolha seu seguro viagem</label>
-                            <div class="grid grid-cols-2 gap-6">
-                                <button type="button" class="insurance-btn flex flex-col items-center gap-1">
-                                    <span class="text-xl">🟢</span>
-                                    <span class="font-semibold">Básico</span>
-                                    <span class="text-green-600 font-bold">R$35/dia</span>
-                                    <span class="text-xs text-gray-400">Cobertura essencial</span>
-                                </button>
-                                <button type="button" class="insurance-btn flex flex-col items-center gap-1">
-                                    <span class="text-xl">🔵</span>
-                                    <span class="font-semibold">Premium</span>
-                                    <span class="text-green-600 font-bold">R$60/dia</span>
-                                    <span class="text-xs text-gray-400">Cobertura completa</span>
-                                </button>
-                                <button type="button" class="insurance-btn flex flex-col items-center gap-1">
-                                    <span class="text-xl">🟣</span>
-                                    <span class="font-semibold">Família</span>
-                                    <span class="text-green-600 font-bold">R$90/dia</span>
-                                    <span class="text-xs text-gray-400">Até 5 pessoas</span>
-                                </button>
-                                <button type="button" class="insurance-btn flex flex-col items-center gap-1">
-                                    <span class="text-xl">⚪</span>
-                                    <span class="font-semibold">Sem Seguro</span>
-                                    <span class="text-green-600 font-bold">R$0</span>
-                                    <span class="text-xs text-gray-400">Viajar sem proteção</span>
-                                </button>
-                            </div>
+                            @include('trip.form') 
                         </div>
                         <div class="flex justify-between">
                             <button type="button" class="prev-btn btn-secondary">← Voltar</button>
@@ -166,14 +176,8 @@
                         <h2 class="text-2xl font-extrabold text-gray-800 mb-6">Voos</h2>
                         <p class="mb-4 text-gray-600">Escolha sua passagem aérea</p>
                         <div class="space-y-4" id="flights-container">
-                            @if(isset($flights) && count($flights))
-                                @foreach($flights as $index => $flight)
-                                    @include('components.flights.cardFlights', ['flight' => $flight, 'index' => $index, 'user' => Auth::user()])
-                                @endforeach
-                            @else
-                                <div class="text-gray-500">Nenhum voo encontrado para os critérios informados.</div>
-                            @endif
                         </div>
+                        <input type="hidden" name="selected_flight_index" id="selected_flight_index" value="">
                         <div class="flex justify-between mt-8">
                             <button type="button" class="prev-btn btn-secondary">← Voltar</button>
                             <button type="button" class="next-btn btn-primary">Próximo →</button>
@@ -189,6 +193,16 @@
                                 <!-- Os dados preenchidos aparecerão aqui via JS -->
                             </ul>
                         </div>
+                        
+            @if ($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
                         <div class="flex justify-between">
                             <button type="button" class="prev-btn btn-secondary">← Voltar</button>
                             <button type="submit" class="btn-primary">Finalizar</button>
@@ -287,3 +301,96 @@ body { font-family: 'Inter', sans-serif; }
     transform: scale(1.03);
 }
 </style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Atualiza campos de idade conforme qtd_passageiros
+    const qtdPassageirosInput = document.getElementById("MainContent_Cotador_selQtdCliente");
+    if (qtdPassageirosInput) {
+        function atualizarCamposIdade() {
+            const qtd = parseInt(qtdPassageirosInput.value) || 1;
+            for (let i = 1; i <= 8; i++) {
+                const bloco = document.getElementById("bloco_idade_" + i);
+                const input = document.getElementById("txtIdadePassageiro" + i);
+                if (bloco && input) {
+                    bloco.classList.toggle("hidden", i > qtd);
+                    input.required = i <= qtd;
+                }
+            }
+        }
+        qtdPassageirosInput.addEventListener("change", atualizarCamposIdade);
+        atualizarCamposIdade();
+    }
+
+    // AJAX para buscar seguros
+    const btnBuscar = document.getElementById('buscar-seguros');
+    if (btnBuscar) {
+        btnBuscar.addEventListener('click', function() {
+            const motivo = document.getElementById('MainContent_Cotador_ddlMotivoDaViagem').value;
+            const destino = document.getElementById('MainContent_Cotador_selContinente').value;
+            const data_ida = document.querySelector('input[name="date_departure"]').value;
+            const data_volta = document.querySelector('input[name="date_return"]').value;
+            const qtd = document.getElementById('num_pessoas').value;
+            let idades = [];
+for (let i = 1; i <= qtd; i++) {
+    idades.push(document.getElementById('txtIdadePassageiro' + i).value);
+}
+            const token = document.querySelector('input[name="_token"]').value;
+
+            const resultado = document.getElementById('resultado-seguros');
+            resultado.innerHTML = '<div class="text-gray-500">Buscando seguros...</div>';
+
+            fetch('{{ route('run.Scraping.ajax') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token
+                },
+                body: JSON.stringify({
+                    motivo, destino, data_ida, data_volta, qtd_passageiros: qtd, idades
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.frases && data.frases.length) {
+                    let html = '<h3 class="mt-10 mb-8 text-center text-blue-700 font-extrabold text-2xl tracking-tight">Resultados dos Seguros</h3>';
+                    html += '<div class="flex flex-col gap-6">';
+                    data.frases.forEach(seguro => {
+                        html += `
+                            <div class="flex flex-col md:flex-row items-stretch bg-white/90 border border-blue-100 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                                <div class="flex items-center justify-center md:w-40 bg-gradient-to-br from-blue-100 to-green-100 p-6">
+                                    <span class="text-5xl text-blue-400">🛡️</span>
+                                </div>
+                                <div class="flex-1 flex flex-col justify-between p-6">
+                                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
+                                        <span class="text-lg font-semibold text-blue-700">${seguro.site || 'Site Desconhecido'}</span>
+                                        ${seguro.preco ? `<span class="text-green-600 font-bold text-lg bg-green-50 px-3 py-1 rounded-full">${seguro.preco}</span>` : ''}}
+                                    </div>
+                                    <div class="text-gray-700 text-sm flex flex-wrap gap-x-6 gap-y-1 mb-4">
+                                        ${(seguro.dados || []).map(linha => `<span class="inline-block">${linha}</span>`).join('')}
+                                    </div>
+                                    ${seguro.link ? `
+                                        <div class="flex justify-end">
+                                            <a href="${seguro.link}" target="_blank" rel="noopener noreferrer"
+                                                class="inline-block text-blue-600 font-semibold border border-blue-200 rounded-lg px-5 py-2 hover:bg-blue-50 hover:scale-105 transition">
+                                                Ver detalhes &rarr;
+                                            </a>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    resultado.innerHTML = html;
+                } else {
+                    resultado.innerHTML = '<div class="text-red-500">Nenhum seguro encontrado.</div>';
+                }
+            })
+            .catch(() => {
+                resultado.innerHTML = '<div class="text-red-500">Erro ao buscar seguros.</div>';
+            });
+        });
+    }
+});
+</script>

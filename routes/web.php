@@ -29,6 +29,7 @@ Route::post('/change-password', [UserController::class, 'changePassword'])->midd
 Route::middleware(['auth'])->group(function (){
     Route::get('/trip/form', [TripController::class, 'showForm'])->name('show.Form');
     Route::post('/trip/insurance', [TripController::class, 'runScraping'])->name('run.Scraping');
+    Route::post('/trip/insurance-ajax', [TripController::class, 'scrapingAjax'])->name('run.Scraping.ajax');
 
     Route::get('/dashboard', [DashBoardController::class, 'dashboard'])->name('dashboard');
     Route::get('/myTrips', function() {
@@ -47,7 +48,7 @@ Route::middleware(['auth'])->group(function (){
     Route::put('/user/{id}/preferences', [UserController::class, 'updatePreferences'])->name('user.updatePreferences');
     Route::get('/dashboard/historico', [DashBoardController::class, 'historicoAjax'])->name('dashboard.historico');
     Route::get('/formTrip', [FormController::class, 'create'])->name('createTrip');
-    Route::post('/formTrip', [FormController::class, 'search'])->name('formTrip.store');
+    Route::post('/formTrip', [FormController::class, 'store'])->name('formTrip.store');
     Route::get('autocomplete-airports', [FlightsController::class, 'autocompleteAirports'])->name('autocomplete.airports');
     Route::get('/formTrip/flights', [FormController::class, 'searchAjax'])->name('formTrip.flights.ajax');
     Route::get('/formTrip/card-flight', [FormController::class, 'cardFlightAjax'])->name('formTrip.cardFlight.ajax');
