@@ -47,7 +47,7 @@
                             </button>
                         </div>
 
-                        <div class="flex flex-wrap justify-center items-center gap-1">
+                        <div class="flex flex-wrap justify-center items-center gap-0">
                             @include('components.explore.filter-modal')
                             @if($hasTrip)
                                 <button type="button" onclick="updateItineraryDisplay()"
@@ -63,13 +63,13 @@
                         <div class="flex flex-col justify-center items-center h-[450px] my-8">
                             <a href="" id="createTripButton"
                             class="block">
-                                <div class="flex flex-col items-center justify-center h-72 rounded-xl border-2 border-dashed border-gray-300 bg-white transition-all duration-200 cursor-pointer py-8 select-none hover:border-blue-500">
-                                    <span class="flex items-center justify-center w-14 h-14 mb-4 rounded-full bg-gray-100">
+                                <div class="flex flex-col items-center justify-center h-50 rounded-xl border-2 border-dashed border-gray-0 bg-white transition-all duration-200 cursor-pointer py-2 select-none hover:border-blue-500">
+                                    <span class="flex items-center justify-center w-10 h-10 mb-2 rounded-full bg-gray-100">
                                         <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                                         </svg>
                                     </span>
-                                    <span class="text-2xl font-extrabold text-gray-800 tracking-wide mb-2">Criar viagem</span>
+                                    <span class="text-xl font-extrabold text-gray-800 tracking-wide mb-2">Criar viagem</span>
                                     <span class="text-base text-gray-500 text-center max-w-xs mt-2">Você ainda não criou uma viagem.<br><span class='text-gray-400'>Crie uma viagem para liberar o itinerário e começar a planejar seu roteiro!</span></span>
                                 </div>
                             </a>
@@ -124,6 +124,39 @@
 @unless($hasTrip)
     @include('components.explore.detailsmodal')
 @endunless
+
+<div id="exploreDetailsModal" class="fixed inset-0 z-50 bg-black/40 flex justify-center items-end sm:items-center transition-all duration-300 hidden">
+    <div class="explore-modal-base">
+<!--<div
+        class="w-full max-w-[480px] sm:max-w-xl bg-white rounded-t-2xl sm:rounded-xl shadow-xl flex flex-col
+               transition-all duration-300
+               overflow-hidden
+               border-t border-gray-200
+               fixed bottom-0 left-1/2 -translate-x-1/2 sm:static sm:translate-x-0"
+        style="min-height: 35vh; max-height: 75vh;"
+        style="min-width: 15vw; max-width: 75vw;"
+    >-->
+        <!-- Header -->
+        <div class="flex items-center justify-between gap-4 p-4 border-b border-gray-100">
+            <h2 class="text-lg sm:text-xl font-bold text-gray-900">Detalhes do Local</h2>
+            <button id="closeExploreDetails" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition-all duration-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <!-- Body -->
+        <div class="p-4 sm:p-6 overflow-y-auto flex-1">
+            <!-- Conteúdo do modal de detalhes aqui -->
+        </div>
+        <!-- Footer (opcional) -->
+        <div class="flex flex-row flex-wrap items-center justify-end gap-2 p-4 border-t border-gray-100">
+            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-xs sm:text-sm shadow-sm">
+                Ação
+            </button>
+        </div>
+    </div>
+</div>
 <script>
 // Notificação simples (alert) para fallback
 if (typeof showNotification !== 'function') {
