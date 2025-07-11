@@ -1,9 +1,9 @@
-<div class="flex justify-center items-center min-h-[30vh] bg-gray-50">
-    <div class="w-full max-w-5xl rounded-2xl px-6 py-6">
+<div class="flex justify-center items-center min-h-[30vh] bg-gray-50 px-2">
+    <div class="w-full max-w-5xl rounded-2xl px-2 sm:px-6 py-4 sm:py-6">
         <form action="{{ route('flights.search') }}" method="GET" class="flex flex-col gap-4 w-full">
             <div class="flex flex-col md:flex-row md:items-end gap-4">
                 <!-- Tipo de viagem -->
-                <div class="flex flex-col">
+                <div class="flex flex-col w-full md:w-auto">
                     <label for="trip_type" class="text-xs text-gray-500 mb-1">Tipo</label>
                     <select name="type_trip" id="type_trip" class="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none">
                         <option value="">Qualquer</option>
@@ -12,7 +12,7 @@
                     </select>
                 </div>
                 <!-- Classe -->
-                <div class="flex flex-col">
+                <div class="flex flex-col w-full md:w-auto">
                     <label for="class" class="text-xs text-gray-500 mb-1">Classe</label>
                     <select name="class" id="class" class="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none">
                         <option value="">Qualquer</option>
@@ -22,8 +22,9 @@
                         <option value="4">Primeira Classe</option>
                     </select>
                 </div>
-                <div class="flex flex-col">
-                    <label for="class" class="text-xs text-gray-500 mb-1">Ordenar por</label>
+                <!-- Ordenar -->
+                <div class="flex flex-col w-full md:w-auto">
+                    <label for="sort_by" class="text-xs text-gray-500 mb-1">Ordenar por</label>
                     <select name="sort_by" id="sort_by" class="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none">
                         <option value="1">Melhores voos</option>
                         <option value="2">Preço</option>
@@ -33,15 +34,15 @@
                     </select>
                 </div>
                 <!-- Filtro de preço -->
-                <div class="flex flex-col">
+                <div class="flex flex-col w-full md:w-auto">
                     <label for="price" class="text-xs text-gray-500 mb-1">Preço máximo (R$)</label>
-                    <input type="number" min="0" step="50" name="price" id="price" placeholder="Ex: 2000" class="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none w-28">
+                    <input type="number" min="0" step="50" name="price" id="price" placeholder="Ex: 2000" class="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none w-full md:w-28">
                 </div>
             </div>
             <div class="flex flex-col md:flex-row gap-4 mt-2">
                 <!-- Origem e destino -->
-                <div class="flex flex-1 bg-gray-100 rounded-lg border border-gray-200 overflow-hidden">
-                    <div class="flex items-center px-3 py-2 gap-2 w-1/2 border-r border-gray-200">
+                <div class="flex flex-1 flex-col xs:flex-row bg-gray-100 rounded-lg border border-gray-200 overflow-hidden">
+                    <div class="flex items-center px-3 py-2 gap-2 w-full xs:w-1/2 border-b xs:border-b-0 xs:border-r border-gray-200">
                         <i class="fa-regular fa-dot-circle text-blue-600"></i>
                         <input 
                             type="text" 
@@ -51,10 +52,10 @@
                             class="bg-transparent border-0 focus:outline-none text-base text-gray-700 placeholder-gray-400 w-full"
                         >
                     </div>
-                    <div class="flex items-center px-2">
+                    <div class="flex items-center justify-center px-2 py-1">
                         <i class="fa-solid fa-right-left text-gray-400"></i>
                     </div>
-                    <div class="flex items-center px-3 py-2 gap-2 w-1/2">
+                    <div class="flex items-center px-3 py-2 gap-2 w-full xs:w-1/2">
                         <i class="fa-solid fa-location-dot text-blue-600"></i>
                         <input 
                             type="text" 
@@ -66,8 +67,8 @@
                     </div>
                 </div>
                 <!-- Datas -->
-                <div class="flex flex-1 bg-gray-100 rounded-lg border border-gray-200 overflow-hidden">
-                    <div class="flex items-center px-3 py-2 gap-2 w-1/2 border-r border-gray-200">
+                <div class="flex flex-1 flex-col xs:flex-row bg-gray-100 rounded-lg border border-gray-200 overflow-hidden">
+                    <div class="flex items-center px-3 py-2 gap-2 w-full xs:w-1/2 border-b xs:border-b-0 xs:border-r border-gray-200">
                         <i class="fa-regular fa-calendar text-blue-600"></i>
                         <input 
                             type="date" 
@@ -76,7 +77,7 @@
                             class="bg-transparent border-0 focus:outline-none text-base text-gray-700 w-full"
                         >
                     </div>
-                    <div class="flex items-center px-3 py-2 gap-2 w-1/2">
+                    <div class="flex items-center px-3 py-2 gap-2 w-full xs:w-1/2">
                         <input 
                             type="date" 
                             name="date_return" 
