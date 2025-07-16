@@ -65,7 +65,7 @@
                         <h2 class="text-2xl font-extrabold text-gray-800 mb-6">Detalhes da viagem</h2>
                         <div class="mb-6">
                             <label class="block text-gray-600 font-semibold mb-2">Qual seu orçamento total?</label>
-                            <input type="number" class="input" placeholder="R$">
+                            <input type="number" class="input" placeholder="R$" name="orcamento">
                         </div>
                         <div class="mb-6">
                             <label class="block text-gray-600 font-semibold mb-2">Qual será o meio de locomoção?</label>
@@ -111,7 +111,7 @@
                         <div class="hidden flex gap-6 mb-8" id="insurance-options"> 
                             <div class="mb-8 relative">
                                 <label for="motivo" class="block text-gray-600 font-semibold mb-2">Motivo da Viagem:</label>
-                                <select name="motivo" id="MainContent_Cotador_ddlMotivoDaViagem" required
+                                <select name="motivo" id="MainContent_Cotador_ddlMotivoDaViagem" 
                                     class="input">
                                     <option value="">SELECIONE O MOTIVO DA VIAGEM</option>
                                     <option value="1" {{ old('motivo') == '1' ? 'selected' : '' }}>LAZER/NEGÓCIO</option>
@@ -122,7 +122,7 @@
                             </div>
                             <div class="mb-8 relative">
                                 <label for="destino" class="block text-gray-600 font-semibold mb-2">Destino:</label>
-                                <select name="destino" id="MainContent_Cotador_selContinente" required
+                                <select name="destino" id="MainContent_Cotador_selContinente"
                                     class="input">
                                     <option value="">Selecione o destino</option>
                                     <option value="5" {{ old('destino') == '5' ? 'selected' : '' }}>África</option>
@@ -178,6 +178,7 @@
                         <div class="space-y-4" id="flights-container">
                         </div>
                         <input type="hidden" name="selected_flight_index" id="selected_flight_index" value="">
+                        <input type="hidden" name="selected_flight_data" id="selected_flight_data">
                         <div class="flex justify-between mt-8">
                             <button type="button" class="prev-btn btn-secondary">← Voltar</button>
                             <button type="button" class="next-btn btn-primary">Próximo →</button>
@@ -304,22 +305,26 @@ body { font-family: 'Inter', sans-serif; }
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    // Atualiza campos de idade conforme qtd_passageiros
-    const qtdPassageirosInput = document.getElementById("MainContent_Cotador_selQtdCliente");
-    if (qtdPassageirosInput) {
-        function atualizarCamposIdade() {
-            const qtd = parseInt(qtdPassageirosInput.value) || 1;
-            for (let i = 1; i <= 8; i++) {
-                const bloco = document.getElementById("bloco_idade_" + i);
-                const input = document.getElementById("txtIdadePassageiro" + i);
-                if (bloco && input) {
-                    bloco.classList.toggle("hidden", i > qtd);
-                    input.required = i <= qtd;
-                }
-            }
+    // Campos de idade dinâmicos
+    const idadesContainer = document.getElementById("idades-container");
+    const numPessoasSelect = document.getElementById("num_pessoas");
+
+    function renderIdadesInputs() {
+        const qtd = parseInt(numPessoasSelect.value) || 1;
+        idadesContainer.innerHTML = '';
+        for (let i = 1; i <= qtd; i++) {
+            idadesContainer.innerHTML += `
+                <div class="flex-1">
+                    <label class="block text-gray-600 font-semibold mb-2">Idade do passageiro ${i}</label>
+                    <input type="number" min="0" max="120" name="idades[]" class="input" required>
+                </div>
+            `;
         }
-        qtdPassageirosInput.addEventListener("change", atualizarCamposIdade);
-        atualizarCamposIdade();
+    }
+
+    if (numPessoasSelect && idadesContainer) {
+        numPessoasSelect.addEventListener("change", renderIdadesInputs);
+        renderIdadesInputs();
     }
 
     // AJAX para buscar seguros
@@ -332,9 +337,9 @@ document.addEventListener("DOMContentLoaded", function () {
             const data_volta = document.querySelector('input[name="date_return"]').value;
             const qtd = document.getElementById('num_pessoas').value;
             let idades = [];
-for (let i = 1; i <= qtd; i++) {
-    idades.push(document.getElementById('txtIdadePassageiro' + i).value);
-}
+document.querySelectorAll('input[name="idades[]"]').forEach(input => {
+    idades.push(input.value);
+});
             const token = document.querySelector('input[name="_token"]').value;
 
             const resultado = document.getElementById('resultado-seguros');

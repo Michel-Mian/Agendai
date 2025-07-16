@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('viajantes', function (Blueprint $table) {
-            $table->bigIncrements('pk_id_viajante');
-            $table->string('nome', 100)->nullable();
-            $table->tinyinteger('idade')->nullable(false);
-            $table->unsignedBigInteger('fk_id_viagem')->nullable(false);
-            $table->timestamps();
+        Schema::create('seguros', function (Blueprint $table) {
+            $table->bigIncrements('pk_id_seguro');
+            $table->string('site')->nullable();
+            $table->string('preco')->nullable();
+            $table->json('dados')->nullable();
+            $table->string('link')->nullable();
+            $table->unsignedBigInteger('fk_id_viagem');
             $table->foreign('fk_id_viagem')->references('pk_id_viagem')->on('viagens')->onDelete('cascade');
+            $table->timestamps();
         });
     }
 
@@ -26,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('viajantes');
+        Schema::dropIfExists('seguros');
     }
 };

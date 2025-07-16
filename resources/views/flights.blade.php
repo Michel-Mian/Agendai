@@ -17,7 +17,7 @@
                 @if(isset($flights) && count($flights))
                     @foreach($flights as $index => $flight)
                         @include('components.flights.cardFlights', ['flight' => $flight, 'index' => $index, 'user' => $user])
-                         <!-- <pre>{{ print_r($flight, true) }}</pre>  -->
+                         <pre>{{ print_r($flight, true) }}</pre> 
                     @endforeach
 
                     <div class="mt-6">

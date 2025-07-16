@@ -40,7 +40,7 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/flights', [FlightsController::class, 'search'])->name('flights.search');
     Route::get('/config/{id}/edit', [UserController::class, 'editConfig']);
     Route::put('/config/{id}/edit', [UserController::class, 'updateConfig']);
-    Route::get('/explore', [ExploreController::class, 'index'])->name('explore.index');
+    Route::get('/explore', [ExploreController::class, 'index'])->name('explore');
     Route::post('/explore', [ExploreController::class, 'store'])->name('explore.store');
     Route::get('/explore/itinerary', [ExploreController::class, 'show'])->name('explore.itinerary');
     Route::delete('/explore/{id}', [ExploreController::class, 'destroy'])->name('explore.destroy');
