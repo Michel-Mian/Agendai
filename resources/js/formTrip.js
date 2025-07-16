@@ -41,6 +41,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    let voosCarregados = []; // Defina no escopo global do script
+
     async function searchFlights() {
         console.log('Chamando searchFlights', currentStep, meioLocomocao);
         if (meioLocomocao === 'Avião') {
@@ -64,8 +66,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (timeout) return;
                 clearTimeout(timer);
                 const result = await resVoos.json();
-                container.innerHTML = '';
                 if (result.flights && result.flights.length) {
+                    voosCarregados = result.flights;
+                    container.innerHTML = '';
                     for (let i = 0; i < result.flights.length; i++) {
                         const flight = result.flights[i];
                         const resCard = await fetch('/formTrip/card-flight?' + new URLSearchParams({
@@ -75,6 +78,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         const cardData = await resCard.json();
                         container.innerHTML += cardData.html;
                     }
+                    // Adicione os listeners agora:
+                    document.querySelectorAll('.select-flight-checkbox').forEach((checkbox, idx) => {
+                        checkbox.addEventListener('change', function() {
+                            if (this.checked) {
+                                document.getElementById('selected_flight_data').value = JSON.stringify(voosCarregados[idx]);
+                                document.getElementById('selected_flight_index').value = idx;
+                            }
+                        });
+                    });
                 } else {
                     container.innerHTML = '<div class="text-gray-500">Nenhum voo encontrado para os critérios informados.</div>';
                 }
@@ -116,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     // Vai para voos normalmente
                     currentStep++;
-                    await searchFlights(); // <-- CHAME AQUI!
+                    await searchFlights();
                 }
             }
             // Etapa 5: voos
@@ -254,30 +266,6 @@ document.addEventListener('DOMContentLoaded', function() {
         depIataContainer.classList.add('hidden');
     }
 
-    const selectPessoas = document.getElementById('num_pessoas');
-    const idadesContainer = document.getElementById('idades-container');
-
-    function renderCamposIdade(qtd) {
-        idadesContainer.innerHTML = '';
-        for (let i = 1; i <= qtd; i++) {
-            const div = document.createElement('div');
-            div.className = 'flex-1';
-            div.innerHTML = `
-                <label class="block text-gray-600 font-semibold mb-2">Idade do viajante ${i}:</label>
-                <input type="number" name="idade${i}" id="txtIdadePassageiro${i}" min="0" max="120" class="input" required>
-            `;
-            idadesContainer.appendChild(div);
-        }
-    }
-
-    // Inicializa com o valor padrão
-    renderCamposIdade(selectPessoas.value);
-
-    selectPessoas.addEventListener('change', function() {
-        let qtd = parseInt(this.value);
-        if (isNaN(qtd) || qtd < 1) qtd = 1;
-        renderCamposIdade(qtd);
-    });
 });
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -293,15 +281,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.querySelectorAll('.flight-card').forEach(card => card.classList.remove('border-4', 'border-blue-600'));
                 // Se marcado, destaca o card e salva o índice
                 if (e.target.checked) {
-                    const card = e.target.closest('.flight-card');
-                    card.classList.add('border-4', 'border-blue-600');
-                    document.getElementById('selected_flight_index').value = e.target.dataset.index;
+                    const idx = parseInt(e.target.dataset.index);
+                    document.getElementById('selected_flight_index').value = idx;
+                    // Salve os dados do voo selecionado como JSON
+                    document.getElementById('selected_flight_data').value = JSON.stringify(voosCarregados[idx]);
                 } else {
                     document.getElementById('selected_flight_index').value = '';
+                    document.getElementById('selected_flight_data').value = '';
                 }
             }
         });
     }
+
+    // Exemplo: ao selecionar um voo
+    document.querySelectorAll('.select-flight-checkbox').forEach((checkbox, idx) => {
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('selected_flight_data').value = JSON.stringify(voosCarregados[idx]);
+                document.getElementById('selected_flight_index').value = idx;
+            }
+        });
+    });
 });
 document.getElementById('multiStepForm').addEventListener('submit', function (e) {
     console.log('submit!');

@@ -15,6 +15,7 @@
         <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
         <link rel="stylesheet" href="{{ asset('css/myTrips.css') }}">
         @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/dashBoard.js', 'resources/js/searchFlights.js', 'resources/js/formTrip.js' , 'resources/js/formTrip.js'])
+        <meta name="csrf-token" content="{{ csrf_token() }}">
     </head>
     <body>
             <main class="">

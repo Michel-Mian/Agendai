@@ -27,59 +27,64 @@ class FormController extends Controller
     public function store(Request $request)
     {
 
-        dd($request->all());
-        
-        // Validate the request data
-        $request->validate([
-            'dep_iata' => 'required',
-            'arr_iata' => 'required',
-            'date_departure' => 'required',
-            'date_return' => 'required',
-            'selected_flight_index' => 'required|integer',
-        ]);
+        //dd($request->all());
 
-        // Busque novamente os voos na SerpApi com os mesmos parâmetros
-        $params = [
-            'engine'      => 'google_flights',
-            'departure_id'=> $request->dep_iata,
-            'arrival_id'  => $request->arr_iata,
-            'outbound_date' => $request->date_departure,
-            'return_date' => $request->date_return,
-            'currency'    => auth()->user()->currency ?? 'EUR',
-            'api_key'     => env('SERPAPI_KEY'),
-        ];
-        $response = Http::get('https://serpapi.com/search', $params);
-        $json = $response->json();
+        // 1. Salve a viagem
+        $viagem = new \App\Models\Viagens();
+        $viagem->destino_viagem = $request->searchInput;
+        $viagem->data_inicio_viagem = $request->date_departure;
+        $viagem->data_final_viagem = $request->date_return;
+        $viagem->orcamento_viagem = $request->orcamento;
+        $viagem->fk_id_usuario = auth()->id();
+        $viagem->save();
 
-        $flights = [];
-        if (isset($json['best_flights'])) {
-            $flights = array_merge($flights, $json['best_flights']);
-        }
-        if (isset($json['other_flights'])) {
-            $flights = array_merge($flights, $json['other_flights']);
-        }
+        // 2. Salve o voo (se houver)
+        if ($request->filled('selected_flight_index')) {
+            // Busque os voos novamente ou recupere os dados do voo selecionado
+            $flightData = json_decode($request->input('selected_flight_data', '{}'), true);
+            //dd($flightData);
+            $voo = new \App\Models\Voos();
+            $primeiroTrecho = $flightData['flights'][0] ?? [];
 
-        $selectedIndex = $request->selected_flight_index;
-        $selectedFlight = $flights[$selectedIndex] ?? null;
-
-        if ($selectedFlight) {
-            // Salve os dados essenciais do voo no banco
-            // Exemplo: tabela 'flights' relacionada à viagem
-            $vooModel = new \App\Models\Voos();
-            $vooModel->user_id = auth()->id();
-            $vooModel->flight_number = $selectedFlight['flights'][0]['flight_number'] ?? null;
-            $vooModel->airline = $selectedFlight['flights'][0]['airline'] ?? null;
-            $vooModel->departure_airport = $selectedFlight['flights'][0]['departure_airport']['id'] ?? null;
-            $vooModel->arrival_airport = $selectedFlight['flights'][count($selectedFlight['flights'])-1]['arrival_airport']['id'] ?? null;
-            $vooModel->departure_time = $selectedFlight['flights'][0]['departure_airport']['time'] ?? null;
-            $vooModel->arrival_time = $selectedFlight['flights'][count($selectedFlight['flights'])-1]['arrival_airport']['time'] ?? null;
-            $vooModel->price = $selectedFlight['price'] ?? null;
-            $vooModel->save();
+            $voo->desc_aeronave_voo = $primeiroTrecho['airplane'] ?? '';
+            $voo->origem_voo = $primeiroTrecho['departure_airport']['id'] ?? '';
+            $voo->destino_voo = $primeiroTrecho['arrival_airport']['id'] ?? '';
+            $voo->data_hora_partida = !empty($primeiroTrecho['departure_airport']['time'])
+                ? date('Y-m-d H:i:s', strtotime($primeiroTrecho['departure_airport']['time']))
+                : now();
+            $voo->data_hora_chegada = !empty($primeiroTrecho['arrival_airport']['time'])
+                ? date('Y-m-d H:i:s', strtotime($primeiroTrecho['arrival_airport']['time']))
+                : now();
+            $voo->companhia_voo = $primeiroTrecho['airline'] ?? '';
+            $voo->fk_id_viagem = $viagem->pk_id_viagem;
+            $voo->save();
         }
 
-        // Salve também os outros dados da viagem normalmente
+        // 3. Salve o seguro (se houver)
+        if ($request->has('seguroSelecionado')) {
+            $seguro = new \App\Models\Seguros();
+            $seguro->site = $request->seguroSelecionado['site'] ?? '';
+            $seguro->preco = $request->seguroSelecionado['preco'] ?? '';
+            $seguro->dados = json_encode($request->seguroSelecionado['dados'] ?? []);
+            $seguro->link = $request->seguroSelecionado['link'] ?? '';
+            $seguro->fk_id_viagem = $viagem->pk_id_viagem;
+            $seguro->save();
+        }
 
-        return redirect()->route('dashboard')->with('success', 'Viagem salva com sucesso!');
+        if ($request->has('idades') && is_array($request->idades)) {
+            foreach ($request->idades as $idade) {
+                $viajante = new \App\Models\Viajantes();
+                $viajante->idade = $idade;
+                $viajante->fk_id_viagem = $viagem->pk_id_viagem;
+                $viajante->save();
+            }
+        }
+
+        // 4. Salve o ID da viagem na sessão
+        session(['trip_id' => $viagem->pk_id_viagem]);
+
+        // 5. Redirecione ou retorne sucesso
+        return redirect()->route('explore')->with('success', 'Viagem salva com sucesso!');
     }
 
 

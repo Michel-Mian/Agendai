@@ -34,6 +34,7 @@ class ExploreController extends Controller
             'title' => 'Explorar',
             'dataInicio' => $dataInicio,
             'dataFim' => $dataFim,
+            'hasTrip' => session()->has('trip_id'), // Adicione esta linha
         ]);
     }
 

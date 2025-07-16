@@ -1,9 +1,5 @@
 @extends('index')
 @section('content')
-@php
-    $hasTrip = session()->has('trip_id');
-@endphp
-
 <div class="h-screen w-screen overflow-hidden bg-gray-100 flex">
     @include('components/layout/sidebar')
 
