@@ -6,6 +6,7 @@ use App\Models\PontoInteresse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Viagens;
 
 class ExploreController extends Controller
 {
@@ -19,7 +20,7 @@ class ExploreController extends Controller
         
         if (session()->has('trip_id')) {
             $tripId = session('trip_id');
-            $viagem = \App\Models\Viagens::find($tripId);
+            $viagem = Viagens::findOrFail($tripId);
             $dataInicio = $viagem?->data_inicio_viagem;
             $dataFim = $viagem?->data_final_viagem;
         }
@@ -35,6 +36,12 @@ class ExploreController extends Controller
             'dataInicio' => $dataInicio,
             'dataFim' => $dataFim,
         ]);
+    }
+
+    public function setTripIdAndRedirect($id)
+    {
+        session(['trip_id' => $id]);
+        return redirect()->route('explore.index');
     }
 
     public function store(Request $request)
@@ -149,5 +156,18 @@ class ExploreController extends Controller
         }
         $pontos = PontoInteresse::where('fk_id_viagem', $tripId)->get();
         return response()->json($pontos);
+    }
+
+    public function updateHorario(Request $request, $id)
+    {
+        $request->validate([
+            'novo_horario' => 'required|date_format:H:i',
+        ]);
+
+        $ponto = \App\Models\PontoInteresse::findOrFail($id);
+        $ponto->hora_ponto_interesse = $request->input('novo_horario');
+        $ponto->save();
+
+        return redirect()->back()->with('success', 'Horário do ponto de interesse alterado com sucesso!');
     }
 }

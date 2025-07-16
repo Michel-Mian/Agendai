@@ -19,11 +19,6 @@
             <main class="">
                 @yield('content')
             </main>
-            
-            <!--Google Maps API-->
-            <script
-            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDWLH0DB_w7iFWxaPJHOl69rSP6YT3sp80&libraries=places&callback=initMap" async defer>
-            </script>
     </body>
     
 </html>
