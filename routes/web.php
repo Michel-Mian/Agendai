@@ -5,6 +5,7 @@ use App\Http\Controllers\FlightsController;
 use Illuminate\Support\Facades\Route;
 use App\http\controllers\UserController;
 use App\http\controllers\ExploreController;
+use App\http\controllers\ViagensController;
 use Illuminate\Http\Request;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
@@ -27,18 +28,23 @@ Route::post('/change-password', [UserController::class, 'changePassword'])->midd
 
 Route::middleware(['auth'])->group(function (){
     Route::get('/dashboard', [DashBoardController::class, 'dashboard'])->name('dashboard');
-    Route::get('/myTrips', function() {
-        return view('myTrips', ['title' => 'Minhas Viagens']);
-    });
+    Route::get('/myTrips', [ViagensController::class, 'index'])->name('myTrips');
+    Route::get('/viagens/{id}', [ViagensController::class, 'show'])->name('viagens');
+    Route::delete('/viajantes/{id}', [ViajantesController::class, 'destroy'])->name('viajantes.destroy');
+    Route::delete('/objetivos/{id}', [ViagensController::class, 'destroyObjetivo'])->name('objetivos.destroy');
+    Route::post('/objetivos', [ViagensController::class, 'addObjetivo'])->name('objetivos.store');
+    Route::post('/viajantes', [ViagensController::class, 'addViajante'])->name('viajantes.store');
     Route::get('/myProfile/{id}/edit', [UserController::class, 'editProfile']);
     Route::put('/myProfile/{id}/edit', [UserController::class, 'updateProfile']);
     Route::get('/flights', [FlightsController::class, 'search'])->name('flights.search');
     Route::get('/config/{id}/edit', [UserController::class, 'editConfig']);
     Route::put('/config/{id}/edit', [UserController::class, 'updateConfig']);
     Route::get('/explore', [ExploreController::class, 'index'])->name('explore.index');
+    Route::get('/explore/set-trip/{id}', [ExploreController::class, 'setTripIdAndRedirect'])->name('explore.setTrip');
     Route::post('/explore', [ExploreController::class, 'store'])->name('explore.store');
-    Route::get('/explore/itinerary', [ExploreController::class, 'show'])->name('explore.itinerary');
     Route::delete('/explore/{id}', [ExploreController::class, 'destroy'])->name('explore.destroy');
+    Route::get('/explore/itinerary', [ExploreController::class, 'show'])->name('explore.itinerary');
+    Route::post('/explore/ponto-interesse/{id}/horario', [ExploreController::class, 'updateHorario'])->name('explore.updateHorario');   
     Route::put('/user/{id}/profile', [UserController::class, 'updateProfile'])->name('user.updateProfile');
     Route::put('/user/{id}/preferences', [UserController::class, 'updatePreferences'])->name('user.updatePreferences');
     Route::get('/dashboard/historico', [DashBoardController::class, 'historicoAjax'])->name('dashboard.historico');

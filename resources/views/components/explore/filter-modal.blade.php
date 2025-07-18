@@ -65,16 +65,16 @@
                         <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                         </svg>
-                        Raio de Busca (km)
+                        Raio de Busca (Metros)
                     </label>
                     <input
                         type="number"
                         id="radiusInput"
                         placeholder="Ex: 5"
                         min="1"
-                        max="50"
+                        max="50000"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" />
-                    <p class="text-xs text-gray-500">Entre 1 e 50 quilômetros</p>
+                    <p class="text-xs text-gray-500">Entre 1 e 50.000 metros</p>
                 </div>
             </div>
 
@@ -135,11 +135,6 @@
 </div>
 
 <script>
-    // Lista de continentes para autocomplete local
-    const continents = [
-        "África", "América", "América do Norte", "América do Sul", "Ásia", "Europa", "Oceania", "Antártida"
-    ];
-
     document.addEventListener('DOMContentLoaded', function() {
         // Lista de todos os tipos de lugares (expanded for more options)
         const placeTypes = [{
@@ -840,7 +835,7 @@
         console.log('Applying map filters:', filters);
 
         const service = new google.maps.places.PlacesService(map);
-        const radius = filters.radius ? parseInt(filters.radius) * 1000 : 10000; // Default to 10km if no radius
+        const radius = filters.radius ? parseInt(filters.radius) * 1000 : 10000;
 
         if (filters.location && filters.location.trim()) {
             const geocoder = new google.maps.Geocoder();
