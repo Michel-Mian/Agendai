@@ -5,178 +5,258 @@
         <div class="flex-1 flex flex-col">
             @include('components/layout/header')
             <div class="w-full px-4 py-10 md:py-16">
-                <!-- Detalhes Gerais da Viagem (sem card) -->
-                <div class="mb-8 mx-5 flex flex-col gap-2">
-                    <div class="flex items-center mb-2">
-                        <a href="{{ route('myTrips') }}" class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors text-sm font-medium shadow-sm mr-4">
-                            <i class="fa-solid fa-arrow-left mr-2"></i> Voltar
-                        </a>
-                        <h1 class="text-4xl font-bold text-gray-900">{{ $viagem->destino_viagem }}</h1>
+                <!-- Detalhes Gerais da Viagem - Design Aprimorado -->
+                <div class="mb-8 mx-5">
+                    <!-- Breadcrumb e Navegação -->
+                    <div class="items-center mb-6">
+                        <div class="flex items-center space-x-4">
+                            <a href="{{ route('myTrips') }}" class="inline-flex items-center px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-xl border border-gray-200 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md group">
+                                <i class="fa-solid fa-arrow-left mr-2 group-hover:-translate-x-1 transition-transform duration-200"></i> 
+                                <span>Minhas Viagens</span>
+                            </a>
+                            <div class="flex items-center text-gray-400">
+                                <i class="fas fa-chevron-right text-sm"></i>
+                            </div>
+                            <span class="text-gray-600 font-medium">Detalhes da Viagem</span>
+                        </div>
                     </div>
-                    <div>
-                        <div class="text-gray-700 mb-1">Criada por: <span class="font-semibold">{{ $usuario->name }}</span></div>
-                        <div class="text-gray-700 mb-1">Origem: {{ $viagem->origem_viagem }}</div>
-                        <div class="text-gray-700 mb-1">Período: {{ \Carbon\Carbon::parse($viagem->data_inicio_viagem)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($viagem->data_final_viagem)->format('d/m/Y') }}</div>
-                        <div class="text-gray-700 mb-1">Orçamento: R$ {{ number_format($viagem->orcamento_viagem, 2, ',', '.') }}</div>
-                    </div>
-                </div>
 
-                <!-- Objetivos e Viajantes lado a lado -->
-                <div class="flex flex-col md:flex-row gap-6 mb-8 w-full">
-                    <!-- Objetivos -->
-                    <div class="flex-1 bg-white rounded-lg shadow-md p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-xl font-semibold">Objetivos</h2>
-                            <div class="flex items-center">
-                                <button type="button" id="open-add-objetivo-modal-btn" class="ml-2 flex items-center px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors text-sm font-medium shadow-sm" title="Adicionar objetivo">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                                    </svg>
-                                </button>
+                    <!-- Card Principal com Informações da Viagem -->
+                    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                        <!-- Header com gradiente -->
+                        <div class="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 px-8 py-6 relative overflow-hidden">
+                            <!-- Padrão decorativo de fundo -->
+                            <div class="absolute inset-0 opacity-10">
+                                <div class="absolute top-0 left-0 w-40 h-40 bg-blue-700 rounded-full -translate-x-20 -translate-y-20"></div>
+                                <div class="absolute bottom-0 right-0 w-32 h-32 bg-purple-700 rounded-full translate-x-16 translate-y-16"></div>
+                                <div class="absolute top-1/2 right-1/4 w-24 h-24 bg-green-700 rounded-full"></div>
+                            </div>
+
+                            <div class="relative z-10">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-3 mb-3">
+                                            <div class="bg-gray-700 rounded-xl p-3">
+                                                <i class="fas fa-map-marked-alt text-white text-2xl"></i>
+                                            </div>
+                                            <div>
+                                                <h1 class="text-4xl font-bold text-gray-800 mb-1">{{ $viagem->destino_viagem }}</h1>
+                                                <p class="text-blue-600 text-lg">Sua próxima aventura te espera</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Status da viagem -->
+                                        <div class="flex items-center space-x-4">
+                                            @php
+                                                $dataInicio = \Carbon\Carbon::parse($viagem->data_inicio_viagem);
+                                                $dataFim = \Carbon\Carbon::parse($viagem->data_final_viagem);
+                                                $hoje = \Carbon\Carbon::now();
+
+                                                if ($hoje->lt($dataInicio)) {
+                                                    $status = 'Planejada';
+                                                    $statusColor = 'bg-yellow-300 text-yellow-900 border-yellow-400';
+                                                    $statusIcon = 'fas fa-clock';
+                                                } elseif ($hoje->between($dataInicio, $dataFim)) {
+                                                    $status = 'Em andamento';
+                                                    $statusColor = 'bg-green-300 text-green-900 border-green-400';
+                                                    $statusIcon = 'fas fa-play';
+                                                } else {
+                                                    $status = 'Concluída';
+                                                    $statusColor = 'bg-gray-400 text-gray-900 border-gray-500';
+                                                    $statusIcon = 'fas fa-check';
+                                                }
+                                            @endphp
+
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $statusColor }} border">
+                                                <i class="{{ $statusIcon }} mr-2"></i>
+                                                {{ $status }}
+                                            </span>
+
+                                            <span class="text-gray-600 text-sm">
+                                                {{ $dataInicio->diffInDays($dataFim) + 1 }} {{ $dataInicio->diffInDays($dataFim) + 1 == 1 ? 'dia' : 'dias' }} de viagem
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Avatar do criador -->
+                                    <div class="text-right">
+                                        <div class="flex items-center justify-end space-x-3 mb-2">
+                                            <div class="text-right">
+                                                <div class="text-gray-500 text-sm">Criada por</div>
+                                                <div class="text-gray-900 font-semibold">{{ $usuario->name }}</div>
+                                            </div>
+                                            <div class="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                                {{ strtoupper(substr($usuario->name, 0, 1)) }}
+                                            </div>
+                                        </div>
+                                        <div class="text-gray-400 text-xs">
+                                            {{ \Carbon\Carbon::parse($viagem->created_at)->format('d/m/Y') }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        
+                        <!-- Corpo do card com informações detalhadas -->
+                        <div class="p-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <!-- Origem -->
+                                <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+                                    <div class="flex items-center space-x-3 mb-3">
+                                        <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+                                            <i class="fas fa-plane-departure text-white text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-green-800 font-semibold text-lg">Origem</div>
+                                            <div class="text-green-600 text-sm">Ponto de partida</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-gray-800 font-bold text-xl">{{ $viagem->origem_viagem }}</div>
+                                </div>
+                                
+                                <!-- Período -->
+                                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+                                    <div class="flex items-center space-x-3 mb-3">
+                                        <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                                            <i class="fas fa-calendar-alt text-white text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-blue-800 font-semibold text-lg">Período</div>
+                                            <div class="text-blue-600 text-sm">Datas da viagem</div>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="text-gray-800 font-bold">{{ \Carbon\Carbon::parse($viagem->data_inicio_viagem)->format('d/m/Y') }}</div>
+                                        <div class="text-gray-500 text-sm flex items-center">
+                                            <i class="fas fa-arrow-down mr-1"></i>
+                                            até
+                                        </div>
+                                        <div class="text-gray-800 font-bold">{{ \Carbon\Carbon::parse($viagem->data_final_viagem)->format('d/m/Y') }}</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Orçamento -->
+                                <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+                                    <div class="flex items-center space-x-3 mb-3">
+                                        <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+                                            <i class="fas fa-wallet text-white text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-purple-800 font-semibold text-lg">Orçamento</div>
+                                            <div class="text-purple-600 text-sm">Valor planejado</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-gray-800 font-bold text-xl">R$ {{ number_format($viagem->orcamento_viagem, 2, ',', '.') }}</div>
+                                    <div class="text-purple-600 text-sm mt-1">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Orçamento total
+                                    </div>
+                                </div>
+                                
+                                <!-- Estatísticas rápidas -->
+                                <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200">
+                                    <div class="flex items-center space-x-3 mb-3">
+                                        <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
+                                            <i class="fas fa-chart-line text-white text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-orange-800 font-semibold text-lg">Resumo</div>
+                                            <div class="text-orange-600 text-sm">Estatísticas</div>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-600 text-sm">Viajantes:</span>
+                                            <span class="font-bold text-gray-800">{{ $viajantes->count() }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-600 text-sm">Objetivos:</span>
+                                            <span class="font-bold text-gray-800">{{ $objetivos->count() }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-600 text-sm">Locais:</span>
+                                            <span class="font-bold text-gray-800">{{ $pontosInteresse->count() }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Barra de progresso da viagem -->
+                            <div class="mt-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h3 class="font-semibold text-gray-800 flex items-center">
+                                        <i class="fas fa-tasks mr-2 text-blue-500"></i>
+                                        Progresso da Viagem
+                                    </h3>
+                                    @php
+                                        $totalDias = $dataInicio->diffInDays($dataFim) + 1;
+                                        
+                                        if ($hoje->lt($dataInicio)) {
+                                            // Viagem ainda não começou
+                                            $diasPassados = 0;
+                                            $progresso = 0;
+                                        } elseif ($hoje->gt($dataFim)) {
+                                            // Viagem já terminou
+                                            $diasPassados = $totalDias;
+                                            $progresso = 100;
+                                        } else {
+                                            // Viagem em andamento
+                                            $diasPassados = $dataInicio->diffInDays($hoje) + 1;
+                                            $diasPassados = round($diasPassados, 1);
+                                            $progresso = $totalDias > 0 ? ($diasPassados / $totalDias) * 100 : 0;
+                                        }
+                                    @endphp
+                                    <span class="text-sm text-gray-900">
+                                        {{ round($progresso) }}% concluído ({{ $diasPassados }}/{{ $totalDias }} dias)
+                                    </span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    {{-- AQUI ESTÁ A MUDANÇA: Usando uma cor sólida para garantir a visualização --}}
+                                    <div class="bg-blue-500 h-3 rounded-full transition-all duration-500" style="width: {{ $progresso }}%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500 mt-2">
+                                    <span>{{ $dataInicio->format('d/m/Y') }}</span>
+                                    <span>Hoje</span>
+                                    <span>{{ $dataFim->format('d/m/Y') }}</span>
+                                </div>
                             </div>
                         </div>
-                        @if($objetivos->count())
-                            <ul class="list-disc list-inside space-y-1">
-                                @php
-                                    $objetivosExibidos = ($objetivos->count() > 5) ? $objetivos->take(3) : $objetivos;
-                                @endphp
-                                @foreach($objetivosExibidos as $objetivo)
-                                    <li class="text-gray-700 duration-150 hover:bg-gray-100 rounded px-2 py-1 flex items-center justify-between group">
-                                        <span>{{ $objetivo->nome }}</span>
-                                        <form action="{{ route('objetivos.destroy', ['id' => $objetivo->pk_id_objetivo]) }}" method="POST" class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 bg-red-100 hover:bg-red-200 rounded p-1.5 text-xs font-semibold flex items-center" title="Remover objetivo">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" />
-                                                </svg>
-                                            </button>
-                                        </form>
-                                    </li>
-                                @endforeach
-                            </ul>
-                            @if($objetivos->count() > 5)
-                                <div class="mt-4">
-                                    <button id="open-objetivos-modal-btn" class="w-full text-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
-                                        Ver mais
-                                    </button>
-                                </div>
-                            @endif
-                        @else
-                            <div class="text-gray-400">Nenhum objetivo cadastrado.</div>
-                        @endif
                     </div>
-                    <!-- Viajantes -->
-                    <div class="flex-1 bg-white rounded-lg shadow-md p-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-xl font-semibold">Viajantes</h2>
-                            <button type="button" id="open-add-viajante-modal-btn" class="ml-2 flex items-center px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors text-sm font-medium shadow-sm" title="Adicionar viajante">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                                </svg>
+                </div>
+
+                <!-- Sistema de Tabs -->
+                <div class="mx-5">
+                    <!-- Tab Navigation Aprimorada -->
+                    <!-- Tab Navigation Aprimorada -->
+                    <div class="bg-white shadow-sm border border-gray-200 mb-6 p-2 rounded-b-xl">
+                        <nav class="flex space-x-2">
+                            <button 
+                                id="tab-visao-geral" 
+                                class="tab-button active flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-b-lg font-medium text-sm transition-all duration-200"
+                                onclick="switchTab('visao-geral')"
+                            >
+                                <i class="fas fa-eye"></i>
+                                <span>Visão Geral</span>
                             </button>
-                        </div>
-                        @if($viajantes->count())
-                            <ul class="space-y-1">
-                                @php
-                                    $viajantesExibidos = ($viajantes->count() > 5) ? $viajantes->take(3) : $viajantes;
-                                @endphp
-                                @foreach($viajantesExibidos as $viajante)
-                                    <li class="group flex items-center justify-between transition-colors duration-150 hover:bg-gray-100 rounded px-2 py-1">
-                                        <div>
-                                            <span class="font-semibold">{{ $viajante->nome }}</span>
-                                            <span class="text-gray-500">- {{ $viajante->idade }} anos</span>
-                                        </div>
-                                        <form action="{{ route('viajantes.destroy', ['id' => $viajante->pk_id_viajante]) }}" method="POST" class="ml-2 hidden group-hover:inline-block">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 bg-red-100 hover:bg-red-200 rounded px-2 py-1 text-xs font-semibold transition-colors duration-150 flex items-center" title="Remover viajante">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" />
-                                                </svg>
-                                            </button>
-                                        </form>
-                                    </li>
-                                @endforeach
-                            </ul>
-                            @if($viajantes->count() > 5)
-                                <div class="mt-4">
-                                    <button id="open-viajantes-modal-btn" class="w-full text-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
-                                        Ver mais
-                                    </button>
-                                </div>
-                            @endif
-                        @else
-                            <div class="text-gray-400">Nenhum viajante cadastrado.</div>
-                        @endif
+                            <button 
+                                id="tab-informacoes-estatisticas" 
+                                class="tab-button flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-b-lg font-medium text-sm transition-all duration-200"
+                                onclick="switchTab('informacoes-estatisticas')"
+                            >
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Informações e Estatísticas</span>
+                            </button>
+                        </nav>
                     </div>
-                </div>
 
-                <!-- Voos -->
-                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-                    <h2 class="text-xl font-semibold mb-4">Voos</h2>
-                    @if($voos->count())
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full text-left text-sm">
-                                <thead>
-                                    <tr>
-                                        <th class="px-2 py-1">Aeronave</th>
-                                        <th class="px-2 py-1">Data/Hora</th>
-                                        <th class="px-2 py-1">Origem</th>
-                                        <th class="px-2 py-1">Destino</th>
-                                        <th class="px-2 py-1">Companhia</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($voos as $voo)
-                                        <tr class="border-b">
-                                            <td class="px-2 py-1">{{ $voo->desc_aeronave_voo }}</td>
-                                            <td class="px-2 py-1">{{ \Carbon\Carbon::parse($voo->data_hora_voo)->format('d/m/Y H:i') }}</td>
-                                            <td class="px-2 py-1">{{ $voo->origem_voo }}</td>
-                                            <td class="px-2 py-1">{{ $voo->destino_voo }}</td>
-                                            <td class="px-2 py-1">{{ $voo->companhia_voo }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                    <!-- Tab Content -->
+                    <div class="tab-content">
+                        <div id="content-visao-geral" class="tab-panel active">
+                            @include('components/myTrips/screenSections/visaoGeral', ['viagem' => $viagem, 'usuario' => $usuario])
                         </div>
-                    @else
-                        <div class="text-gray-400">Nenhum voo cadastrado.</div>
-                    @endif
-                </div>
-
-                <!-- Pontos de Interesse -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-xl font-semibold">Pontos de Interesse</h2>
-                        <a href="{{ route('explore.setTrip', ['id' => $viagem->pk_id_viagem]) }}" class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors text-sm font-medium shadow-sm">
-                            <i class="fa-solid fa-map-location-dot mr-2"></i> Editar no mapa
-                        </a>
-                    </div>
-                    <div>
-                        @php
-                            $pontosOrdenados = $pontosInteresse->sortBy('data_ponto_interesse');
-                        @endphp
-                        @if($pontosOrdenados->count())
-                            <ul class="space-y-2">
-                                @foreach($pontosOrdenados as $ponto)
-                                    <li class="transition-colors duration-150 hover:bg-gray-100 rounded px-3 py-2 cursor-pointer flex flex-col" onclick="openPlaceDetailsModal('{{ $ponto->placeid_ponto_interesse }}', true, {{ $ponto->pk_id_ponto_interesse }}, '{{ $ponto->hora_ponto_interesse ? \Carbon\Carbon::parse($ponto->hora_ponto_interesse)->format('H:i') : '' }}')">
-                                        <div class="flex items-center justify-between">
-                                            <span class="font-semibold text-base">{{ $ponto->nome_ponto_interesse }}</span>
-                                            <span class="text-gray-500 text-sm">{{ \Carbon\Carbon::parse($ponto->data_ponto_interesse)->format('d/m/Y') }}</span>
-                                        </div>
-                                        <div>
-                                            <span class="text-gray-500 text-xs">Horário: {{ \Carbon\Carbon::parse($ponto->hora_ponto_interesse)->format('H:i') }}</span>
-                                        </div>
-                                        @if($ponto->desc_ponto_interesse)
-                                            <div class="text-gray-600 text-xs mt-1">{{ $ponto->desc_ponto_interesse }}</div>
-                                        @endif
-                                    </li>
-                                @endforeach
-                            </ul>
-                        @else
-                            <div class="text-gray-400">Nenhum ponto de interesse cadastrado.</div>
-                        @endif
+                        <div id="content-informacoes-estatisticas" class="tab-panel hidden">
+                            @include('components/myTrips/screenSections/informacoesEstatisticas', ['viagem' => $viagem, 'usuario' => $usuario])
+                        </div>
                     </div>
                 </div>
             </div>
@@ -198,4 +278,69 @@
     @include('components/explore/detailsModal')
     <script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places" async defer></script>
     
+    <!-- Script para controle das tabs -->
+    <script>
+        function switchTab(tabName) {
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Hide all tab panels
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.add('hidden');
+                panel.classList.remove('active');
+            });
+            
+            // Add active class to clicked tab button
+            document.getElementById('tab-' + tabName).classList.add('active');
+            
+            // Show corresponding tab panel
+            const panel = document.getElementById('content-' + tabName);
+            panel.classList.remove('hidden');
+            panel.classList.add('active');
+        }
+    </script>
+
+    <!-- Estilos CSS aprimorados para as tabs -->
+    <style>
+        .tab-button {
+            color: #6b7280;
+            background-color: transparent;
+        }
+        
+        .tab-button:hover {
+            color: #374151;
+            background-color: #f3f4f6;
+        }
+        
+        .tab-button.active {
+            color: #3b82f6;
+            background-color: #dbeafe;
+        }
+        
+        .tab-panel {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Animações para os cards */
+        .bg-gradient-to-br {
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .bg-gradient-to-br:hover {
+            transform: translateY(-2px);
+        }
+    </style>
 @endsection

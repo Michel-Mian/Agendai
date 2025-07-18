@@ -23,18 +23,24 @@ class ExploreController extends Controller
             $viagem = Viagens::findOrFail($tripId);
             $dataInicio = $viagem?->data_inicio_viagem;
             $dataFim = $viagem?->data_final_viagem;
+            $destino = $viagem?->destino_viagem;
+            $origem = $viagem?->origem_viagem;
         }
         
         Log::info('Página explore carregada', [
             'trip_id' => session('trip_id'),
             'data_inicio' => $dataInicio,
-            'data_fim' => $dataFim
+            'data_fim' => $dataFim,
+            'destino' => $destino ?? null,
+            'origem' => $origem ?? null
         ]);
         
         return view('explore', [
             'title' => 'Explorar',
             'dataInicio' => $dataInicio,
             'dataFim' => $dataFim,
+            'destino' => $destino ?? null,
+            'origem' => $origem ?? null,
         ]);
     }
 
