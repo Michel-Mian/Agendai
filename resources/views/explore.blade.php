@@ -48,13 +48,7 @@
                         </div>
 
                         <div class="flex flex-wrap justify-center items-center gap-1">
-                            <button id="filterButton" class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"/>
-                                </svg>
-                                Filtros
-                                <span id="filterCount" class="ml-2 px-2 py-1 bg-blue-500 text-xs rounded-full font-medium hidden">0</span>
-                            </button>
+                            @include('components.explore.filter-modal')
                             @if($hasTrip)
                                 <button type="button" onclick="updateItineraryDisplay()"
                                     class="ml-2 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-blue-50 hover:border-blue-500 transition-all duration-150 text-sm font-medium shadow-sm flex items-center gap-1">
@@ -69,13 +63,13 @@
                         <div class="flex flex-col justify-center items-center h-[450px] my-8">
                             <a href="" id="createTripButton"
                             class="block">
-                                <div class="flex flex-col items-center justify-center h-72 rounded-xl border-2 border-dashed border-gray-300 bg-white transition-all duration-200 cursor-pointer py-8 select-none hover:border-blue-500">
-                                    <span class="flex items-center justify-center w-14 h-14 mb-4 rounded-full bg-gray-100">
+                                <div class="flex flex-col items-center justify-center h-50 rounded-xl border-2 border-dashed border-gray-0 bg-white transition-all duration-200 cursor-pointer py-2 select-none hover:border-blue-500">
+                                    <span class="flex items-center justify-center w-10 h-10 mb-2 rounded-full bg-gray-100">
                                         <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                                         </svg>
                                     </span>
-                                    <span class="text-2xl font-extrabold text-gray-800 tracking-wide mb-2">Criar viagem</span>
+                                    <span class="text-xl font-extrabold text-gray-800 tracking-wide mb-2">Criar viagem</span>
                                     <span class="text-base text-gray-500 text-center max-w-xs mt-2">Você ainda não criou uma viagem.<br><span class='text-gray-400'>Crie uma viagem para liberar o itinerário e começar a planejar seu roteiro!</span></span>
                                 </div>
                             </a>
@@ -133,7 +127,6 @@
 @unless($hasTrip)
     @include('components.explore.detailsmodal')
 @endunless
-
 <script>
 // Notificação simples (alert) para fallback
 if (typeof showNotification !== 'function') {
@@ -165,9 +158,11 @@ let places = [];
 let infoWindow;
 let currentDate = null;
 let itinerary = {}; // Agora é um mapa de datas
-window.hasTrip = @json($hasTrip);
+window.hasTrip = @json($hasTrip); // Corrigido para usar a variável PHP correta
 window.dataInicioViagem = @json($dataInicio);
 window.dataFimViagem = @json($dataFim);
+window.destinoViagem = @json($destino);
+window.origemViagem = @json($origem);
 // Variável para cache dos pontos do banco
 let pontosCache = [];
 
@@ -334,70 +329,100 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize Google Map
 window.initMap = function() {
-    map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: -22.9068, lng: -43.1729 },
-        zoom: 12,
-        disableDefaultUI: true,
-        zoomControl: false,
-        mapTypeControl: true,
-        fullscreenControl: false,
-        streetViewControl: false,
-        styles: [
-            {
-                featureType: "poi",
-                elementType: "labels",
-                stylers: [{ visibility: "off" }]
-            },
-            {
-                featureType: "water",
-                elementType: "geometry",
-                stylers: [{ color: "#e3f2fd" }]
-            },
-            {
-                featureType: "landscape",
-                elementType: "geometry",
-                stylers: [{ color: "#f5f5f5" }]
-            }
-        ]
-    });
+    // Função para inicializar o mapa após obter as coordenadas
+    function startMapWithCoords(coords) {
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: coords,
+            zoom: 12,
+            disableDefaultUI: true,
+            zoomControl: false,
+            mapTypeControl: true,
+            fullscreenControl: false,
+            streetViewControl: false,
+            styles: [
+                {
+                    featureType: "poi",
+                    elementType: "labels",
+                    stylers: [{ visibility: "off" }]
+                },
+                {
+                    featureType: "water",
+                    elementType: "geometry",
+                    stylers: [{ color: "#e3f2fd" }]
+                },
+                {
+                    featureType: "landscape",
+                    elementType: "geometry",
+                    stylers: [{ color: "#f5f5f5" }]
+                }
+            ]
+        });
 
-
-    const service = new google.maps.places.PlacesService(map);
-    service.nearbySearch(
-        {
-            location: { lat: -22.9068, lng: -43.1729 },
-            radius: 10000,
-            type: 'tourist_attraction',
-        },
-        (results, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK) {
-                places = [];
-                results.forEach(place => {
-                    // [GOOGLE PLACES API] Cada 'place' vem da resposta da API Places
-                    places.push({
-                        id: place.place_id,
-                        name: place.name,
-                        lat: place.geometry.location.lat(), // [GOOGLE PLACES API] latitude
-                        lng: place.geometry.location.lng(), // [GOOGLE PLACES API] longitude
-                        type: getPlaceType(place.types),
-                        rating: place.rating || 4.0,
-                        address: place.vicinity,
-                        opening_hours: place.opening_hours ? place.opening_hours.weekday_text : [],
-                        description: place.vicinity || place.formatted_address || '',
-                        photos: place.photos ? place.photos.map(p => p.getUrl({ 'maxWidth': 400, 'maxHeight': 400 })) : [] // [GOOGLE PLACES API] URLs das fotos
+        const service = new google.maps.places.PlacesService(map);
+        service.nearbySearch(
+            {
+                location: coords,
+                radius: 10000,
+                type: 'tourist_attraction',
+            },
+            (results, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    places = [];
+                    results.forEach(place => {
+                        // [GOOGLE PLACES API] Cada 'place' vem da resposta da API Places
+                        places.push({
+                            id: place.place_id,
+                            name: place.name,
+                            lat: place.geometry.location.lat(), // [GOOGLE PLACES API] latitude
+                            lng: place.geometry.location.lng(), // [GOOGLE PLACES API] longitude
+                            type: getPlaceType(place.types),
+                            rating: place.rating || 4.0,
+                            address: place.vicinity,
+                            opening_hours: place.opening_hours ? place.opening_hours.weekday_text : [],
+                            description: place.vicinity || place.formatted_address || '',
+                            photos: place.photos ? place.photos.map(p => p.getUrl({ 'maxWidth': 400, 'maxHeight': 400 })) : [] // [GOOGLE PLACES API] URLs das fotos
+                        });
                     });
-                });
-                addMarkersToMap();
-                updateSuggestions();
-            } else {
-                console.error('Falha na busca de locais:', status);
+                    addMarkersToMap();
+                    updateSuggestions();
+                } else {
+                    console.error('Falha na busca de locais:', status);
+                }
             }
-        }
-    );
+        );
 
-    infoWindow = new google.maps.InfoWindow();
-    initPlacesAutocomplete();
+        infoWindow = new google.maps.InfoWindow();
+        initPlacesAutocomplete();
+    }
+
+    // Busca coordenadas do destino da viagem, se houver
+    if (window.destinoViagem && typeof getCoordinatesFromAddress === 'function') {
+        getCoordinatesFromAddress(window.destinoViagem)
+            .then(coords => {
+                startMapWithCoords(coords);
+            })
+            .catch(() => {
+                // Fallback para coordenadas padrão da origem da viagem
+                startMapWithOrigemCoords();
+            });
+    } else {
+        startMapWithCoords({ lat: -10.8263593, lng: -42.7335083 });
+    }
 };
+
+function startMapWithOrigemCoords() {
+         if (window.origemViagem && typeof getCoordinatesFromAddress === 'function') {
+            getCoordinatesFromAddress(window.origemViagem)
+                .then(coords => {
+                    startMapWithCoords(coords);
+                    console.log('Mapa iniciado com coordenadas da origem da viagem:', coords);
+                })
+                .catch(() => {
+                    // Fallback para coordenadas padrão (Xique-Xique, Bahia)
+                    startMapWithCoords({ lat: -10.8263593, lng: -42.7335083 });
+                });
+    }
+}
 
 /**
  * Busca coordenadas de um endereço usando a API de Geocoding do Google.
