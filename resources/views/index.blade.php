@@ -14,6 +14,7 @@
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
         <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
         <link rel="stylesheet" href="{{ asset('css/myTrips.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/formTrip.css') }}">
         @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/dashBoard.js', 'resources/js/searchFlights.js', 'resources/js/formTrip.js' , 'resources/js/formTrip.js'])
         <meta name="csrf-token" content="{{ csrf_token() }}">
     </head>
