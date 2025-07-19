@@ -71,6 +71,7 @@ class FormController extends Controller
             $seguro->save();
         }
 
+        // 4. Salve as idades dos viajantes
         if ($request->has('idades') && is_array($request->idades)) {
             foreach ($request->idades as $idade) {
                 $viajante = new \App\Models\Viajantes();
@@ -80,10 +81,23 @@ class FormController extends Controller
             }
         }
 
-        // 4. Salve o ID da viagem na sessão
+        // 5. Salve as preferências da viagem (vários objetivos para uma viagem)
+        if ($request->has('preferences')) {
+            $prefs = explode(',', $request->preferences[0]);
+            foreach ($prefs as $pref) {
+                if (trim($pref) !== '') {
+                    $objetivo = new \App\Models\Objetivos();
+                    $objetivo->nome = $pref;
+                    $objetivo->fk_id_viagem = $viagem->pk_id_viagem;
+                    $objetivo->save();
+                }
+            }
+        }
+
+        // 6. Salve o ID da viagem na sessão
         session(['trip_id' => $viagem->pk_id_viagem]);
 
-        // 5. Redirecione ou retorne sucesso
+        // 7. Redirecione ou retorne sucesso
         return redirect()->route('explore')->with('success', 'Viagem salva com sucesso!');
     }
 
