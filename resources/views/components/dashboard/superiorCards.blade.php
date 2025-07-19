@@ -1,8 +1,8 @@
-<div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
-    <div class="bg-white rounded-xl shadow p-6 flex flex-col justify-between">
+<div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-6 md:gap-12 mb-10 md:mb-16">
+    <div class="bg-white rounded-xl shadow p-4 md:p-6 flex flex-col justify-between h-full">
         <div>
             <div class="text-gray-500 text-sm">Viagens Planejadas</div>
-            <div class="text-3xl font-bold mt-6">12 até agora!</div>
+            <div class="text-2xl md:text-3xl font-bold mt-4 md:mt-6">12 até agora!</div>
         </div>
         <div class="self-end mt-4">
             <span class="bg-green-100 p-2 rounded-lg">
@@ -10,10 +10,10 @@
             </span>
         </div>
     </div>
-    <div class="bg-white rounded-xl shadow p-6 flex flex-col justify-between">
+    <div class="bg-white rounded-xl shadow p-4 md:p-6 flex flex-col justify-between h-full">
         <div>
             <div class="text-gray-500 text-sm">Sua moeda preferida</div>
-            <div class="text-3xl font-bold mt-2">
+            <div class="text-2xl md:text-3xl font-bold mt-2">
                 @if(isset($currencies[$user->currency]))
                     {{ $currencies[$user->currency] }} ({{ $user->currency }})
                 @else
@@ -34,10 +34,10 @@
             </span>
         </div>
     </div>
-    <div class="bg-white rounded-xl shadow p-6 flex flex-col justify-between">
+    <div class="bg-white rounded-xl shadow p-4 md:p-6 flex flex-col justify-between h-full">
         <div>
             <div class="text-gray-500 text-sm">Próxima Viagem</div>
-            <div class="text-xl font-bold mt-2">Rio de Janeiro</div>
+            <div class="text-lg md:text-xl font-bold mt-2">Rio de Janeiro</div>
             <div class="text-purple-600 text-xs mt-1">Em 15 dias</div>
         </div>
         <div class="self-end mt-4">

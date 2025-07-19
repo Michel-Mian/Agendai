@@ -1,30 +1,30 @@
 <div id="placeDetailsModal"
-     class="fixed inset-0 flex items-center justify-center p-4 z-50 hidden"
+     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden"
      style="background: rgba(17,24,39,0.3); backdrop-filter: blur(8px);">
-    <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto transform scale-95 opacity-0 transition-all duration-300 relative">
+    <div class="explore-modal-base relative transition-all duration-300 scale-95 opacity-0"
+         style="max-width: 480px; min-height: 35vh; max-height: 75vh;">
         <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-10">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
-        <div id="modalContent" class="p-8">
-            <h2 class="text-2xl font-bold mb-4 text-gray-800" id="detailedPlaceName">Nome do Local</h2>
+        <div id="modalContent" class="p-4 sm:p-8 overflow-y-auto max-h-[60vh] sm:max-h-[60vh]">
+            <h2 class="text-xl sm:text-2xl font-bold mb-4 text-gray-800" id="detailedPlaceName">Nome do Local</h2>
             <p class="text-gray-600 mb-2" id="detailedPlaceAddress">Endereço do Local</p>
             <p class="text-gray-700 leading-relaxed" id="detailedPlaceDescription">
-                Descrição detalhada do local será carregada aqui. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                Descrição detalhada do local será carregada aqui.
             </p>
-            <div id="detailedPlacePhotos" class="grid grid-cols-2 gap-4 mt-4">
-                </div>
+            <div id="detailedPlacePhotos" class="grid grid-cols-2 gap-4 mt-4"></div>
             <p class="text-gray-800 font-semibold mt-4" id="detailedPlaceRating">Avaliação: N/A</p>
             <p class="text-gray-800 font-semibold" id="detailedPlaceType">Tipo: N/A</p>
         </div>
-
-        
     </div>
 </div>
 
 <script>
     // --- Funções do Modal ---
-async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId = null) {
-    infoWindow.close(); // Fecha a InfoWindow ao abrir o modal
+async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId = null, horarioBanco = null) {
+    if (typeof infoWindow !== 'undefined' && infoWindow) {
+        infoWindow.close();
+    }
 
     const modal = document.getElementById('placeDetailsModal');
     const modalContent = document.getElementById('modalContent');
@@ -45,7 +45,10 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
         modal.querySelector('div').classList.add('scale-100', 'opacity-100');
     }, 50);
 
-    const service = new google.maps.places.PlacesService(map);
+    const mapElement = (typeof map !== 'undefined' && map)
+        ? map
+        : document.createElement('div');
+    const service = new google.maps.places.PlacesService(mapElement);
     const request = {
         placeId: placeId,
         fields: ['place_id', 'name', 'formatted_address', 'types', 'rating', 'user_ratings_total', 'photos', 'opening_hours', 'website', 'formatted_phone_number', 'reviews', 'geometry', 'vicinity']
@@ -86,6 +89,22 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
                     </div>
                 </div>` : '';
 
+            // --- NOVO FORMULÁRIO GERADO VIA JS ---
+            let horarioAtual = horarioBanco || "00:00";
+            let alterarHorarioForm = "";
+            if (fromItinerary && databaseId) {
+                let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                alterarHorarioForm = `
+                    <form method="POST" action="/explore/ponto-interesse/${databaseId}/horario" class="mt-4 flex items-center gap-2">
+                        <input type="hidden" name="_token" value="${csrfToken}">
+                        <label for="novo_horario" class="text-sm font-medium text-gray-700">Horário:</label>
+                        <input type="time" id="novo_horario" name="novo_horario" value="${horarioAtual}" class="border rounded px-2 py-1">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded">Alterar para esse horário</button>
+                    </form>
+                    <button onclick="removePontoFromItinerary('${databaseId}')" class="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-pink-500 rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg w-full sm:w-auto">🗑️ Remover do Itinerário</button>
+                `;
+            }
+            // ...restante do modal
             modalContent.innerHTML = `
                 <div class="bg-white rounded-lg">
                     ${photosHtml}
@@ -119,9 +138,9 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
                     </div>
                 </div>
                 <div class="p-8 border-t border-gray-200 flex flex-col sm:flex-row justify-end items-center gap-4">
-                    ${fromItinerary
-                        ? `<button onclick=\"removePontoFromItinerary('${databaseId}')\" class=\"px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-pink-500 rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg w-full sm:w-auto\">🗑️ Remover do Itinerário</button>`
-                        : `
+                    ${fromItinerary && databaseId
+                        ? alterarHorarioForm
+                        : (window.hasTrip ? `
                         <div class=\"flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto\">
                             <div class=\"flex items-center gap-2\">
                                 <label for=\"itineraryDate\" class=\"text-gray-700 font-medium whitespace-nowrap\">Data da visita:</label>
@@ -134,7 +153,7 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
                         </div>
                         <button onclick=\"addToItinerary(currentDetailedPlace && currentDetailedPlace.place_id, document.getElementById('itineraryTime').value, document.getElementById('itineraryDate').value); closeModal();\" class=\"px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg w-full sm:w-auto\">
                             ➕ Adicionar ao Itinerário
-                        </button>`
+                        </button>` : `<div class=\"w-full text-center text-gray-400 text-base\">Crie uma viagem para adicionar este local ao itinerário.</div>`)
                     }
                 </div>
             `;
@@ -185,5 +204,31 @@ function closeModal() {
         modal.classList.add('hidden');
         currentDetailedPlace = null; // Limpa o lugar detalhado
     }, 300); // Deve corresponder à duração da transição CSS
+}
+
+function getPlaceType(types) {
+    if (!types) return 'place';
+    if (types.includes('tourist_attraction') || types.includes('museum') || types.includes('park')) return 'attraction';
+    if (types.includes('restaurant') || types.includes('food') || types.includes('meal_takeaway')) return 'restaurant';
+    if (types.includes('lodging') || types.includes('hotel')) return 'hotel';
+    return types.length > 0 ? types[0] : 'place';
+}
+
+function getTypeColorClass(type) {
+    const colors = {
+        attraction: 'bg-purple-100 text-purple-800',
+        restaurant: 'bg-orange-100 text-orange-800',
+        hotel: 'bg-blue-100 text-blue-800'
+    };
+    return colors[type] || 'bg-gray-100 text-gray-800';
+}
+
+function getTypeLabel(type) {
+    const labels = {
+        attraction: 'Atração',
+        restaurant: 'Restaurante',
+        hotel: 'Hotel'
+    };
+    return labels[type] || type.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
 }
 </script>

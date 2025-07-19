@@ -9,27 +9,67 @@
         <div class="relative flex-1 overflow-hidden">
             <div id="map" class="absolute inset-0 w-full h-full rounded-xl"></div>
 
-            <div class="absolute right-6 top-6 bottom-6 hidden lg:flex w-96 flex-shrink-0 overflow-hidden z-10 shadow-lg rounded-2xl">
+            <!-- Botão para abrir o menu flutuante -->
+            <button id="openFloatingMenuBtn"
+                class="fixed right-6 top-[120px] z-20 bg-white border border-gray-300 shadow-lg rounded-lg p-3 flex items-center justify-center hover:bg-blue-50 transition-all duration-200"
+                type="button">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+
+            <!-- Menu flutuante -->
+            <div id="floatingMenu"
+                class="absolute right-6 top-6 bottom-6 w-96 flex-shrink-0 overflow-hidden z-30 shadow-lg rounded-2xl bg-white border border-gray-200 transition-transform duration-300"
+                style="transform: translateX(110%);">
                 <div class="flex flex-col h-full w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
                     <div class="mb-6 flex-shrink-0 px-4 pt-4">
-                        <div class="relative my-4">
-                            <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
-                            <input
-                                type="text"
-                                id="searchInput"
-                                placeholder="Pesquisar lugares..."
-                                class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm transition-all duration-200"
-                            />
+                        <div class="my-4 flex items-center gap-2">
+                            <div class="relative flex-1">
+                                <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                                <input
+                                    type="text"
+                                    id="searchInput"
+                                    placeholder="Pesquisar lugares..."
+                                    class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm transition-all duration-200"
+                                />
+                            </div>
+                            <button onclick="closeFloatingMenu()" class="flex-shrink-0 bg-white rounded-md p-2 hover:bg-blue-50 focus:outline-none ">
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         </div>
 
-                        <div class="flex flex-wrap justify-center">
+                        <div class="flex flex-wrap justify-center items-center gap-1">
                             @include('components.explore.filter-modal')
+                            @if($hasTrip)
+                                <button type="button" onclick="updateItineraryDisplay()"
+                                    class="ml-2 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-blue-50 hover:border-blue-500 transition-all duration-150 text-sm font-medium shadow-sm flex items-center gap-1">
+                                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582M20 20v-5h-.581M5 9A7 7 0 0112 5a7 7 0 017 7v3a7 7 0 01-7 7 7 7 0 01-7-7V9z" />
+                                    </svg>
+                                </button>
+                            @endif
                         </div>
                     </div>
                     @if(!$hasTrip)
-                        <button id="createTripButton" ...>Criar viagem</button>
+                        <div class="flex flex-col justify-center items-center h-[450px] my-8">
+                            <a href="" id="createTripButton"
+                            class="block">
+                                <div class="flex flex-col items-center justify-center h-50 rounded-xl border-2 border-dashed border-gray-0 bg-white transition-all duration-200 cursor-pointer py-2 select-none hover:border-blue-500">
+                                    <span class="flex items-center justify-center w-10 h-10 mb-2 rounded-full bg-gray-100">
+                                        <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                                        </svg>
+                                    </span>
+                                    <span class="text-xl font-extrabold text-gray-800 tracking-wide mb-2">Criar viagem</span>
+                                    <span class="text-base text-gray-500 text-center max-w-xs mt-2">Você ainda não criou uma viagem.<br><span class='text-gray-400'>Crie uma viagem para liberar o itinerário e começar a planejar seu roteiro!</span></span>
+                                </div>
+                            </a>
+                        </div>
                     @else
                     <div class="p-6 flex-1 flex flex-col overflow-hidden">
                         <div class="flex items-center gap-3 border-b mb-4 pb-3 flex-shrink-0">
@@ -75,7 +115,14 @@
     </div>
 </div>
 
-@include('components.explore.detailsmodal')
+<!-- Modal de Filtros - Movido para fora do menu flutuante -->
+@include('components.explore.filter-modal')
+
+@php $hasTrip = session()->has('trip_id'); @endphp
+@includeWhen($hasTrip, 'components.explore.detailsmodal')
+@unless($hasTrip)
+    @include('components.explore.detailsmodal')
+@endunless
 <script>
 // Notificação simples (alert) para fallback
 if (typeof showNotification !== 'function') {
@@ -89,6 +136,17 @@ if (typeof showNotification !== 'function') {
     }
 }
 
+// --- Floating menu open/close logic ---
+function openFloatingMenu() {
+    document.getElementById('floatingMenu').style.transform = 'translateX(0)';
+    document.getElementById('openFloatingMenuBtn').style.display = 'none';
+}
+
+function closeFloatingMenu() {
+    document.getElementById('floatingMenu').style.transform = 'translateX(110%)';
+    document.getElementById('openFloatingMenuBtn').style.display = 'flex';
+}
+
 // Global variables
 let map;
 let markers = [];
@@ -96,9 +154,11 @@ let places = [];
 let infoWindow;
 let currentDate = null;
 let itinerary = {}; // Agora é um mapa de datas
-window.hasTrip = @json($hasTrip);
+window.hasTrip = @json($hasTrip); // Corrigido para usar a variável PHP correta
 window.dataInicioViagem = @json($dataInicio);
 window.dataFimViagem = @json($dataFim);
+window.destinoViagem = @json($destino);
+window.origemViagem = @json($origem);
 // Variável para cache dos pontos do banco
 let pontosCache = [];
 
@@ -225,8 +285,15 @@ function updateSuggestions() {
         console.log('função updateSuggestions falhou', e);
     }
 }
+
 // --- Inicialização ---
 document.addEventListener('DOMContentLoaded', function() {
+    // Registra o event listener para o botão do menu flutuante
+    const openBtn = document.getElementById('openFloatingMenuBtn');
+    if (openBtn) {
+        openBtn.onclick = openFloatingMenu;
+    }
+
     // Step 3: Set min/max for both datepickers
     if (window.hasTrip && window.dataInicioViagem && window.dataFimViagem) {
         const mainDatePicker = document.getElementById('datePicker');
@@ -258,71 +325,100 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize Google Map
 window.initMap = function() {
-    map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: -22.9068, lng: -43.1729 }, // Rio de Janeiro
-        zoom: 12,
-        disableDefaultUI: true,
-        zoomControl: false,
-        mapTypeControl: true,
-        fullscreenControl: false,
-        streetViewControl: false,
-        styles: [
-            {
-                featureType: "poi",
-                elementType: "labels",
-                stylers: [{ visibility: "off" }]
-            },
-            {
-                featureType: "water",
-                elementType: "geometry",
-                stylers: [{ color: "#e3f2fd" }]
-            },
-            {
-                featureType: "landscape",
-                elementType: "geometry",
-                stylers: [{ color: "#f5f5f5" }]
-            }
-        ]
-    });
+    // Função para inicializar o mapa após obter as coordenadas
+    function startMapWithCoords(coords) {
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: coords,
+            zoom: 12,
+            disableDefaultUI: true,
+            zoomControl: false,
+            mapTypeControl: true,
+            fullscreenControl: false,
+            streetViewControl: false,
+            styles: [
+                {
+                    featureType: "poi",
+                    elementType: "labels",
+                    stylers: [{ visibility: "off" }]
+                },
+                {
+                    featureType: "water",
+                    elementType: "geometry",
+                    stylers: [{ color: "#e3f2fd" }]
+                },
+                {
+                    featureType: "landscape",
+                    elementType: "geometry",
+                    stylers: [{ color: "#f5f5f5" }]
+                }
+            ]
+        });
 
-
-    // [GOOGLE PLACES API] Busca pontos turísticos próximos usando nearbySearch
-    const service = new google.maps.places.PlacesService(map);
-    service.nearbySearch(
-        {
-            location: { lat: -22.9068, lng: -43.1729 }, // Rio de Janeiro
-            radius: 10000,
-            type: 'tourist_attraction',
-        },
-        (results, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK) {
-                places = [];
-                results.forEach(place => {
-                    // [GOOGLE PLACES API] Cada 'place' vem da resposta da API Places
-                    places.push({
-                        id: place.place_id,
-                        name: place.name,
-                        lat: place.geometry.location.lat(), // [GOOGLE PLACES API] latitude
-                        lng: place.geometry.location.lng(), // [GOOGLE PLACES API] longitude
-                        type: getPlaceType(place.types),
-                        rating: place.rating || 4.0,
-                        address: place.vicinity,
-                        opening_hours: place.opening_hours ? place.opening_hours.weekday_text : [],
-                        description: place.vicinity || place.formatted_address || '',
-                        photos: place.photos ? place.photos.map(p => p.getUrl({ 'maxWidth': 400, 'maxHeight': 400 })) : [] // [GOOGLE PLACES API] URLs das fotos
+        const service = new google.maps.places.PlacesService(map);
+        service.nearbySearch(
+            {
+                location: coords,
+                radius: 10000,
+                type: 'tourist_attraction',
+            },
+            (results, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    places = [];
+                    results.forEach(place => {
+                        // [GOOGLE PLACES API] Cada 'place' vem da resposta da API Places
+                        places.push({
+                            id: place.place_id,
+                            name: place.name,
+                            lat: place.geometry.location.lat(), // [GOOGLE PLACES API] latitude
+                            lng: place.geometry.location.lng(), // [GOOGLE PLACES API] longitude
+                            type: getPlaceType(place.types),
+                            rating: place.rating || 4.0,
+                            address: place.vicinity,
+                            opening_hours: place.opening_hours ? place.opening_hours.weekday_text : [],
+                            description: place.vicinity || place.formatted_address || '',
+                            photos: place.photos ? place.photos.map(p => p.getUrl({ 'maxWidth': 400, 'maxHeight': 400 })) : [] // [GOOGLE PLACES API] URLs das fotos
+                        });
                     });
-                });
-                addMarkersToMap();
-                updateSuggestions();
-            } else {
-                console.error('Falha na busca de locais:', status);
+                    addMarkersToMap();
+                    updateSuggestions();
+                } else {
+                    console.error('Falha na busca de locais:', status);
+                }
             }
-        }
-    );
+        );
 
-    infoWindow = new google.maps.InfoWindow();
-    initPlacesAutocomplete();
+        infoWindow = new google.maps.InfoWindow();
+        initPlacesAutocomplete();
+    }
+
+    // Busca coordenadas do destino da viagem, se houver
+    if (window.destinoViagem && typeof getCoordinatesFromAddress === 'function') {
+        getCoordinatesFromAddress(window.destinoViagem)
+            .then(coords => {
+                startMapWithCoords(coords);
+            })
+            .catch(() => {
+                // Fallback para coordenadas padrão da origem da viagem
+                startMapWithOrigemCoords();
+            });
+    } else {
+        startMapWithCoords({ lat: -10.8263593, lng: -42.7335083 });
+    }
 };
+
+function startMapWithOrigemCoords() {
+         if (window.origemViagem && typeof getCoordinatesFromAddress === 'function') {
+            getCoordinatesFromAddress(window.origemViagem)
+                .then(coords => {
+                    startMapWithCoords(coords);
+                    console.log('Mapa iniciado com coordenadas da origem da viagem:', coords);
+                })
+                .catch(() => {
+                    // Fallback para coordenadas padrão (Xique-Xique, Bahia)
+                    startMapWithCoords({ lat: -10.8263593, lng: -42.7335083 });
+                });
+    }
+}
 
 /**
  * Busca coordenadas de um endereço usando a API de Geocoding do Google.
@@ -348,6 +444,7 @@ async function getCoordinatesFromAddress(address) {
         });
     });
 }
+
 document.addEventListener('DOMContentLoaded', function() {
     const locationInput = document.getElementById('locationInput');
     const searchInput = document.getElementById('searchInput');
@@ -388,8 +485,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Função para inicializar autocomplete Google Places
 function initPlacesAutocomplete() {
-    const locationInput = document.getElementById('locationInput');
     const searchInput = document.getElementById('searchInput');
+    const locationInput = document.getElementById('locationInput');
+    
     // Helper to initialize autocomplete on a given input
     function setupAutocomplete(input) {
         // [GOOGLE PLACES AUTOCOMPLETE] Inicializa autocomplete do Google Places no input
@@ -405,17 +503,9 @@ function initPlacesAutocomplete() {
             }
         }
     }
-    setupAutocomplete(locationInput);
+    
     setupAutocomplete(searchInput);
-}
-
-// Helper functions
-function getPlaceType(types) {
-    if (types.includes('tourist_attraction') || types.includes('museum') || types.includes('park')) return 'attraction';
-    if (types.includes('restaurant') || types.includes('food') || types.includes('meal_takeaway')) return 'restaurant';
-    if (types.includes('lodging') || types.includes('hotel')) return 'hotel';
-    // Return the first type if none of the above match, or a generic 'place'
-    return types.length > 0 ? types[0] : 'place';
+    setupAutocomplete(locationInput);
 }
 
 // Add markers to map
@@ -497,24 +587,6 @@ function showPlaceInfo(place, marker) {
     infoWindow.open(map, marker);
 }
 
-// Utility functions
-function getTypeColorClass(type) {
-    const colors = {
-        attraction: 'bg-purple-100 text-purple-800',
-        restaurant: 'bg-orange-100 text-orange-800',
-        hotel: 'bg-blue-100 text-blue-800'
-    };
-    return colors[type] || 'bg-gray-100 text-gray-800';
-}
-
-function getTypeLabel(type) {
-    const labels = {
-        attraction: 'Atração',
-        restaurant: 'Restaurante',
-        hotel: 'Hotel'
-    };
-    return labels[type] || type.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
-}
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {
@@ -601,8 +673,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateSuggestions();
     }, 1000);
 });
-
-
 
 // --- Função para atualizar o itinerário do banco ---
 /**
@@ -753,4 +823,6 @@ function removePontoFromItinerary(pontoId) {
     updateItineraryDisplay();
 }
 </script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places&callback=initMap" async defer></script>
 @endsection

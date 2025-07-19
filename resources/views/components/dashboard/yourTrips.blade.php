@@ -1,17 +1,15 @@
 <div>
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
         <h2 class="text-xl font-semibold">Suas Viagens</h2>
-        <button class="bg-white border rounded-lg px-5 py-2 text-sm font-medium flex items-center gap-2 hover:bg-gray-100 cursor-pointer">
-            <a href="/myTrips">
-                <span class="mr-1">Ver Todas</span>
-                <i class="fa-solid fa-arrow-right"></i>
-            </a>
-        </button>
+        <a href="/myTrips" class="bg-white border rounded-lg px-4 py-2 text-sm font-medium flex items-center gap-2 hover:bg-gray-100 cursor-pointer transition">
+            <span>Ver Todas</span>
+            <i class="fa-solid fa-arrow-right"></i>
+        </a>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl shadow flex">
-            <div class="flex-1 p-6">
-                <div class="flex items-center justify-between">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="bg-white rounded-xl shadow flex flex-col h-full">
+            <div class="flex-1 p-4 sm:p-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                     <div class="font-semibold text-lg">Rio de Janeiro</div>
                     <span class="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full">Próxima</span>
                 </div>
@@ -23,9 +21,9 @@
                 <a href="/myTrips" class="text-blue-600 font-medium mt-4 inline-flex items-center">Ver Detalhes <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></a>
             </div>
         </div>
-        <div class="bg-white rounded-xl shadow flex opacity-80">
-            <div class="flex-1 p-6">
-                <div class="flex items-center justify-between">
+        <div class="bg-white rounded-xl shadow flex flex-col h-full opacity-80">
+            <div class="flex-1 p-4 sm:p-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                     <div class="font-semibold text-lg">Salvador</div>
                     <span class="bg-gray-200 text-gray-700 text-xs px-3 py-1 rounded-full">Concluída</span>
                 </div>
