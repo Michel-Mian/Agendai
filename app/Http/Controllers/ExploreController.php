@@ -10,14 +10,13 @@ use App\Models\Viagens;
 
 class ExploreController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Para desenvolvimento - remove em produção
-        // session(['trip_id' => 1]);
+        //session(['trip_id' => 1]);
         
         $dataInicio = null;
         $dataFim = null;
-        
         if (session()->has('trip_id')) {
             $tripId = session('trip_id');
             $viagem = Viagens::findOrFail($tripId);
@@ -39,7 +38,9 @@ class ExploreController extends Controller
             'title' => 'Explorar',
             'dataInicio' => $dataInicio,
             'dataFim' => $dataFim,
-            'hasTrip' => session()->has('trip_id'), // Adicione esta linha
+            'hasTrip' => session()->has('trip_id'),
+            'destino' => $destino ?? null,
+            'origem' => $origem ?? null,
         ]);
     }
 

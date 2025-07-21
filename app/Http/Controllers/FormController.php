@@ -32,6 +32,7 @@ class FormController extends Controller
         // 1. Salve a viagem
         $viagem = new \App\Models\Viagens();
         $viagem->destino_viagem = $request->searchInput;
+        $viagem->origem_viagem = $request->origem;
         $viagem->data_inicio_viagem = $request->date_departure;
         $viagem->data_final_viagem = $request->date_return;
         $viagem->orcamento_viagem = $request->orcamento;
