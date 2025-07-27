@@ -53,7 +53,8 @@
     let myChart; // Variável para a instância do Chart.js
 
     // A chave da API do Google, injetada pelo Blade/Laravel
-    const GOOGLE_API_KEY = {{ config('services.Maps_api_key') }};
+    // IMPORTANTE: Certifique-se de que esta chave da API tenha as permissões para a Google Cloud Translation API.
+    const GOOGLE_API_KEY = "AIzaSyDWLH0DB_w7iFWxaPJHOl69rSP6YT3sp80";
 
     function formatDateTime(date) {
         const day = String(date.getDate()).padStart(2, '0');
@@ -97,6 +98,11 @@
      * @returns {Promise<string|null>} O texto traduzido ou null em caso de erro.
      */
     async function translateText(text, targetLanguage) {
+        if (!GOOGLE_API_KEY) {
+            console.warn('GOOGLE_API_KEY não configurada. A tradução do país não será realizada.');
+            return null;
+        }
+
         try {
             const response = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${GOOGLE_API_KEY}`, {
                 method: 'POST',
@@ -112,12 +118,18 @@
 
             if (!response.ok) {
                 const errorData = await response.json();
-                console.error('Erro na API de Tradução do Google:', errorData);
+                console.error(`Erro na API de Tradução do Google (status: ${response.status}):`, errorData);
+                // Retorna o texto original em caso de erro da API para que a busca REST Countries possa ser tentada com o nome original.
                 return null;
             }
 
             const data = await response.json();
-            return data.data.translations[0].translatedText;
+            if (data && data.data && data.data.translations && data.data.translations.length > 0) {
+                return data.data.translations[0].translatedText;
+            } else {
+                console.warn('Resposta da API de Tradução do Google sem tradução esperada:', data);
+                return null;
+            }
         } catch (error) {
             console.error('Erro ao chamar a API de Tradução do Google:', error);
             return null;
@@ -132,67 +144,86 @@
      */
     async function getDestinationCurrency(destination) {
         const parts = destination.split(',').map(part => part.trim());
-        let countryName = parts[parts.length - 1]; // Pega a última parte como o país, ou a string inteira se não houver vírgula
+        let countryNameOriginal = parts[parts.length - 1]; // Pega a última parte como o país
 
-        if (!countryName) {
+        if (!countryNameOriginal) {
             console.warn('Não foi possível extrair o nome do país do destino:', destination);
             return null;
         }
 
-        let translatedCountryName = null;
-        // Tenta traduzir o nome do país para o inglês
-        if (GOOGLE_API_KEY) { // Apenas tenta traduzir se a chave API estiver disponível
-             translatedCountryName = await translateText(countryName, 'en');
+        let possibleCountryNames = [];
+
+        // 1. Tenta traduzir o nome do país para o inglês
+        const translatedCountryName = await translateText(countryNameOriginal, 'en');
+
+        if (translatedCountryName) {
+            possibleCountryNames.push(translatedCountryName);
+            console.log(`País '${countryNameOriginal}' traduzido para '${translatedCountryName}'.`);
+
+            // Se a tradução for 'Türkiye', adiciona 'Turkey' como fallback
+            if (translatedCountryName.toLowerCase() === 'türkiye') {
+                possibleCountryNames.push('Turkey');
+                console.log(`Adicionando 'Turkey' como fallback para 'Türkiye'.`);
+            }
+        } else {
+            console.warn(`Não foi possível traduzir '${countryNameOriginal}'. Tentando buscar com o nome original e fallbacks conhecidos.`);
         }
 
-        // Se a tradução falhar ou a chave API não estiver configurada, usa o nome original.
-        // Adiciona um ajuste manual para "Estados Unidos" caso a tradução falhe
-        let finalCountryName = translatedCountryName || countryName;
-        if (finalCountryName.toLowerCase() === 'estados unidos' || finalCountryName.toLowerCase() === 'us' || finalCountryName.toLowerCase() === 'usa') {
-            finalCountryName = 'United States';
-        } else if (finalCountryName.toLowerCase() === 'reino unido') {
-            finalCountryName = 'United Kingdom';
+        // 2. Adiciona o nome original como fallback, caso a tradução falhe
+        if (!possibleCountryNames.includes(countryNameOriginal)) {
+             possibleCountryNames.push(countryNameOriginal);
+        }
+        // 3. Adiciona alguns fallbacks manuais para casos específicos se a tradução não for exata ou a API REST Countries tiver problemas
+        if (countryNameOriginal.toLowerCase() === 'estados unidos' && !possibleCountryNames.includes('United States')) {
+            possibleCountryNames.push('United States');
+        }
+        if (countryNameOriginal.toLowerCase() === 'reino unido' && !possibleCountryNames.includes('United Kingdom')) {
+            possibleCountryNames.push('United Kingdom');
+        }
+        if (countryNameOriginal.toLowerCase() === 'irlanda' && !possibleCountryNames.includes('Ireland')) {
+            possibleCountryNames.push('Ireland');
         }
 
 
-        try {
-            // Tenta busca fullText primeiro
-            let response = await fetch(`https://restcountries.com/v3.1/name/${finalCountryName}?fullText=true`);
-            let data;
+        for (const countryNameToTry of possibleCountryNames) {
+            try {
+                // Tenta busca fullText primeiro
+                let response = await fetch(`https://restcountries.com/v3.1/name/${countryNameToTry}?fullText=true`);
+                let data;
 
-            if (response.ok) {
-                data = await response.json();
-            } else {
-                // Se fullText falhar, tenta uma busca parcial
-                const partialResponse = await fetch(`https://restcountries.com/v3.1/name/${finalCountryName}`);
-                if (partialResponse.ok) {
-                    data = await partialResponse.json();
+                if (response.ok) {
+                    data = await response.json();
                 } else {
-                    console.error(`Erro ao buscar informações para o país '${finalCountryName}':`, partialResponse.statusText);
-                    return null;
+                    // Se fullText falhar, tenta uma busca parcial
+                    const partialResponse = await fetch(`https://restcountries.com/v3.1/name/${countryNameToTry}`);
+                    if (partialResponse.ok) {
+                        data = await partialResponse.json();
+                    } else {
+                        console.warn(`Falha na busca REST Countries para '${countryNameToTry}' (status: ${partialResponse.status}).`);
+                        continue; // Tenta o próximo nome na lista
+                    }
                 }
-            }
 
-            if (data && data.length > 0) {
-                // Encontrar o país correto na lista de resultados (se a busca for parcial)
-                const country = data.find(c =>
-                    c.name.common.toLowerCase() === finalCountryName.toLowerCase() ||
-                    c.altSpellings?.some(s => s.toLowerCase() === finalCountryName.toLowerCase()) ||
-                    c.translations?.por?.common?.toLowerCase() === countryName.toLowerCase() // Tenta corresponder pelo nome original em português também
-                ) || data[0]; // Se não encontrar correspondência exata, pega o primeiro resultado
+                if (data && data.length > 0) {
+                    // Tenta encontrar o país correto na lista de resultados
+                    const country = data.find(c =>
+                        c.name.common.toLowerCase() === countryNameToTry.toLowerCase() ||
+                        c.altSpellings?.some(s => s.toLowerCase() === countryNameToTry.toLowerCase()) ||
+                        c.translations?.por?.common?.toLowerCase() === countryNameOriginal.toLowerCase()
+                    ) || data[0]; // Se não encontrar correspondência exata, pega o primeiro resultado
 
-                if (country && country.currencies) {
-                    return Object.keys(country.currencies)[0]; // Retorna o primeiro código de moeda
+                    if (country && country.currencies) {
+                        console.log(`Moeda encontrada para '${countryNameToTry}':`, Object.keys(country.currencies)[0]);
+                        return Object.keys(country.currencies)[0]; // Retorna o primeiro código de moeda
+                    }
                 }
+            } catch (error) {
+                console.error(`Erro ao buscar moeda do destino para '${countryNameToTry}' na API REST Countries:`, error);
             }
-
-            console.warn('Moeda não encontrada para o destino:', destination, data);
-            return null;
-
-        } catch (error) {
-            console.error('Erro ao buscar moeda do destino na API REST Countries:', error);
-            return null;
         }
+
+        console.warn('Moeda não encontrada para o destino após todas as tentativas:', destination);
+        return null;
     }
 
 
@@ -234,6 +265,16 @@
                     const data = await response.json();
                     let bid = 'N/A';
                     let pctChange = 'N/A';
+                    let errorStatus = null; // Para guardar o status de erro
+
+                    if (response.status === 404) { // Captura especificamente o 404 da Frankfurter
+                        errorStatus = 404;
+                        console.warn(`Dados para ${fromCurrency}/${userLocalCurrency} não encontrados (404) na Frankfurter.`);
+                    } else if (!response.ok) {
+                        errorStatus = response.status;
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
 
                     if (data && data.rates && data.rates[userLocalCurrency]) {
                         bid = data.rates[userLocalCurrency];
@@ -245,6 +286,13 @@
                         const prevResponse = await fetch(`https://api.frankfurter.app/${yesterdayFormatted}?from=${fromCurrency}&to=${userLocalCurrency}`);
                         const prevData = await prevResponse.json();
 
+                        if (prevResponse.status === 404) {
+                            console.warn(`Dados históricos para ${fromCurrency}/${userLocalCurrency} não encontrados (404) na Frankfurter.`);
+                        } else if (!prevResponse.ok) {
+                             throw new Error(`HTTP error! status: ${prevResponse.status} for historical data.`);
+                        }
+
+
                         if (prevData && prevData.rates && prevData.rates[userLocalCurrency]) {
                             const prevBid = prevData.rates[userLocalCurrency];
                             if (prevBid !== 0) {
@@ -252,10 +300,10 @@
                             }
                         }
                     }
-                    return { from: fromCurrency, to: userLocalCurrency, rate: bid, pctChange: pctChange, isSame: false };
+                    return { from: fromCurrency, to: userLocalCurrency, rate: bid, pctChange: pctChange, isSame: false, errorStatus: errorStatus };
                 } catch (error) {
                     console.error(`Erro ao buscar ${fromCurrency}/${userLocalCurrency}:`, error);
-                    return { from: fromCurrency, to: userLocalCurrency, rate: 'Erro', pctChange: 'Erro', isSame: false };
+                    return { from: fromCurrency, to: userLocalCurrency, rate: 'Erro', pctChange: 'Erro', isSame: false, errorStatus: 500 }; // Captura outros erros
                 }
             });
 
@@ -284,8 +332,16 @@
                     let changeClass = 'text-gray-700';
                     let displayPctChange = 'N/A';
                     let symbol = '';
+                    let rateDisplay = 'N/A';
+                    let cardSubtitle = '';
 
-                    if (typeof result.pctChange === 'number') {
+                    if (result.errorStatus === 404 && result.from === destinationCurrencyCode) {
+                         cardClass = 'border-orange-400';
+                         changeClass = 'text-orange-700';
+                         rateDisplay = 'N/A';
+                         displayPctChange = 'N/A';
+                         cardSubtitle = 'Moeda com dados instáveis/indisponíveis';
+                    } else if (typeof result.pctChange === 'number') {
                         if (result.pctChange >= 0) {
                             cardClass = 'border-green-400';
                             changeClass = 'text-green-700';
@@ -294,35 +350,38 @@
                             changeClass = 'text-red-700';
                         }
                         displayPctChange = `${result.pctChange > 0 ? '+' : ''}${result.pctChange.toFixed(2)}%`;
-                    } else if (result.pctChange === 'Erro') {
+                        rateDisplay = `${result.to} ${typeof result.rate === 'number' ? result.rate.toFixed(2).replace('.', ',') : result.rate}`;
+                    } else if (result.pctChange === 'Erro' || result.rate === 'Erro') {
                         changeClass = 'text-red-700';
                         cardClass = 'border-red-400';
                         displayPctChange = 'Erro';
+                        rateDisplay = 'Erro';
+                        cardSubtitle = 'Erro ao carregar';
+                    } else {
+                        rateDisplay = `${result.to} ${typeof result.rate === 'number' ? result.rate.toFixed(2).replace('.', ',') : result.rate}`;
                     }
 
-                    if (result.rate === 'Erro') {
-                        cardClass = 'border-red-400';
-                    }
 
                     try {
                         const formatter = new Intl.NumberFormat(undefined, { style: 'currency', currency: result.from });
-                        // Pega o símbolo da moeda. Se a formatação falhar, usa o código da moeda.
                         symbol = formatter.format(0).replace(/0|\s/g, '').trim();
-                        if (!symbol || symbol === 'NaN') symbol = result.from;
+                        if (!symbol) symbol = result.from;
                     } catch (e) {
                         symbol = result.from;
                     }
 
-                    let cardTitle = '';
-                    if (result.from === 'USD') {
-                        cardTitle = 'Dólar Americano';
-                    } else if (result.from === 'EUR') {
-                        cardTitle = 'Euro';
-                    } else if (result.from === destinationCurrencyCode) {
-                        cardTitle = 'Moeda do Destino';
-                    } else {
-                        cardTitle = `${result.from} Cotação`;
+                    if (!cardSubtitle) { // Se não foi definida por um erro específico
+                        if (result.from === 'USD') {
+                            cardSubtitle = 'Dólar Americano';
+                        } else if (result.from === 'EUR') {
+                            cardSubtitle = 'Euro';
+                        } else if (result.from === destinationCurrencyCode) {
+                            cardSubtitle = 'Moeda do Destino';
+                        } else {
+                            cardSubtitle = `${result.from} Cotação`;
+                        }
                     }
+
 
                     cardHtml = `
                         <div class="bg-white rounded-lg p-4 ${cardClass} shadow-sm currency-card">
@@ -335,8 +394,8 @@
                                 </div>
                                 <span class="${changeClass} text-sm font-semibold">${displayPctChange}</span>
                             </div>
-                            <div class="text-2xl font-extrabold text-gray-900">${result.to} ${typeof result.rate === 'number' ? result.rate.toFixed(2).replace('.', ',') : result.rate}</div>
-                            <div class="text-sm text-gray-800">${cardTitle}</div>
+                            <div class="text-2xl font-extrabold text-gray-900">${rateDisplay}</div>
+                            <div class="text-sm text-gray-800">${cardSubtitle}</div>
                         </div>
                     `;
                 }
@@ -379,6 +438,13 @@
         try {
             const response = await fetch(`https://api.frankfurter.app/${startFormatted}..${endFormatted}?from=${fromCurrency}&to=${toCurrency}`);
             if (!response.ok) {
+                if (response.status === 404) {
+                    return {
+                        labels: [],
+                        dataValues: [],
+                        message: `Dados históricos para ${fromCurrency}/${toCurrency} indisponíveis ou com alta instabilidade.`,
+                    };
+                }
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
