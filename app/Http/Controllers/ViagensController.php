@@ -5,6 +5,7 @@ use App\Models\User;
 use App\Models\Viajantes;
 use App\Models\Objetivos;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse; // Certifique-se de que esta linha está presente
 
 class ViagensController extends Controller
 {
@@ -79,23 +80,37 @@ class ViagensController extends Controller
         $viajante = Viajantes::findOrFail($id);
         $viagemId = $viajante->fk_id_viagem;
         $viajante->delete();
-        return redirect()->route('viagens', ['id' => $viagemId])
-            ->with('success', 'Viajante removido com sucesso!');
+        return redirect()->route('viagens', ['id' => $viagemId]);
     }
 
     // Adiciona um novo viajante à viagem
     public function addViajante(\Illuminate\Http\Request $request)
     {
-        $validated = $request->validate([
+        $rules = [
             'nome_viajante' => 'required|string|max:100',
-            'idade_viajante' => 'required|integer|min:0',
+            'idade_viajante' => 'required|integer|min:0|max:127',
             'viagem_id' => 'required|integer|exists:viagens,pk_id_viagem',
-        ]);
+        ];
+
+        // Adiciona a regra de validação para 'responsavel_legal' (que é o ID do responsável)
+        // apenas se a idade do novo viajante for menor que 18
+        if ($request->input('idade_viajante') < 18) {
+            // Garante que o responsável legal é obrigatório e existe na tabela de viajantes
+            $rules['responsavel_legal'] = 'required|integer|exists:viajantes,pk_id_viajante';
+        }
+
+        $validated = $request->validate($rules);
 
         $viajante = new Viajantes();
         $viajante->nome = $validated['nome_viajante'];
         $viajante->idade = $validated['idade_viajante'];
         $viajante->fk_id_viagem = $validated['viagem_id'];
+
+        // Se o viajante for menor de 18, atribui o ID do responsável legal
+        if ($viajante->idade < 18) {
+            $viajante->responsavel_viajante_id = $validated['responsavel_legal']; // O campo no BD é responsavel_viajante_id
+        }
+
         $viajante->save();
 
         // Se for requisição AJAX, retorna JSON
@@ -105,7 +120,8 @@ class ViagensController extends Controller
                 'viajante' => [
                     'id' => $viajante->pk_id_viajante,
                     'nome' => $viajante->nome,
-                    'idade' => $viajante->idade
+                    'idade' => $viajante->idade,
+                    'responsavel_viajante_id' => $viajante->responsavel_viajante_id ?? null, // Inclui o responsável no retorno AJAX, se existir
                 ]
             ]);
         }
