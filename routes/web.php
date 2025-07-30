@@ -35,6 +35,7 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/dashboard', [DashBoardController::class, 'dashboard'])->name('dashboard');
     Route::get('/myTrips', [ViagensController::class, 'index'])->name('myTrips');
     Route::get('/viagens/{id}', [ViagensController::class, 'show'])->name('viagens');
+    Route::get('/viagens/{id}/noticias', [ViagensController::class, 'showNews'])->name('viagens.noticias');
     Route::delete('/viajantes/{id}', [ViajantesController::class, 'destroy'])->name('viajantes.destroy');
     Route::delete('/objetivos/{id}', [ViagensController::class, 'destroyObjetivo'])->name('objetivos.destroy');
     Route::post('/objetivos', [ViagensController::class, 'addObjetivo'])->name('objetivos.store');
@@ -57,4 +58,5 @@ Route::middleware(['auth'])->group(function (){
     Route::get('autocomplete-airports', [FlightsController::class, 'autocompleteAirports'])->name('autocomplete.airports');
     Route::get('/formTrip/flights', [FormController::class, 'searchAjax'])->name('formTrip.flights.ajax');
     Route::get('/formTrip/card-flight', [FormController::class, 'cardFlightAjax'])->name('formTrip.cardFlight.ajax');
+    Route::get('/explore/set-trip/{id}', [ExploreController::class, 'setTrip'])->name('explore.setTrip');
 });

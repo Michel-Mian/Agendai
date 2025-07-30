@@ -8,7 +8,7 @@
                 <div>
                     <h3 class="text-xl font-bold text-yellow-500">Cotação de Moeda</h3>
                     {{-- O destino da viagem ainda virá do PHP --}}
-                    <p class="text-yellow-400 text-sm font-medium" id="destination-currency-text">{{ $viagem->destino_viagem }}</p>
+                    <p class="text-yellow-400 text-sm font-medium" id="destination-currency-text">{{ $viagem->destino_viagem ?? '' }}</p>
                 </div>
             </div>
             <div class="text-right">
