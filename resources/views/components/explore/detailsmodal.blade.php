@@ -1,12 +1,13 @@
 <div id="placeDetailsModal"
-     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden"
+     class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 hidden"
      style="background: rgba(17,24,39,0.3); backdrop-filter: blur(8px);">
-    <div class="explore-modal-base relative transition-all duration-300 scale-95 opacity-0"
-         style="max-width: 480px; min-height: 35vh; max-height: 75vh;">
+    <div class="explore-modal-base relative transition-all duration-300 scale-95 opacity-0
+            w-full sm:w-[90vw] md:w-[70vw] lg:w-[50vw] max-w-2xl
+            min-h-[35vh] max-h-[90vh] overflow-y-auto">
         <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-10">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
-        <div id="modalContent" class="p-4 sm:p-8 overflow-y-auto max-h-[60vh] sm:max-h-[60vh]">
+        <div id="modalContent" class="p-4 overflow-y-auto w-auto h-auto"> <!--max-h-[100vh] sm:max-h-[100vh] max-w-[100vw] sm:max-w-[100vw]-->
             <h2 class="text-xl sm:text-2xl font-bold mb-4 text-gray-800" id="detailedPlaceName">Nome do Local</h2>
             <p class="text-gray-600 mb-2" id="detailedPlaceAddress">Endereço do Local</p>
             <p class="text-gray-700 leading-relaxed" id="detailedPlaceDescription">

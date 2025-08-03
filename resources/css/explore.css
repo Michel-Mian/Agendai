@@ -43,7 +43,7 @@ html, body {
 /* Responsividade para modais e menus do Explore */
 
 /* Modal base responsivo */
-.explore-modal-base {
+.explore-filter-modal-base {
     width: 100% !important;
     max-width: 480px !important;
     min-width: 0 !important;
@@ -67,7 +67,7 @@ html, body {
     padding: 0 !important;
 }
 @media (min-width: 640px) {
-    .explore-modal-base {
+    .explore-filter-modal-base {
         border-radius: 0.75rem !important;
         position: static !important;
         left: auto !important;
@@ -171,4 +171,4 @@ body, html {
     #cardPreferences {
         max-width: 36rem !important;
     }
-}
+}   
