@@ -16,10 +16,11 @@ return new class extends Migration
             $table->string('destino_viagem', 100);
             $table->date('data_inicio_viagem');
             $table->date('data_final_viagem');
-            $table->string('origem_viagem', 100);
+            $table->string('origem_viagem', 100) -> nullable();
             $table->decimal('orcamento_viagem', 10, 2)->nullable();
             $table->unsignedBigInteger('fk_id_usuario');
             $table->foreign('fk_id_usuario')->references('id')->on('users');
+            $table->timestamps();
         });
     }
 

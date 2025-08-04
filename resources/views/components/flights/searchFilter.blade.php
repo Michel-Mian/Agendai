@@ -41,29 +41,37 @@
             </div>
             <div class="flex flex-col md:flex-row gap-4 mt-2">
                 <!-- Origem e destino -->
-                <div class="flex flex-1 flex-col xs:flex-row bg-gray-100 rounded-lg border border-gray-200 overflow-hidden">
-                    <div class="flex items-center px-3 py-2 gap-2 w-full xs:w-1/2 border-b xs:border-b-0 xs:border-r border-gray-200">
+                <div class="flex flex-1 bg-gray-100 rounded-lg border border-gray-200">
+                    <!-- Origem -->
+                    <div class="flex items-center px-3 py-2 gap-2 w-1/2 border-r border-gray-200 relative">
                         <i class="fa-regular fa-dot-circle text-blue-600"></i>
                         <input 
                             type="text" 
                             name="dep_iata" 
                             id="dep_iata"
                             placeholder="Origem (IATA)"
-                            class="bg-transparent border-0 focus:outline-none text-base text-gray-700 placeholder-gray-400 w-full"
+                            class="bg-transparent border-0 focus:outline-none text-base text-gray-700 placeholder-gray-400 w-full airport-autocomplete"
+                            autocomplete="off"
                         >
+                        <div id="dep_iata_suggestions" class="absolute left-0 top-full w-full bg-white border border-gray-200 rounded max-h-40 overflow-y-auto shadow">
+                        </div>
                     </div>
                     <div class="flex items-center justify-center px-2 py-1">
                         <i class="fa-solid fa-right-left text-gray-400"></i>
                     </div>
-                    <div class="flex items-center px-3 py-2 gap-2 w-full xs:w-1/2">
+                    <!-- Destino -->
+                    <div class="flex items-center px-3 py-2 gap-2 w-1/2 relative">
                         <i class="fa-solid fa-location-dot text-blue-600"></i>
                         <input 
                             type="text" 
                             name="arr_iata" 
                             id="arr_iata"
                             placeholder="Destino (IATA)"
-                            class="bg-transparent border-0 focus:outline-none text-base text-gray-700 placeholder-gray-400 w-full"
+                            class="bg-transparent border-0 focus:outline-none text-base text-gray-700 placeholder-gray-400 w-full airport-autocomplete"
+                            autocomplete="off"
                         >
+                        <div id="arr_iata_suggestions" class="absolute left-0 top-full w-full bg-white border border-gray-200 rounded max-h-40 overflow-y-auto shadow">
+                        </div>                    
                     </div>
                 </div>
                 <!-- Datas -->

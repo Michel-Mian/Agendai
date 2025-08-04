@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('voos', function (Blueprint $table) {
             $table->bigIncrements('pk_id_voo');
             $table->text('desc_aeronave_voo')->nullable(false);
-            $table->dateTime('data_hora_voo')->nullable(false);
+            $table->dateTime('data_hora_partida')->nullable(false);
+            $table->dateTime('data_hora_chegada')->nullable(false);
             $table->string('origem_voo', 100)->nullable(false);
             $table->string('destino_voo', 100)->nullable(false);
             $table->string('companhia_voo', 100)->nullable(false);

@@ -1,9 +1,7 @@
 <div id="placeDetailsModal"
      class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 hidden"
      style="background: rgba(17,24,39,0.3); backdrop-filter: blur(8px);">
-    <div class="explore-modal-base relative transition-all duration-300 scale-95 opacity-0
-            w-full sm:w-[90vw] md:w-[70vw] lg:w-[50vw] max-w-2xl
-            min-h-[35vh] max-h-[90vh] overflow-y-auto">
+    <div class="explore-details-modal-base">
         <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-10">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
@@ -22,8 +20,10 @@
 
 <script>
     // --- Funções do Modal ---
-async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId = null) {
-    infoWindow.close(); // Fecha a InfoWindow ao abrir o modal
+async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId = null, horarioBanco = null) {
+    if (typeof infoWindow !== 'undefined' && infoWindow) {
+        infoWindow.close();
+    }
 
     const modal = document.getElementById('placeDetailsModal');
     const modalContent = document.getElementById('modalContent');
@@ -44,7 +44,10 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
         modal.querySelector('div').classList.add('scale-100', 'opacity-100');
     }, 50);
 
-    const service = new google.maps.places.PlacesService(map);
+    const mapElement = (typeof map !== 'undefined' && map)
+        ? map
+        : document.createElement('div');
+    const service = new google.maps.places.PlacesService(mapElement);
     const request = {
         placeId: placeId,
         fields: ['place_id', 'name', 'formatted_address', 'types', 'rating', 'user_ratings_total', 'photos', 'opening_hours', 'website', 'formatted_phone_number', 'reviews', 'geometry', 'vicinity']
@@ -85,6 +88,22 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
                     </div>
                 </div>` : '';
 
+            // --- NOVO FORMULÁRIO GERADO VIA JS ---
+            let horarioAtual = horarioBanco || "00:00";
+            let alterarHorarioForm = "";
+            if (fromItinerary && databaseId) {
+                let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                alterarHorarioForm = `
+                    <form method="POST" action="/explore/ponto-interesse/${databaseId}/horario" class="mt-4 flex items-center gap-2">
+                        <input type="hidden" name="_token" value="${csrfToken}">
+                        <label for="novo_horario" class="text-sm font-medium text-gray-700">Horário:</label>
+                        <input type="time" id="novo_horario" name="novo_horario" value="${horarioAtual}" class="border rounded px-2 py-1">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded">Alterar para esse horário</button>
+                    </form>
+                    <button onclick="removePontoFromItinerary('${databaseId}')" class="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-pink-500 rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg w-full sm:w-auto">🗑️ Remover do Itinerário</button>
+                `;
+            }
+            // ...restante do modal
             modalContent.innerHTML = `
                 <div class="bg-white rounded-lg">
                     ${photosHtml}
@@ -118,8 +137,8 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
                     </div>
                 </div>
                 <div class="p-8 border-t border-gray-200 flex flex-col sm:flex-row justify-end items-center gap-4">
-                    ${fromItinerary
-                        ? `<button onclick=\"removePontoFromItinerary('${databaseId}')\" class=\"px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-pink-500 rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg w-full sm:w-auto\">🗑️ Remover do Itinerário</button>`
+                    ${fromItinerary && databaseId
+                        ? alterarHorarioForm
                         : (window.hasTrip ? `
                         <div class=\"flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto\">
                             <div class=\"flex items-center gap-2\">
@@ -184,5 +203,31 @@ function closeModal() {
         modal.classList.add('hidden');
         currentDetailedPlace = null; // Limpa o lugar detalhado
     }, 300); // Deve corresponder à duração da transição CSS
+}
+
+function getPlaceType(types) {
+    if (!types) return 'place';
+    if (types.includes('tourist_attraction') || types.includes('museum') || types.includes('park')) return 'attraction';
+    if (types.includes('restaurant') || types.includes('food') || types.includes('meal_takeaway')) return 'restaurant';
+    if (types.includes('lodging') || types.includes('hotel')) return 'hotel';
+    return types.length > 0 ? types[0] : 'place';
+}
+
+function getTypeColorClass(type) {
+    const colors = {
+        attraction: 'bg-purple-100 text-purple-800',
+        restaurant: 'bg-orange-100 text-orange-800',
+        hotel: 'bg-blue-100 text-blue-800'
+    };
+    return colors[type] || 'bg-gray-100 text-gray-800';
+}
+
+function getTypeLabel(type) {
+    const labels = {
+        attraction: 'Atração',
+        restaurant: 'Restaurante',
+        hotel: 'Hotel'
+    };
+    return labels[type] || type.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
 }
 </script>
