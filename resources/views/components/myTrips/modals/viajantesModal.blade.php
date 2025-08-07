@@ -1,10 +1,7 @@
 <div id="viajantes-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
-    <!-- Fundo com blur aprimorado -->
     <div id="viajantes-modal-overlay" class="absolute inset-0 bg-gradient-to-br from-gray-900/60 to-gray-800/60 backdrop-blur-md" aria-hidden="true"></div>
 
-    <!-- Conteúdo do Modal -->
     <div id="viajantes-modal-panel" class="relative w-full max-w-2xl transform rounded-2xl bg-white shadow-2xl transition-all duration-300 scale-95 opacity-0 overflow-hidden max-h-[90vh]">
-        <!-- Header com gradiente -->
         <div class="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
@@ -22,9 +19,7 @@
             </div>
         </div>
         
-        <!-- Corpo do modal -->
         <div class="p-6 flex flex-col max-h-[calc(90vh-120px)]">
-            <!-- Barra de busca aprimorada -->
             <div class="mb-6">
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -44,7 +39,6 @@
                 </div>
             </div>
 
-            <!-- Lista de viajantes com scroll -->
             <div class="flex-1 overflow-y-auto pr-2 space-y-3" style="max-height: calc(90vh - 250px);">
                 @if($viajantes->count())
                     @foreach($viajantes as $viajante)
@@ -89,7 +83,6 @@
                     </div>
                 @endif
                 
-                <!-- Mensagem quando não há resultados na busca -->
                 <div id="no-results-message-viajantes" class="hidden text-center py-12">
                     <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-search text-gray-400 text-2xl"></i>
@@ -99,7 +92,6 @@
                 </div>
             </div>
             
-            <!-- Footer com ações -->
             <div class="mt-6 pt-4 border-t border-gray-200">
                 <div class="flex justify-between items-center">
                     <button id="add-viajante-from-list" class="bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded-lg transition-colors flex items-center space-x-2">

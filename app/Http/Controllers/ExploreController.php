@@ -170,4 +170,11 @@ class ExploreController extends Controller
 
         return redirect()->back()->with('success', 'Horário do ponto de interesse alterado com sucesso!');
     }
+
+    
+    public function setTripIdAndRedirect($id)
+    {
+        session(['trip_id' => $id]);
+        return redirect()->route('explore.index');
+    }
 }

@@ -33,10 +33,11 @@ Route::middleware(['auth'])->group(function (){
     Route::post('/trip/insurance-ajax', [TripController::class, 'scrapingAjax'])->name('run.Scraping.ajax');
 
     Route::get('/dashboard', [DashBoardController::class, 'dashboard'])->name('dashboard');
+
     Route::get('/myTrips', [ViagensController::class, 'index'])->name('myTrips');
     Route::get('/viagens/{id}', [ViagensController::class, 'show'])->name('viagens');
-    Route::get('/viagens/{id}/noticias', [ViagensController::class, 'showNews'])->name('viagens.noticias');
-    Route::delete('/viajantes/{id}', [ViajantesController::class, 'destroy'])->name('viajantes.destroy');
+    Route::delete('/viajantes/{id}', [ViagensController::class, 'destroy'])->name('viajantes.destroy');
+    Route::get('/explore/set-trip/{id}', [ExploreController::class, 'setTripIdAndRedirect'])->name('explore.setTrip');
     Route::delete('/objetivos/{id}', [ViagensController::class, 'destroyObjetivo'])->name('objetivos.destroy');
     Route::post('/objetivos', [ViagensController::class, 'addObjetivo'])->name('objetivos.store');
     Route::post('/viajantes', [ViagensController::class, 'addViajante'])->name('viajantes.store');
