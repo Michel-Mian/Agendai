@@ -106,6 +106,34 @@ class ViagensController extends Controller
             Log::error("Erro ao acessar SerpAPI");
         }
 
+        //Busca o clima na Open-Meteo
+        $destino = $viagem->destino_viagem;
+        $coordenadas = $this->getLatLngFromAddress($destino);
+        $data_inicio = Carbon::parse($viagem->data_inicio_viagem)->format('Y-m-d');
+        $data_fim = Carbon::parse($viagem->data_final_viagem)->format('Y-m-d');
+        $hoje = Carbon::today();
+        $diasDiferenca = $hoje->diffInDays($data_inicio, false); 
+
+        $climas = [];
+        if($diasDiferenca < 7){
+            if ($coordenadas) {
+            $latitude = $coordenadas['lat'];
+            $longitude = $coordenadas['lng'];
+            $weatherUrl = "https://api.open-meteo.com/v1/forecast?latitude={$latitude}&longitude={$longitude}&daily=temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_sum,rain_sum,precipitation_probability_max&start_date={$data_inicio}&end_date={$data_fim}";
+            $weatherResponse = file_get_contents($weatherUrl);
+            $clima = json_decode($weatherResponse, true);
+
+            $climas[] = $clima;
+            } else {
+                $clima = null;
+            }
+        }
+        else{
+            $clima = null;
+        }
+        
+
+        //dd($clima);
         return view('viagens/detailsTrip', [
             'title' => 'Detalhes da Viagem',
             'viagem' => $viagem,
@@ -115,7 +143,8 @@ class ViagensController extends Controller
             'objetivos' => $viagem->objetivos,
             'usuario' => $viagem->user,
             'noticias' => $noticias,
-            'eventos' => $eventos
+            'eventos' => $eventos,
+            'clima' => $clima
         ]);
     }
 
@@ -161,23 +190,37 @@ class ViagensController extends Controller
         $viajante = Viajantes::findOrFail($id);
         $viagemId = $viajante->fk_id_viagem;
         $viajante->delete();
-        return redirect()->route('viagens', ['id' => $viagemId])
-            ->with('success', 'Viajante removido com sucesso!');
+        return redirect()->route('viagens', ['id' => $viagemId]);
     }
 
     // Adiciona um novo viajante à viagem
     public function addViajante(\Illuminate\Http\Request $request)
     {
-        $validated = $request->validate([
+        $rules = [
             'nome_viajante' => 'required|string|max:100',
-            'idade_viajante' => 'required|integer|min:0',
+            'idade_viajante' => 'required|integer|min:0|max:127',
             'viagem_id' => 'required|integer|exists:viagens,pk_id_viagem',
-        ]);
+        ];
+
+        // Adiciona a regra de validação para 'responsavel_legal' (que é o ID do responsável)
+        // apenas se a idade do novo viajante for menor que 18
+        if ($request->input('idade_viajante') < 18) {
+            // Garante que o responsável legal é obrigatório e existe na tabela de viajantes
+            $rules['responsavel_legal'] = 'required|integer|exists:viajantes,pk_id_viajante';
+        }
+
+        $validated = $request->validate($rules);
 
         $viajante = new Viajantes();
         $viajante->nome = $validated['nome_viajante'];
         $viajante->idade = $validated['idade_viajante'];
         $viajante->fk_id_viagem = $validated['viagem_id'];
+
+        // Se o viajante for menor de 18, atribui o ID do responsável legal
+        if ($viajante->idade < 18) {
+            $viajante->responsavel_viajante_id = $validated['responsavel_legal']; // O campo no BD é responsavel_viajante_id
+        }
+
         $viajante->save();
 
         // Se for requisição AJAX, retorna JSON
@@ -187,12 +230,32 @@ class ViagensController extends Controller
                 'viajante' => [
                     'id' => $viajante->pk_id_viajante,
                     'nome' => $viajante->nome,
-                    'idade' => $viajante->idade
+                    'idade' => $viajante->idade,
+                    'responsavel_viajante_id' => $viajante->responsavel_viajante_id ?? null, // Inclui o responsável no retorno AJAX, se existir
                 ]
             ]);
         }
 
         // Redireciona de volta para a página da viagem
         return redirect()->route('viagens', ['id' => $viajante->fk_id_viagem])->with('success', 'Viajante adicionado com sucesso!');
+    }
+
+    private function getLatLngFromAddress($address)
+    {
+        $apiKey = env('GOOGLE_GEOCODING_KEY');
+        $addressEncoded = urlencode($address);
+        $url = "https://maps.googleapis.com/maps/api/geocode/json?address={$addressEncoded}&key={$apiKey}";
+
+        $response = file_get_contents($url);
+        $data = json_decode($response, true);
+
+        if ($data['status'] === 'OK') {
+            $location = $data['results'][0]['geometry']['location'];
+            return [
+                'lat' => $location['lat'],
+                'lng' => $location['lng'],
+            ];
+        }
+        return null;
     }
 }
