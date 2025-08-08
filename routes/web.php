@@ -69,7 +69,6 @@ Route::middleware(['auth'])->group(function (){
  
     Route::put('/user/{id}/profile', [UserController::class, 'updateProfile'])->name('user.updateProfile');
     Route::put('/user/{id}/preferences', [UserController::class, 'updatePreferences'])->name('user.updatePreferences');
-
     Route::get('/hotels', [HotelsController::class, 'index']);
     Route::post('/hotels/search', [HotelsController::class, 'search']);
     Route::post('/hotels/{id}', [HotelsController::class, 'addToTrip'])->name('hotels.addToTrip');
