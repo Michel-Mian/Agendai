@@ -16,7 +16,7 @@
         <link rel="stylesheet" href="{{ asset('css/myTrips.css') }}">
         <link rel="stylesheet" href="{{ asset('css/formTrip.css') }}">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        @vite(['resources/css/app.css', 'resources/css/explore.css', 'resources/js/app.js', 'resources/js/dashBoard.js', 'resources/js/searchFlights.js', 'resources/js/formTrip.js' ,])
+        @vite(['resources/css/app.css', 'resources/css/explore.css', 'resources/js/app.js', 'resources/js/dashBoard.js', 'resources/js/searchFlights.js', 'resources/js/formTrip.js' , 'resources/js/hotels.js'])
     </head>
     <body>
             <main class="">
