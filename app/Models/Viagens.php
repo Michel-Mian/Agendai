@@ -39,4 +39,9 @@ class Viagens extends Model
     {
         return $this->hasMany(Voos::class, 'fk_id_viagem', 'pk_id_viagem');
     }
+
+    public function hotels()
+    {
+        return $this->hasMany(Hotels::class, 'fk_id_viagem', 'pk_id_viagem');
+    }
 }

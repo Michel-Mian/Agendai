@@ -36,6 +36,12 @@
                 </a>
             </li>
             <li>
+                <a href="/hotels" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
+                    <i class="fa-solid fa-hotel"></i>
+                    <span class="nav-text">Hotels</span>
+                </a>
+            </li>
+            <li>
                 <a href="/formTrip" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
                     <i class="fa-solid fa-plus"></i>
                     <span class="nav-text">Criar Viagem</span>
