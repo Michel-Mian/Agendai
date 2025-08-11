@@ -343,4 +343,25 @@
             transform: translateY(-2px);
         }
     </style>
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Substitua pelo ID real da viagem
+    const viagemId = {{ $viagem->pk_id_viagem }};
+    fetch(`/viagens/${viagemId}/noticias`)
+        .then(response => response.json())
+        .then(noticias => {
+            // Exemplo: onde exibir as notícias
+            if (noticias.Cultura) {
+                document.getElementById('noticia-cultura');
+            }
+            if (noticias.Saúde) {
+                document.getElementById('noticia-saude');
+            }
+            if (noticias.Local) {
+                document.getElementById('noticia-local');
+            }
+        });
+});
+</script>
 @endsection

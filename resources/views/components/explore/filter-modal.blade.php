@@ -9,7 +9,7 @@
 <!-- Modal Overlay -->
 <div id="modalOverlay" class="fixed inset-0 z-50 bg-black/40 flex justify-center items-end sm:items-center transition-all duration-300 hidden">
     <!-- Modal Content -->
-    <div class="explore-modal-base">
+    <div class="explore-filter-modal-base">
         <!--<div
         class="w-full max-w-[480px] sm:max-w-xl bg-white rounded-t-2xl sm:rounded-xl shadow-xl flex flex-col
                transition-all duration-300
