@@ -12,6 +12,9 @@
             <div class="bg-white rounded-2xl shadow-xl p-10 mb-10 animate-fade-in">
                 <form id="multiStepForm" method="POST" action="{{ route('formTrip.store') }}">
                     @csrf
+                    <!-- Campo oculto para salvar o seguro selecionado -->
+                    <input type="hidden" name="seguro_selecionado" id="seguro_selecionado">
+
                     <!-- Passo 1 -->
                     @include('trip.step1')
 
@@ -49,7 +52,9 @@ document.addEventListener("DOMContentLoaded", function () {
         for (let i = 1; i <= qtd; i++) {
             idadesContainer.innerHTML += `
                 <div class="flex-1">
-                    <label class="block text-gray-600 font-semibold mb-2">Idade do passageiro ${i}<label class="text-red-600 text-base font-thin">*</label></label>
+                    <label class="block text-gray-600 font-semibold mb-2">
+                        Idade do passageiro ${i}<label class="text-red-600 text-base font-thin">*</label>
+                    </label>
                     <input type="number" min="0" max="120" name="idades[]" class="input" id="idades" required>
                 </div>
             `;
@@ -71,9 +76,9 @@ document.addEventListener("DOMContentLoaded", function () {
             const data_volta = document.querySelector('input[name="date_return"]').value;
             const qtd = document.getElementById('num_pessoas').value;
             let idades = [];
-    document.querySelectorAll('input[name="idades[]"]').forEach(input => {
-        idades.push(input.value);
-    });
+            document.querySelectorAll('input[name="idades[]"]').forEach(input => {
+                idades.push(input.value);
+            });
             const token = document.querySelector('input[name="_token"]').value;
 
             const resultado = document.getElementById('resultado-seguros');
@@ -94,34 +99,40 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (data.frases && data.frases.length) {
                     let html = '<h3 class="mt-10 mb-8 text-center text-blue-700 font-extrabold text-2xl tracking-tight">Resultados dos Seguros</h3>';
                     html += '<div class="flex flex-col gap-6">';
-                    data.frases.forEach(seguro => {
+                    data.frases.forEach((seguro, index) => {
                         html += `
-                            <div class="flex flex-col md:flex-row items-stretch bg-white/90 border border-blue-100 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                            <div 
+                                class="seguro-card flex flex-col md:flex-row items-stretch bg-white/90 border border-blue-100 rounded-xl shadow-sm hover:shadow-lg transition duration-300 overflow-hidden cursor-pointer"
+                                data-id="${seguro.id || index}"
+                                data-link="${seguro.link || ''}"
+                            >
                                 <div class="flex items-center justify-center md:w-40 bg-gradient-to-br from-blue-100 to-green-100 p-6">
                                     <span class="text-5xl text-blue-400">🛡️</span>
                                 </div>
                                 <div class="flex-1 flex flex-col justify-between p-6">
                                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
                                         <span class="text-lg font-semibold text-blue-700">${seguro.site || 'Site Desconhecido'}</span>
-                                        ${seguro.preco ? `<span class="text-green-600 font-bold text-lg bg-green-50 px-3 py-1 rounded-full">${seguro.preco}</span>` : ''}}
+                                        ${seguro.preco ? `<span class="text-green-600 font-bold text-lg bg-green-50 px-3 py-1 rounded-full">${seguro.preco}</span>` : ''}
                                     </div>
                                     <div class="text-gray-700 text-sm flex flex-wrap gap-x-6 gap-y-1 mb-4">
                                         ${(seguro.dados || []).map(linha => `<span class="inline-block">${linha}</span>`).join('')}
                                     </div>
-                                    ${seguro.link ? `
-                                        <div class="flex justify-end">
-                                            <a href="${seguro.link}" target="_blank" rel="noopener noreferrer"
-                                                class="inline-block text-blue-600 font-semibold border border-blue-200 rounded-lg px-5 py-2 hover:bg-blue-50 hover:scale-105 transition">
-                                                Ver detalhes &rarr;
-                                            </a>
-                                        </div>
-                                    ` : ''}
                                 </div>
                             </div>
                         `;
                     });
                     html += '</div>';
                     resultado.innerHTML = html;
+
+                    // Deixar os cards clicáveis para selecionar
+                    document.querySelectorAll('.seguro-card').forEach(card => {
+                        card.addEventListener('click', function() {
+                            document.querySelectorAll('.seguro-card').forEach(c => c.classList.remove('selected'));
+                            this.classList.add('selected');
+                            document.getElementById('seguro_selecionado').value = this.dataset.id;
+                        });
+                    });
+
                 } else {
                     resultado.innerHTML = '<div class="text-red-500">Nenhum seguro encontrado.</div>';
                 }
@@ -133,3 +144,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 </script>
+
+<style>
+/* Estilo para o card selecionado igual preferências */
+.seguro-card.selected {
+    border: 2px solid #22c55e;
+    background-color: #ecfdf5;
+}
+</style>
