@@ -44,6 +44,7 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/myProfile/{id}/edit', [UserController::class, 'editProfile']);
     Route::put('/myProfile/{id}/edit', [UserController::class, 'updateProfile']);
     Route::get('/flights', [FlightsController::class, 'search'])->name('flights.search');
+    Route::post('/flights', [FlightsController::class, 'saveFlights'])->name('flights.saveFlights');
     Route::get('/config/{id}/edit', [UserController::class, 'editConfig']);
     Route::put('/config/{id}/edit', [UserController::class, 'updateConfig']);
     Route::get('/explore', [ExploreController::class, 'index'])->name('explore');

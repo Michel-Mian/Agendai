@@ -1,7 +1,12 @@
 <div class="flight-card relative flex bg-white rounded-lg shadow-md px-8 py-6 mb-10 transition-all duration-200" data-index="{{ $index }}">
     <!-- Checkbox lateral -->
     <div class="absolute left-0 top-1/2 -translate-y-1/2 pl-4">
-        <input type="checkbox" class="select-flight-checkbox" data-index="{{ $index }}">
+        <input type="checkbox"
+            class="select-flight-checkbox"
+            data-voo='@json($flight)'
+            data-preco="{{ $flight['price'] }}"
+            data-index="{{ $index }}"
+        >
     </div>
     <div class="flex-1 pl-12">
         <div class="flex items-center">
