@@ -4,8 +4,9 @@ use App\Models\Viagens;
 use App\Models\User;
 use App\Models\Viajantes;
 use App\Models\Objetivos;
+use App\Models\Hotel;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse; // Certifique-se de que esta linha está presente
+use Illuminate\Http\RedirectResponse; 
 
 class ViagensController extends Controller
 {
@@ -25,7 +26,8 @@ class ViagensController extends Controller
             'pontosInteresse',
             'voos',
             'objetivos',
-            'user'
+            'user',
+            'hotel'
         ])->findOrFail($id);
 
         return view('viagens/detailsTrip', [
@@ -35,7 +37,8 @@ class ViagensController extends Controller
             'pontosInteresse' => $viagem->pontosInteresse,
             'voos' => $viagem->voos,
             'objetivos' => $viagem->objetivos,
-            'usuario' => $viagem->user
+            'usuario' => $viagem->user,
+            'hotel' => $viagem->hotel
         ]);
     }
 
