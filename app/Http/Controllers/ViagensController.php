@@ -145,7 +145,7 @@ class ViagensController extends Controller
             'voos' => $viagem->voos,
             'objetivos' => $viagem->objetivos,
             'usuario' => $viagem->user,
-            'hotel' => $viagem->hotel
+            'hotel' => $viagem->hotel,
             'noticias' => $noticias,
             'eventos' => $eventos,
             'clima' => $clima
