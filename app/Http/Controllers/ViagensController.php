@@ -4,11 +4,13 @@ use App\Models\Viagens;
 use App\Models\User;
 use App\Models\Viajantes;
 use App\Models\Objetivos;
+use App\Models\Hotel;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse; 
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Carbon\CarbonInterface;
-Carbon::setLocale('pt_BR'); // ou 'pt' se o sistema estiver em português
+Carbon::setLocale('pt_BR');
 
 class ViagensController extends Controller
 {
@@ -28,7 +30,8 @@ class ViagensController extends Controller
             'pontosInteresse',
             'voos',
             'objetivos',
-            'user'
+            'user',
+            'hotel'
         ])->findOrFail($id);
 
         // Busca notícias da SerpAPI
@@ -142,6 +145,7 @@ class ViagensController extends Controller
             'voos' => $viagem->voos,
             'objetivos' => $viagem->objetivos,
             'usuario' => $viagem->user,
+            'hotel' => $viagem->hotel
             'noticias' => $noticias,
             'eventos' => $eventos,
             'clima' => $clima
