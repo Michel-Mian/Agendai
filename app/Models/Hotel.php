@@ -14,11 +14,8 @@ class Hotel extends Model
     
     protected $table = 'hotels';
     protected $primaryKey = 'pk_id_hotel';
-    // REMOVIDO: public $incrementing = false; // Agora será auto-incrementável
-    // REMOVIDO: protected $keyType = 'string'; // Agora será um inteiro
 
     protected $fillable = [
-        // REMOVIDO: 'pk_id_hotel', // Não é mais fillable, pois é auto-incrementável
         'nome_hotel',
         'latitude',
         'longitude',
@@ -33,7 +30,7 @@ class Hotel extends Model
     /**
      * Relacionamento com a tabela de viagens.
      */
-    public function viagem()
+    public function viagens()
     {
         return $this->belongsTo(Viagens::class, 'fk_id_viagem', 'pk_id_viagem');
     }

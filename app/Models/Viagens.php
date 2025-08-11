@@ -40,8 +40,8 @@ class Viagens extends Model
         return $this->hasMany(Voos::class, 'fk_id_viagem', 'pk_id_viagem');
     }
 
-    public function hotels()
+    public function hotel()
     {
-        return $this->hasMany(Hotels::class, 'fk_id_viagem', 'pk_id_viagem');
+        return $this->hasMany(Hotel::class, 'fk_id_viagem', 'pk_id_viagem');
     }
 }
