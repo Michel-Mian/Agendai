@@ -6,7 +6,7 @@
     </div>
     <div class="mb-6">
         <label class="block text-gray-600 font-semibold mb-2">Qual sua origem?<label class="text-red-600 text-base font-thin">*</label></label>
-        <input type="text" id="origem" name="origem" class="input" placeholder="Digite o destino dos sonhos...">
+        <input type="text" id="origem" name="origem" class="input" placeholder="Digite de onde você sairá...">
     </div>
     <div class="flex gap-6 mb-6">
         <div class="flex-1">

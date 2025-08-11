@@ -116,7 +116,6 @@
 </div>
 
 <!-- Modal de Filtros - Movido para fora do menu flutuante -->
-@include('components.explore.filter-modal')
 
 @php $hasTrip = session()->has('trip_id'); @endphp
 @includeWhen($hasTrip, 'components.explore.detailsmodal')
