@@ -188,4 +188,229 @@ class TripController extends Controller
             'link' => $link,
         ];
     }
+
+    public function salvarSeguro(Request $request) 
+{
+    $data = $request->all();
+
+    if (is_string($data['dados'])) {
+        $data['dados'] = json_decode($data['dados'], true);
+    }
+
+    if (!is_array($data['dados'])) {
+        return response()->json(['erro' => 'Dados inválidos'], 400);
+    }
+
+    $cobertura_medica = null;
+    $cobertura_bagagem = null;
+    $cobertura_cancelamento = null;
+    $preco_pix = null;
+    $preco_cartao = null;
+    $parcelas = null;
+    $preco = null;
+
+    $cobertura_odonto = null;
+    $cobertura_medicamentos = null;
+    $cobertura_eletronicos = null;
+    $cobertura_mochila_mao = null;
+    $cobertura_atraso_embarque = null;
+    $cobertura_pet = null;
+    $cobertura_sala_vip = null;
+    $cobertura_telemedicina = false;
+
+    $esperando_valor_para = null;
+    $previousLine = '';
+
+    foreach ($data['dados'] as $linha) {
+        $linha_lower = mb_strtolower($linha);
+
+        // === Cobertura médica ===
+        if (
+            str_contains($linha_lower, 'despesas médico') ||
+            str_contains($linha_lower, 'despesas médicas') ||
+            str_contains($linha_lower, 'despesa médica hospitalar') ||
+            str_contains($linha_lower, 'dmh')
+        ) {
+            if (preg_match('/us[d\$]\s*[\d\.,]+/i', $linha)) {
+                $cobertura_medica = $this->extrairValorNumerico($linha);
+            } else {
+                $esperando_valor_para = 'cobertura_medica';
+            }
+        }
+
+        // === Cobertura bagagem ===
+        if (str_contains($linha_lower, 'bagagem')) {
+            preg_match_all('/(us[d\$])\s*[\d\.,]+/i', $linha, $matches);
+            if (!empty($matches[0])) {
+                $ultimo_valor = end($matches[0]);
+                $cobertura_bagagem = $this->extrairValorNumerico($ultimo_valor);
+            } else {
+                $esperando_valor_para = 'cobertura_bagagem';
+            }
+        }
+
+        // === Cancelamento ===
+        if (str_contains($linha_lower, 'cancelamento')) {
+            if (preg_match('/us[d\$]\s*[\d\.,]+/i', $linha)) {
+                $cobertura_cancelamento = $this->extrairValorNumerico($linha);
+            } else {
+                $esperando_valor_para = 'cobertura_cancelamento';
+            }
+        }
+
+        // === Valor na linha seguinte ===
+        if ($esperando_valor_para && preg_match('/us[d\$]\s*[\d\.,]+/i', $linha, $match)) {
+            $valor = $this->extrairValorNumerico($match[0]);
+            if ($esperando_valor_para === 'cobertura_medica' && !$cobertura_medica) {
+                $cobertura_medica = $valor;
+            } elseif ($esperando_valor_para === 'cobertura_bagagem' && !$cobertura_bagagem) {
+                $cobertura_bagagem = $valor;
+            } elseif ($esperando_valor_para === 'cobertura_cancelamento' && !$cobertura_cancelamento) {
+                $cobertura_cancelamento = $valor;
+            }
+            $esperando_valor_para = null;
+        }
+
+        if (str_contains($linha_lower, 'odontológicas') || str_contains($linha_lower, 'odontológica')) {
+            $cobertura_odonto = $this->extrairValorNumerico($linha);
+        }
+
+        if (str_contains($linha_lower, 'medicamentos')) {
+            $cobertura_medicamentos = $this->extrairValorNumerico($linha);
+        }
+
+        if (str_contains($linha_lower, 'eletrônicos')) {
+            $cobertura_eletronicos = $this->extrairValorNumerico($linha);
+        }
+
+        if (str_contains($linha_lower, 'mochila') || str_contains($linha_lower, 'mão protegida')) {
+            $cobertura_mochila_mao = $this->extrairValorNumerico($linha);
+        }
+
+        if (str_contains($linha_lower, 'atraso de embarque')) {
+            $cobertura_atraso_embarque = $this->extrairValorNumerico($linha);
+        }
+
+        if (str_contains($linha_lower, 'pet')) {
+            $cobertura_pet = $this->extrairValorNumerico($linha);
+        }
+
+        if (str_contains($linha_lower, 'sala vip')) {
+            $cobertura_sala_vip = 'incluído';
+        }
+
+        if (str_contains($linha_lower, 'telemedicina')) {
+            $cobertura_telemedicina = true;
+        }
+
+        // === Preço PIX ===
+        if (str_contains($linha_lower, 'preço pix') || (str_contains($linha_lower, 'pix') && str_contains($linha_lower, 'r$'))) {
+            $preco_pix = $this->extrairValorNumerico($linha);
+        }
+
+        // === Preço Cartão ===
+        if (
+            (str_contains($linha_lower, 'cartão') && str_contains($linha_lower, 'r$')) ||
+            (str_contains($linha_lower, 'em até') && str_contains($linha_lower, 'x') && str_contains($linha_lower, 'r$'))
+        ) {
+            $preco_cartao = $this->extrairValorNumerico($linha);
+        }
+
+        // === Parcelas ===
+        if (
+            str_contains($linha_lower, 'x de r$') ||
+            preg_match('/\d+x.*(sem juros|no cartão)/i', $linha)
+        ) {
+            $linha_limpa = trim(preg_replace('/^ou\s+/i', '', $linha));
+            $parcelas = $linha_limpa;
+        }
+
+        // === Preço Total ===
+        if (str_contains($linha_lower, 'total à vista')) {
+            $preco = $this->extrairValorNumerico($linha);
+        }
+
+        if ($preco === null && str_contains($linha_lower, 'r$')) {
+            $preco = $this->extrairValorNumerico($linha);
+        }
+
+        $previousLine = $linha;
+    }
+
+    // === Limpa o título (remove aspas e espaços extras) ===
+    $titulo_bruto = $data['dados'][0] ?? 'Título não informado';
+    $titulo_limpo = trim($titulo_bruto);
+    $titulo_limpo = str_replace(['\\"', "\\'", '"', "'"], '', $titulo_limpo);
+
+    $seguro = new \App\Models\Seguros();
+    $seguro->site = $data['site'];
+    $seguro->titulo = $titulo_limpo;
+    $seguro->link = !empty($data['link']) ? $data['link'] : null;
+    $seguro->cobertura_medica = $cobertura_medica;
+    $seguro->cobertura_bagagem = $cobertura_bagagem;
+    $seguro->cobertura_cancelamento = $cobertura_cancelamento;
+    $seguro->cobertura_odonto = $cobertura_odonto;
+    $seguro->cobertura_medicamentos = $cobertura_medicamentos;
+    $seguro->cobertura_eletronicos = $cobertura_eletronicos;
+    $seguro->cobertura_mochila_mao = $cobertura_mochila_mao;
+    $seguro->cobertura_atraso_embarque = $cobertura_atraso_embarque;
+    $seguro->cobertura_pet = $cobertura_pet;
+    $seguro->cobertura_sala_vip = $cobertura_sala_vip;
+    $seguro->cobertura_telemedicina = $cobertura_telemedicina;
+    $seguro->preco_pix = $preco_pix;
+    $seguro->preco_cartao = $preco_cartao;
+    $seguro->parcelas = $parcelas;
+    $seguro->preco = $preco;
+    $seguro->save();
+
+    return response()->json(['mensagem' => 'Seguro salvo com sucesso!']);
+}
+
+
+private function extrairValorComMoeda($texto)
+{
+    preg_match('/(usd|us\$|r\$)?\s*([\d\.]+(?:,\d{2})?)/i', $texto, $matches);
+    if (isset($matches[2])) {
+        $moeda = strtoupper($matches[1] ?? '');
+        $numero = str_replace(['.', ','], ['', '.'], $matches[2]);
+        return trim($moeda . ' ' . number_format((float) $numero, 2, '.', ''));
+    }
+    return null;
+}
+
+private function extrairValorNumerico($texto)
+{
+    if (preg_match('/((US\$|USD|R\$|€|U\$)?\s*)?([\d\.,]+)/i', $texto, $matches)) {
+        $moeda = strtoupper($matches[2] ?? '');
+        $valor = str_replace(['.', ','], ['', '.'], $matches[3]);
+
+        // Garante duas casas decimais
+        $valorFormatado = number_format((float) $valor, 2, '.', '');
+
+        // Corrige o símbolo da moeda
+        switch ($moeda) {
+            case 'USD':
+            case 'U$':
+                $moeda = 'US$';
+                break;
+            case 'R$':
+                $moeda = 'R$';
+                break;
+            case '€':
+                $moeda = '€';
+                break;
+            case 'US$':
+                // Já está certo
+                break;
+            default:
+                $moeda = 'R$'; // padrão
+                break;
+        }
+
+        return trim($moeda . ' ' . $valorFormatado);
+    }
+
+    return null;
+}
+
 }
