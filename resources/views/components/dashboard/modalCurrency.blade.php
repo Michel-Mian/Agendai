@@ -1,5 +1,6 @@
-<div id="currency-modal" class="fixed inset-0 z-50 flex items-start justify-center pt-20 sm:pt-32 bg-black bg-opacity-30 backdrop-blur-sm hidden border-t-4 border-gray-200">
-    <div class="bg-white rounded-xl shadow-lg p-4 sm:p-8 max-w-xs sm:max-w-xl w-full relative mx-2 sm:mx-0">
+<div id="currency-modal" class="fixed inset-0 z-50 flex items-start justify-center pt-20 sm:pt-32 hidden border-t-4 border-gray-200">
+    <div class="bg-white rounded-xl shadow-lg p-4 sm:p-8 max-w-xs sm:max-w-xl w-full relative mx-2 sm:mx-0"
+         style="box-shadow: 0 0 0 4px rgba(30, 41, 59, 0.25), 0 10px 25px 0 rgba(0,0,0,0.15);">
         <button id="close-currency-modal" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-2xl font-bold transition-colors">&times;</button>
         <div class="text-center">
             <div class="text-xl sm:text-2xl font-semibold mb-2">Cotação</div>

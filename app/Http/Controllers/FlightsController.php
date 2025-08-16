@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\Airport;
+use App\Models\Viagens;
+use App\Models\Flight; // Certifique-se de ter o modelo Flight importado
 
 class FlightsController extends Controller
 {
@@ -127,7 +129,16 @@ class FlightsController extends Controller
             'EgyptAir'              => 'MS',
             'Royal Air Maroc'       => 'AT',
         ];
-        return view('flights', ['flights' => $paginator, 'title' => 'Voos', 'airlines' => $airlines, 'user' => $user]);
+
+        $viagens = Viagens::where('fk_id_usuario', auth()->id())->get();
+
+        return view('flights', [
+            'flights' => $paginator,
+            'title' => 'Voos',
+            'airlines' => $airlines,
+            'user' => $user,
+            'viagens' => $viagens,
+        ]);
     }
 
     private function paginateArray(array $items, $perPage = 6, $page = null, $options = [])
@@ -185,5 +196,33 @@ class FlightsController extends Controller
         ->get(['name', 'city', 'iata_code']);
 
     return response()->json($results);
+    }
+
+    public function saveFlights(Request $request)
+    {
+        //dd($request->all());
+        $request->validate([
+            'flight_data' => 'required',
+            'viagem_id' => 'required|exists:viagens,pk_id_viagem',
+        ]);
+        $flightData = json_decode($request->flight_data, true);
+
+        // Se vier como array de voos, pegue o primeiro
+        $flight = isset($flightData['flights'][0]) ? $flightData['flights'][0] : $flightData;
+
+
+        \DB::table('voos')->insert([
+            'desc_aeronave_voo' => $flight['airplane'] ?? 'Desconhecido',
+            'data_hora_partida' => $flight['departure_airport']['time'] ?? now(),
+            'data_hora_chegada' => $flight['arrival_airport']['time'] ?? now(),
+            'origem_voo'        => $flight['departure_airport']['id'] ?? '',
+            'destino_voo'       => $flight['arrival_airport']['id'] ?? '',
+            'companhia_voo'     => $flight['airline'] ?? '',
+            'fk_id_viagem'      => $request->viagem_id,
+            'created_at'        => now(),
+            'updated_at'        => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Voo salvo com sucesso!');
     }
 }
