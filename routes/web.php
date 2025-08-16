@@ -62,14 +62,13 @@ Route::middleware(['auth'])->group(function (){
     Route::put('/myProfile/{id}/edit', [UserController::class, 'updateProfile']);
 
     Route::get('/flights', [FlightsController::class, 'search'])->name('flights.search');
-
+    Route::post('/flights', [FlightsController::class, 'saveFlights'])->name('flights.saveFlights');
     Route::get('/config/{id}/edit', [UserController::class, 'editConfig']);
     Route::put('/config/{id}/edit', [UserController::class, 'updateConfig']);
 
  
     Route::put('/user/{id}/profile', [UserController::class, 'updateProfile'])->name('user.updateProfile');
     Route::put('/user/{id}/preferences', [UserController::class, 'updatePreferences'])->name('user.updatePreferences');
-
     Route::get('/hotels', [HotelsController::class, 'index']);
     Route::post('/hotels/search', [HotelsController::class, 'search']);
     Route::post('/hotels/{id}', [HotelsController::class, 'addToTrip'])->name('hotels.addToTrip');
