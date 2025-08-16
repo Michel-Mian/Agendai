@@ -175,6 +175,6 @@ class ExploreController extends Controller
     public function setTripIdAndRedirect($id)
     {
         session(['trip_id' => $id]);
-        return redirect()->route('explore.index');
+        return redirect()->route('explore');
     }
 }

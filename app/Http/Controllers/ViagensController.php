@@ -7,6 +7,7 @@ use App\Models\Objetivos;
 use App\Models\Hotel;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse; 
+use App\Models\PontoInteresse;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Carbon\CarbonInterface;
@@ -25,9 +26,12 @@ class ViagensController extends Controller
     }
     public function show($id, Request $request)
     {
+        $pontos = PontoInteresse::where('fk_id_viagem', $id)
+            ->orderBy('data_ponto_interesse')
+            ->orderBy('hora_ponto_interesse')
+            ->get();
         $viagem = Viagens::with([
             'viajantes',
-            'pontosInteresse',
             'voos',
             'objetivos',
             'user',
@@ -141,7 +145,7 @@ class ViagensController extends Controller
             'title' => 'Detalhes da Viagem',
             'viagem' => $viagem,
             'viajantes' => $viagem->viajantes,
-            'pontosInteresse' => $viagem->pontosInteresse,
+            'pontosInteresse' => $pontos,
             'voos' => $viagem->voos,
             'objetivos' => $viagem->objetivos,
             'usuario' => $viagem->user,
