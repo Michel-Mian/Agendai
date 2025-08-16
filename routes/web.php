@@ -32,6 +32,7 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/trip/form', [TripController::class, 'showForm'])->name('show.Form');
     Route::post('/trip/insurance', [TripController::class, 'runScraping'])->name('run.Scraping');
     Route::post('/trip/insurance-ajax', [TripController::class, 'scrapingAjax'])->name('run.Scraping.ajax');
+    Route::post('/trip/salvar-seguro', [TripController::class, 'salvarSeguro']);
     Route::get('/formTrip', [FormController::class, 'create'])->name('createTrip');
     Route::post('/formTrip', [FormController::class, 'store'])->name('formTrip.store');
     Route::get('autocomplete-airports', [FlightsController::class, 'autocompleteAirports'])->name('autocomplete.airports');

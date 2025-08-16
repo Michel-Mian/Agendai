@@ -90,20 +90,21 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
             })
             .then(res => res.json())
+
             .then(data => {
                 if (data.frases && data.frases.length) {
                     let html = '<h3 class="mt-10 mb-8 text-center text-blue-700 font-extrabold text-2xl tracking-tight">Resultados dos Seguros</h3>';
-                    html += '<div class="flex flex-col gap-6">';
-                    data.frases.forEach(seguro => {
+                    html += '<div id="seguros-list" class="flex flex-col gap-6">';
+                    data.frases.forEach((seguro, idx) => {
                         html += `
-                            <div class="flex flex-col md:flex-row items-stretch bg-white/90 border border-blue-100 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                            <div class="seguro-card flex flex-col md:flex-row items-stretch bg-white/90 border border-blue-100 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden cursor-pointer" data-idx="${idx}" data-seguro='${JSON.stringify(seguro)}'>
                                 <div class="flex items-center justify-center md:w-40 bg-gradient-to-br from-blue-100 to-green-100 p-6">
                                     <span class="text-5xl text-blue-400">🛡️</span>
                                 </div>
                                 <div class="flex-1 flex flex-col justify-between p-6">
                                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
                                         <span class="text-lg font-semibold text-blue-700">${seguro.site || 'Site Desconhecido'}</span>
-                                        ${seguro.preco ? `<span class="text-green-600 font-bold text-lg bg-green-50 px-3 py-1 rounded-full">${seguro.preco}</span>` : ''}}
+                                        ${seguro.preco ? `<span class="text-green-600 font-bold text-lg bg-green-50 px-3 py-1 rounded-full">${seguro.preco}</span>` : ''}
                                     </div>
                                     <div class="text-gray-700 text-sm flex flex-wrap gap-x-6 gap-y-1 mb-4">
                                         ${(seguro.dados || []).map(linha => `<span class="inline-block">${linha}</span>`).join('')}
@@ -122,6 +123,32 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
                     html += '</div>';
                     resultado.innerHTML = html;
+
+                    // Seleção de seguro
+                    let selectedIdx = sessionStorage.getItem('selectedSeguroIdx');
+                    const segurosCards = document.querySelectorAll('.seguro-card');
+                    segurosCards.forEach(card => {
+                        if (selectedIdx !== null && card.getAttribute('data-idx') === selectedIdx) {
+                            card.classList.add('border-green-500');
+                        }
+                        card.addEventListener('click', function() {
+                            segurosCards.forEach(c => c.classList.remove('border-green-500'));
+                            card.classList.add('border-green-500');
+                            sessionStorage.setItem('selectedSeguroIdx', card.getAttribute('data-idx'));
+                            // Salva nome do seguro selecionado
+                            const seguroData = JSON.parse(card.getAttribute('data-seguro'));
+                            sessionStorage.setItem('selectedSeguroName', seguroData.site || 'Seguro');
+                            // Salva no banco via AJAX
+                            fetch("/trip/salvar-seguro", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRF-TOKEN": token
+                                },
+                                body: JSON.stringify(seguroData)
+                            });
+                        });
+                    });
                 } else {
                     resultado.innerHTML = '<div class="text-red-500">Nenhum seguro encontrado.</div>';
                 }
