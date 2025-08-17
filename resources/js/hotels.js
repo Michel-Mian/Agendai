@@ -292,8 +292,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const gpsCoords = hotel.gps_coordinates || null
 
       // Escapa aspas duplas para o atributo data-hotel-json.
-      const hotelJsonString = JSON.stringify(hotel).replace(/"/g, '"')
-
+const hotelJsonString = JSON.stringify(hotel).replace(/"/g, '&quot;');
       htmlContent += `
                 <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 ${hotelSponsored ? "ring-2 ring-yellow-400" : ""}">
                     <div class="relative">
