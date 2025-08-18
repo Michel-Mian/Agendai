@@ -218,6 +218,7 @@ class FlightsController extends Controller
             'origem_voo'        => $flight['departure_airport']['id'] ?? '',
             'destino_voo'       => $flight['arrival_airport']['id'] ?? '',
             'companhia_voo'     => $flight['airline'] ?? '',
+            'preco_voo'         => $flightData['price'],
             'fk_id_viagem'      => $request->viagem_id,
             'created_at'        => now(),
             'updated_at'        => now(),

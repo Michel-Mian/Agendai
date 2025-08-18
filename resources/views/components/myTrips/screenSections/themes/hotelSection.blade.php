@@ -1,20 +1,4 @@
 @php
-    function convertToFloat($value) {
-        if (empty($value)) return 0;
-        // Remove espaços e caracteres não numéricos exceto vírgula e ponto
-        $value = preg_replace('/[^\d,.]/', '', $value);
-        // Se tem vírgula e ponto, assume formato brasileiro (1.234,56)
-        if (strpos($value, ',') !== false && strpos($value, '.') !== false) {
-            $value = str_replace('.', '', $value); // Remove pontos (milhares)
-            $value = str_replace(',', '.', $value); // Troca vírgula por ponto (decimal)
-        }
-        // Se tem apenas vírgula, assume que é decimal brasileiro
-        elseif (strpos($value, ',') !== false) {
-            $value = str_replace(',', '.', $value);
-        }
-        return (float) $value;
-    }
-
     $hotels = $hotel ?? collect();
     if (is_object($hotels) && !method_exists($hotels, 'count')) {
         // Se é um objeto único, transformar em collection

@@ -118,7 +118,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('confirm-orcamento').textContent = `O orçamento da sua viagem é ${orcamento.toFixed(2)}`;
                 document.getElementById('confirm-preco').textContent = `O preço do voo é ${precoSelecionado.toFixed(2)}`;
 
-                // --- NOVA VERIFICAÇÃO DE DATA ---
                 // Pegue a data do voo (do voo selecionado)
                 console.log('dataInicioViagem:', dataInicioViagem);
                 console.log('vooSelecionado:', vooSelecionado);

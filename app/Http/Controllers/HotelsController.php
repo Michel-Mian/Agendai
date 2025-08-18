@@ -106,18 +106,30 @@ class HotelsController extends Controller
             'overall_rating' => 'nullable|numeric',
             'rate_per_night.lowest' => 'nullable|string',
             'extracted_price' => 'nullable|numeric',
-            'price' => 'nullable|string',
+            'price' => 'nullable|numeric',
             'thumbnail' => 'nullable|url',
             'gps_coordinates.latitude' => 'nullable|string',
             'gps_coordinates.longitude' => 'nullable|string',
         ]);
+
+        $preco = $request->input('rate_per_night.lowest') ??
+                 $request->input('extracted_price') ??
+                 $request->input('price') ??
+                 null;
+
+        if (is_string($preco)) {
+            $preco = preg_replace('/[^\d,\.]/', '', $preco); // Remove R$ e espaços
+            $preco = str_replace(',', '.', $preco); // Troca vírgula por ponto
+            $preco = (float) $preco;
+        }
+        $hotelData['preco'] = $preco;
 
         $hotelData = [
             'nome_hotel' => $request->input('name'),
             'latitude' => $request->input('gps_coordinates.latitude'),
             'longitude' => $request->input('gps_coordinates.longitude'),
             'avaliacao' => $request->input('overall_rating'),
-            'preco' => $request->input('rate_per_night.lowest'),
+            'preco' => $preco,
             'data_check_in' => $request->input('check_in_date'),
             'data_check_out' => $request->input('check_out_date'),
             'image_url' => $request->input('thumbnail'),
