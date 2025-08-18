@@ -52,20 +52,17 @@ def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         context = browser.new_context()
-
-        # Bloqueia carregamento de imagens e fontes para acelerar
+        # Bloqueia imagens e fontes para acelerar
         context.route("**/*.{png,jpg,jpeg,svg,woff,woff2}", lambda route: route.abort())
         page = context.new_page()
 
         page.goto("https://www.easyseguroviagem.com.br", timeout=20000)
 
-        # Preenche formulário: motivo e destino
         page.select_option("#MainContent_Cotador_ddlMotivoDaViagem", motivo)
         page.select_option("#MainContent_Cotador_selContinente", destino)
 
-        # Seleciona datas no calendário
         page.click("#MainContent_Cotador_daterange")
-        page.wait_for_selector("//td[contains(@class, 'available')]", timeout=5000)
+        page.wait_for_selector("//td[contains(@class, 'available')]", timeout=3000)
 
         xpath_ida = f"//td[contains(@class, 'available') and text()='{data_ida_obj.day}']"
         page.locator(xpath_ida).nth(0).click()
@@ -75,9 +72,8 @@ def main():
 
         page.click(".applyBtn")
 
-        # Define quantidade de passageiros e preenche idades
         page.select_option("#MainContent_Cotador_selQtdCliente", str(qtd_passageiros))
-        page.wait_for_selector(f"#txtIdadePassageiro{qtd_passageiros}", timeout=3000)
+        page.wait_for_selector(f"#txtIdadePassageiro{qtd_passageiros}", timeout=2000)
 
         for i in range(1, qtd_passageiros + 1):
             campo_id = f"#txtIdadePassageiro{i}"
@@ -86,14 +82,12 @@ def main():
             page.dispatch_event(campo_id, "blur")
 
         page.locator("body").click()
-        page.wait_for_selector("#MainContent_Cotador_btnComprar:enabled", timeout=5000)
+        page.wait_for_selector("#MainContent_Cotador_btnComprar:enabled", timeout=3000)
         page.click("#MainContent_Cotador_btnComprar")
 
-        # Espera os cards aparecerem
         try:
-            page.wait_for_selector(".card-produto", timeout=8000)
+            page.wait_for_selector(".card-produto", timeout=5000)
         except:
-            # Nenhum plano carregado
             browser.close()
             return
 
@@ -106,7 +100,6 @@ def main():
             texto = card.text_content().replace("Veja os detalhes da cobertura", "").strip()
             site = extrair_nome_site(url_resultado)
 
-            # Imprime informações organizadas
             print(site)
             for linha in texto.split("\n"):
                 linha = linha.strip()
@@ -114,6 +107,7 @@ def main():
                     print(linha)
             print(url_resultado)
             print("=====")
+            sys.stdout.flush()
 
         browser.close()
 

@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Recupera nome do seguro selecionado da sessionStorage
+        // Recupera nome completo do seguro selecionado da sessionStorage
         if (seguro === 'Sim') {
             nomeSeguro = sessionStorage.getItem('selectedSeguroName') || 'Nenhum seguro selecionado';
         }
@@ -517,4 +517,13 @@ document.addEventListener('DOMContentLoaded', function() {
             preferencesInput.value = selectedPrefs.join(',');
         });
     });
+});
+
+// -------------------- Tratamento de seleção de seguro (nova lógica) --------------------
+$(document).on('click', '.insurance-card', function() {
+    $('.insurance-card').removeClass('selected');
+    $(this).addClass('selected');
+    // Salva nome do seguro selecionado para revisão
+    var name = $(this).find('h5').text();
+    sessionStorage.setItem('selectedSeguroName', name);
 });

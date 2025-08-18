@@ -99,127 +99,7 @@
                         
                         <!-- Corpo do card com informações detalhadas -->
                         <div class="p-8">
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                <!-- Origem -->
-                                <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
-                                    <div class="flex items-center space-x-3 mb-3">
-                                        <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
-                                            <i class="fas fa-plane-departure text-white text-lg"></i>
-                                        </div>
-                                        <div>
-                                            <div class="text-green-800 font-semibold text-lg">Origem</div>
-                                            <div class="text-green-600 text-sm">Ponto de partida</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-gray-800 font-bold text-xl">{{ $viagem->origem_viagem }}</div>
-                                </div>
-                                
-                                <!-- Período -->
-                                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
-                                    <div class="flex items-center space-x-3 mb-3">
-                                        <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-                                            <i class="fas fa-calendar-alt text-white text-lg"></i>
-                                        </div>
-                                        <div>
-                                            <div class="text-blue-800 font-semibold text-lg">Período</div>
-                                            <div class="text-blue-600 text-sm">Datas da viagem</div>
-                                        </div>
-                                    </div>
-                                    <div class="space-y-1">
-                                        <div class="text-gray-800 font-bold">{{ \Carbon\Carbon::parse($viagem->data_inicio_viagem)->format('d/m/Y') }}</div>
-                                        <div class="text-gray-500 text-sm flex items-center">
-                                            <i class="fas fa-arrow-down mr-1"></i>
-                                            até
-                                        </div>
-                                        <div class="text-gray-800 font-bold">{{ \Carbon\Carbon::parse($viagem->data_final_viagem)->format('d/m/Y') }}</div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Orçamento -->
-                                <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
-                                    <div class="flex items-center space-x-3 mb-3">
-                                        <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
-                                            <i class="fas fa-wallet text-white text-lg"></i>
-                                        </div>
-                                        <div>
-                                            <div class="text-purple-800 font-semibold text-lg">Orçamento</div>
-                                            <div class="text-purple-600 text-sm">Valor planejado</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-gray-800 font-bold text-xl">R$ {{ number_format($viagem->orcamento_viagem, 2, ',', '.') }}</div>
-                                    <div class="text-purple-600 text-sm mt-1">
-                                        <i class="fas fa-info-circle mr-1"></i>
-                                        Orçamento total
-                                    </div>
-                                </div>
-                                
-                                <!-- Estatísticas rápidas -->
-                                <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200">
-                                    <div class="flex items-center space-x-3 mb-3">
-                                        <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
-                                            <i class="fas fa-chart-line text-white text-lg"></i>
-                                        </div>
-                                        <div>
-                                            <div class="text-orange-800 font-semibold text-lg">Resumo</div>
-                                            <div class="text-orange-600 text-sm">Estatísticas</div>
-                                        </div>
-                                    </div>
-                                    <div class="space-y-2">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-gray-600 text-sm">Viajantes:</span>
-                                            <span class="font-bold text-gray-800">{{ $viajantes->count() }}</span>
-                                        </div>
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-gray-600 text-sm">Objetivos:</span>
-                                            <span class="font-bold text-gray-800">{{ $objetivos->count() }}</span>
-                                        </div>
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-gray-600 text-sm">Locais:</span>
-                                            <span class="font-bold text-gray-800">{{ $pontosInteresse->count() }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Barra de progresso da viagem -->
-                            <div class="mt-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
-                                <div class="flex items-center justify-between mb-3">
-                                    <h3 class="font-semibold text-gray-800 flex items-center">
-                                        <i class="fas fa-tasks mr-2 text-blue-500"></i>
-                                        Progresso da Viagem
-                                    </h3>
-                                    @php
-                                        $totalDias = $dataInicio->diffInDays($dataFim) + 1;
-                                        
-                                        if ($hoje->lt($dataInicio)) {
-                                            // Viagem ainda não começou
-                                            $diasPassados = 0;
-                                            $progresso = 0;
-                                        } elseif ($hoje->gt($dataFim)) {
-                                            // Viagem já terminou
-                                            $diasPassados = $totalDias;
-                                            $progresso = 100;
-                                        } else {
-                                            // Viagem em andamento
-                                            $diasPassados = $dataInicio->diffInDays($hoje) + 1;
-                                            $diasPassados = round($diasPassados, 1);
-                                            $progresso = $totalDias > 0 ? ($diasPassados / $totalDias) * 100 : 0;
-                                        }
-                                    @endphp
-                                    <span class="text-sm text-gray-900">
-                                        {{ round($progresso) }}% concluído ({{ $diasPassados }}/{{ $totalDias }} dias)
-                                    </span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-3">
-                                    {{-- AQUI ESTÁ A MUDANÇA: Usando uma cor sólida para garantir a visualização --}}
-                                    <div class="bg-blue-500 h-3 rounded-full transition-all duration-500" style="width: {{ $progresso }}%"></div>
-                                </div>
-                                <div class="flex justify-between text-xs text-gray-500 mt-2">
-                                    <span>{{ $dataInicio->format('d/m/Y') }}</span>
-                                    <span>Hoje</span>
-                                    <span>{{ $dataFim->format('d/m/Y') }}</span>
-                                </div>
-                            </div>
+                            <!-- REMOVE themed sections grid from here -->
                         </div>
                     </div>
                 </div>
@@ -259,6 +139,15 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Themed sections grid: travelers, objectives, insurance (NOW BELOW THE TABS) -->
+                <div class="mx-5 mt-10">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        @include('components.myTrips.screenSections.themes.travelerSection', ['viajantes' => $viajantes, 'viagem' => $viagem])
+                        @include('components.myTrips.screenSections.themes.objectiveSection', ['objetivos' => $objetivos, 'viagem' => $viagem])
+                        @include('components.myTrips.screenSections.themes.insuranceSection', ['seguros' => $seguros, 'viagem' => $viagem])
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -274,6 +163,10 @@
 
     <!-- Modal de Adicionar Viajante -->
     @include('components.myTrips.modals.addViajantesModal')
+
+    <!-- Modal de Seguro -->
+    @include('components.myTrips.modals.insuranceModal')
+    @include('components.myTrips.modals.addInsurance')
 
     @include('components/explore/detailsModal')
     <script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places" async defer></script>

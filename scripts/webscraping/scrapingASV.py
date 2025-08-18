@@ -17,12 +17,10 @@ inicio = time.time()
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=True)
     context = browser.new_context()
-
     # Bloqueia imagens e fontes para acelerar
     context.route("**/*.{png,jpg,jpeg,svg,woff,woff2}", lambda route: route.abort())
     page = context.new_page()
 
-    # Navega para a página inicial
     try:
         page.goto("https://www.affinityseguro.com.br/home/", timeout=20000)
         page.wait_for_selector("#categoria", timeout=10000)
@@ -30,14 +28,12 @@ with sync_playwright() as p:
         browser.close()
         sys.exit(1)
 
-    # Seleciona categoria
     try:
         page.select_option("#categoria", value=categoria)
     except Exception:
         browser.close()
         sys.exit(1)
 
-    # Seleciona destino
     try:
         page.wait_for_selector("#destino", timeout=10000)
         page.wait_for_function("""
@@ -51,7 +47,6 @@ with sync_playwright() as p:
         browser.close()
         sys.exit(1)
 
-    # Remove readonly e preenche datas manualmente
     try:
         page.evaluate(f"""
             () => {{
@@ -68,21 +63,17 @@ with sync_playwright() as p:
         sys.exit(1)
 
     def clicar(id, vezes):
-        """
-        Clica várias vezes no botão de incremento de passageiro, para cada faixa etária.
-        """
         btn = f'button[onclick*="increment(\'{id}\')"]'
         for _ in range(vezes):
             try:
                 page.click(btn)
-                page.wait_for_timeout(100)
+                page.wait_for_timeout(60)
             except Exception:
                 break
 
-    # Abre popover de passageiros
     try:
         page.click("#showPopoverButton")
-        page.wait_for_selector("#popoverContent", state="visible", timeout=10000)
+        page.wait_for_selector("#popoverContent", state="visible", timeout=6000)
     except Exception:
         browser.close()
         sys.exit(1)
@@ -92,20 +83,17 @@ with sync_playwright() as p:
     clicar("inputThird", pax_71_80)
     clicar("inputFourth", pax_81_85)
 
-    # Fecha popover
     try:
         page.click("#showPopoverButton")
     except Exception:
         pass
 
-    # Avança para próxima etapa do formulário
     try:
         page.click("button[onclick*='nextStep(2)']")
     except Exception:
         browser.close()
         sys.exit(1)
 
-    # Preenche dados pessoais
     try:
         page.fill("#nomeCotacao", nome)
         page.fill("#emailCotacao", email)
@@ -114,18 +102,15 @@ with sync_playwright() as p:
         browser.close()
         sys.exit(1)
 
-    # Clica em enviar
     try:
         page.click("button#submit")
     except Exception:
         browser.close()
         sys.exit(1)
 
-    # Espera os cards aparecerem
     try:
-        page.wait_for_selector(".cardiculo", timeout=15000)
+        page.wait_for_selector(".cardiculo", timeout=7000)
     except Exception:
-        # Nenhum plano carregado
         browser.close()
         sys.exit(0)
 
@@ -149,13 +134,13 @@ with sync_playwright() as p:
                         link = "https://www.affinityseguro.com.br" + link
                     print(link)
                 else:
-                    print("https://www.affinityseguro.com.br")  # fallback ou algum link padrão
+                    print("https://www.affinityseguro.com.br")
             except Exception as e:
-                print("https://www.affinityseguro.com.br")  # fallback
+                print("https://www.affinityseguro.com.br")
 
             print("=====")
+            sys.stdout.flush()
         except Exception:
-            # Erro ignorado para não poluir a saída
             pass
 
     browser.close()

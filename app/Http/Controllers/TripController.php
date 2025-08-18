@@ -11,8 +11,8 @@ class TripController extends Controller
     // Exibe o formulário de pesquisa de seguros
     public function showForm()
     {
-        $seguros = Seguros::latest()->get();
-        return view('formTrip', compact('seguros'));
+    $insurances = Seguros::latest()->get();
+    return view('formTrip', ['insurances' => $insurances]);
     }
 
     // Roda os scripts de scraping em paralelo e retorna os seguros padronizados

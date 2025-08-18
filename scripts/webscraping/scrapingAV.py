@@ -63,35 +63,33 @@ def main():
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
+        context = browser.new_context()
+        # Bloqueia imagens e fontes para acelerar
+        context.route("**/*.{png,jpg,jpeg,svg,woff,woff2}", lambda route: route.abort())
+        page = context.new_page()
 
         page.goto("https://assistentedeviagem.com.br/seguro-viagem/cotacao-seguro-viagem.php", timeout=20000)
 
-        # Seleciona destino
         page.click("#destino + .nice-select")
-        page.wait_for_selector(f"#destino + .nice-select .option[data-value='{destino}']", timeout=5000)
+        page.wait_for_selector(f"#destino + .nice-select .option[data-value='{destino}']", timeout=3000)
         page.click(f"#destino + .nice-select .option[data-value='{destino}']")
 
-        # Seleciona datas
         selecionar_data_jquery_ui(page, "#from", data_ida_obj)
         page.wait_for_function(f'document.querySelector("#from").value === "{data_ida_obj.strftime("%d/%m/%Y")}"')
 
         selecionar_data_jquery_ui(page, "#to", data_volta_obj)
         page.wait_for_function(f'document.querySelector("#to").value === "{data_volta_obj.strftime("%d/%m/%Y")}"')
 
-        # Seleciona quantidade de viajantes
         page.click(".box-qtd .nice-select")
-        page.wait_for_selector(f".box-qtd .nice-select .option[data-value='{qtd_viajantes}']", timeout=5000)
+        page.wait_for_selector(f".box-qtd .nice-select .option[data-value='{qtd_viajantes}']", timeout=3000)
         page.click(f".box-qtd .nice-select .option[data-value='{qtd_viajantes}']")
 
-        # Espera inputs de idades aparecerem e preenche idades
-        page.wait_for_selector("div.js-ages input[type='tel']", timeout=10000)
+        page.wait_for_selector("div.js-ages input[type='tel']", timeout=6000)
         campos_idade = page.locator("div.js-ages input[type='tel']")
         total_inputs = campos_idade.count()
-
         tentativas = 0
-        while total_inputs < qtd_viajantes and tentativas < 10:
-            page.wait_for_timeout(300)
+        while total_inputs < qtd_viajantes and tentativas < 6:
+            page.wait_for_timeout(200)
             total_inputs = campos_idade.count()
             tentativas += 1
 
@@ -100,23 +98,19 @@ def main():
                 campo = campos_idade.nth(i)
                 campo.fill("")
                 campo.fill(idade)
-                page.wait_for_timeout(100)
+                page.wait_for_timeout(60)
             except Exception:
-                # Erro ao preencher idade ignorado para não poluir saída
                 pass
 
-        # Preenche dados pessoais
         page.fill('input#name[type="text"]', nome)
         page.fill('input#phone[type="tel"]', telefone)
         page.fill('input#email[type="email"]', email)
 
         page.click("#btnCotacao")
 
-        # Espera os cards carregarem
         try:
-            page.wait_for_selector(".new-plano-destaque", timeout=15000)
+            page.wait_for_selector(".new-plano-destaque", timeout=8000)
         except:
-            # Nenhum plano carregado
             browser.close()
             return
 
@@ -126,7 +120,6 @@ def main():
         for i in range(total_cards):
             card = cards.nth(i)
             try:
-                #titulo = card.locator("h4.nomePlanoCom").text_content().strip()
                 cobertura_medica = card.locator("span.new-plano-destaque-tituloCobertura").text_content().strip()
                 valor_cobertura = card.locator("span.new-plano-destaque-valorCobertura").text_content().strip()
                 cobertura_bagagem = card.locator("span.new-plano-destaque-tituloBagagem").text_content().strip()
@@ -138,16 +131,15 @@ def main():
 
                 print("Assistentedeviagem")
                 print(f"Seguradora: {seguradora_img}")
-                #print(f"Plano: {titulo}")
                 print(f"{cobertura_medica}: {valor_cobertura}")
                 print(f"{cobertura_bagagem}: {valor_bagagem}")
                 print(f"Preço PIX: {preco_pix}")
                 print(f"Preço Cartão: {preco_cartao}")
                 print(link if link else "")
                 print("=====")
+                sys.stdout.flush()
 
             except Exception:
-                # Erro ignorado para evitar poluição da saída
                 pass
 
         browser.close()

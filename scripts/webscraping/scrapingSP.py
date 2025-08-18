@@ -64,12 +64,15 @@ def main():
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
+        context = browser.new_context()
+        # Bloqueia imagens e fontes para acelerar
+        context.route("**/*.{png,jpg,jpeg,svg,woff,woff2}", lambda route: route.abort())
+        page = context.new_page()
         page.goto("https://www.segurospromo.com.br", timeout=20000)
 
         # Seleciona destino na lista
         page.click("#destinationSp")
-        page.wait_for_selector("li.styles_option__hh1To", timeout=5000)
+        page.wait_for_selector("li.styles_option__hh1To", timeout=3000)
 
         opcoes = page.locator("li.styles_option__hh1To")
         total = opcoes.count()
@@ -82,19 +85,15 @@ def main():
                 break
 
         if not encontrado:
-            # Destino não encontrado
             browser.close()
             return
 
-        # Converte datas
         dia_ida = datetime.strptime(data_ida, "%Y-%m-%d")
         dia_volta = datetime.strptime(data_volta, "%Y-%m-%d")
 
-        # Seleciona datas no calendário
         selecionar_data(page, dia_ida, "#departureDateInput")
         selecionar_data(page, dia_volta, "#returningDateInput")
 
-        # Preenche dados pessoais
         page.fill("#nameSp", nome)
         page.fill("#emailSp", email)
         page.fill("#cellphoneSp", celular)
@@ -103,9 +102,8 @@ def main():
 
         # Espera os cards carregarem
         try:
-            page.wait_for_selector(".show-up-plan", timeout=10000)
+            page.wait_for_selector(".show-up-plan", timeout=6000)
         except:
-            # Nenhum plano carregado
             browser.close()
             return
 
@@ -114,7 +112,6 @@ def main():
 
         for i in range(total_cards):
             card = cards.nth(i)
-
             nome_plano = card.locator(".header span").text_content().strip()
             preco_pix = card.locator(".price-pix span").nth(0).text_content().strip()
             preco_cartao = card.locator(".price-atually").text_content().strip()
@@ -122,7 +119,7 @@ def main():
             cobertura_bagagem = card.locator(".plan-info").nth(1).locator(".plan-info-benefit").text_content().strip()
             link = card.locator(".link a").get_attribute("href")
 
-            # Imprime os dados organizados
+            # Imprime os dados organizados imediatamente
             print("SeguroPromo")
             print(nome_plano)
             print(f"Despesa médica hospitalar: {cobertura_medica}")
@@ -131,6 +128,7 @@ def main():
             print(preco_cartao)
             print("https://www.segurospromo.com.br" + link if link else "")
             print("=====")
+            sys.stdout.flush()
 
         browser.close()
 
