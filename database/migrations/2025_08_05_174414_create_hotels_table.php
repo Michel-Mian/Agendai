@@ -19,7 +19,7 @@ return new class extends Migration
             $table->decimal('avaliacao', 2, 1)->nullable();
             $table->date('data_check_in')->nullable();
             $table->date('data_check_out')->nullable();
-            $table->string('preco', 100)->nullable();
+            $table->float('preco')->nullable();
             $table->string('image_url')->nullable();
             $table->unsignedBigInteger('fk_id_viagem');
             $table->foreign('fk_id_viagem')->references('pk_id_viagem')->on('viagens')->onDelete('cascade');

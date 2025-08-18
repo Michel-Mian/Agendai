@@ -136,13 +136,14 @@ class ViagensController extends Controller
         }
         
 
-        //dd($clima);
         return view('viagens/detailsTrip', [
             'title' => 'Detalhes da Viagem',
             'viagem' => $viagem,
             'viajantes' => $viagem->viajantes,
             'pontosInteresse' => $viagem->pontosInteresse,
-            'voos' => $viagem->voos,
+            'voos' => $viagem->voos->filter(function($voo) {
+                return is_object($voo) && $voo !== false;
+            }),
             'objetivos' => $viagem->objetivos,
             'usuario' => $viagem->user,
             'hotel' => $viagem->hotel,
