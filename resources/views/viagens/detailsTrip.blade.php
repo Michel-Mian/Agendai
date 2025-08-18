@@ -275,6 +275,14 @@
                                 <span>Visão Geral</span>
                             </button>
                             <button 
+                                id="tab-rotas-mapa" 
+                                class="tab-button flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-b-lg font-medium text-sm transition-all duration-200"
+                                onclick="switchTab('rotas-mapa')"
+                            >
+                                <i class="fa-solid fa-map"></i>
+                                <span>Suas Rotas</span>
+                            </button>
+                            <button 
                                 id="tab-informacoes-estatisticas" 
                                 class="tab-button flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-b-lg font-medium text-sm transition-all duration-200"
                                 onclick="switchTab('informacoes-estatisticas')"
@@ -289,6 +297,9 @@
                     <div class="tab-content">
                         <div id="content-visao-geral" class="tab-panel active">
                             @include('components/myTrips/screenSections/visaoGeral', ['viagem' => $viagem, 'usuario' => $usuario])
+                        </div>
+                        <div id="content-rotas-mapa" class="tab-panel hidden">
+                            @include('components/myTrips/screenSections/rotasMapa', ['viagem' => $viagem, 'usuario' => $usuario])
                         </div>
                         <div id="content-informacoes-estatisticas" class="tab-panel hidden">
                             @include('components/myTrips/screenSections/informacoesEstatisticas', ['viagem' => $viagem, 'usuario' => $usuario])
@@ -315,7 +326,7 @@
     @include('components.myTrips.modals.addViajantesModal')
 
     @include('components/explore/detailsModal')
-    <script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places&libraries=geometry&callback=checkGoogleMapsLoaded" async defer></script>
     
     <!-- Script para controle das tabs -->
     <script>

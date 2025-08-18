@@ -13,9 +13,6 @@
 
     <!-- Seção de Hotéis -->
     @include('components/myTrips/screenSections/themes/hotelSection')
-
-    <!-- Seção de Pontos de Interesse -->
-    @include('components/myTrips/screenSections/themes/pointSection')
 </div>
 
 <style>
