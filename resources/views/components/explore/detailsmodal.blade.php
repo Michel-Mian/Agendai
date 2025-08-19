@@ -90,7 +90,7 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
                     </div>
                 </div>` : '';
 
-            // --- NOVO FORMULÁRIO GERADO VIA JS ---
+            // --- NOVO FORMULÁRIO GERADO VIA JS   ---
             let horarioAtual = horarioBanco || "00:00";
             let alterarHorarioForm = "";
             if (fromItinerary && databaseId) {

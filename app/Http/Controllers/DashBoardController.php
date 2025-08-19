@@ -17,7 +17,7 @@ class DashBoardController extends Controller
     // Total de viagens do usuário logado
     $totalViagens = Viagens::where('fk_id_usuario', $user->id)->count();
 
-    // Próxima viagem do usuário logado (menor data futura)
+    // Próxima viagem do usuário logado 
     $proximaViagem = Viagens::where('fk_id_usuario', $user->id)
         ->whereDate('data_inicio', '>=', now())
         ->orderBy('data_inicio', 'asc')

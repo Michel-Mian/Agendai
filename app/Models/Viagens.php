@@ -19,7 +19,7 @@ class Viagens extends Model
         'fk_id_usuario',
     ];
 
-    // Relação com o usuário (User)
+    // Relação com  usuário (User)
     public function user()
     {
         return $this->belongsTo(User::class, 'fk_id_usuario', 'id');

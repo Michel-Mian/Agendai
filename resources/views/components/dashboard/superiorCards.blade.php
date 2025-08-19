@@ -1,5 +1,5 @@
 @php
-    // Fallbacks caso alguma variável não seja passada
+    // Fallback caso alguma variável não seja passada
     $proximaViagem = $proximaViagem ?? null;
     $totalViagens = $totalViagens ?? 0;
     $user = $user ?? null;

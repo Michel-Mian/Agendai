@@ -6,7 +6,7 @@
         <div class="flex-1 flex flex-col">
             @include('components/layout/header')
             <main class="flex-1 p-8">
-                <!-- Cards superiores -->{{-- dashboard.blade.php --}}
+                <!-- Cards superiores -->
                 @include('components/dashboard/superiorCards', ['proximaViagem' => $proximaViagem ?? null, 'totalViagens' => $totalViagens ?? 0, 'user' => $user ?? null, 'currencies' => $currencies ?? [], 'cotacao' => $cotacao ?? null])
 
                 <!-- Ações rápidas -->

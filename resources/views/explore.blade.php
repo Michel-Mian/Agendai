@@ -18,7 +18,7 @@
                 </svg>
             </button>
 
-            <!-- Menu flutuante -->
+            <!-- Menu  flutuante -->
             <div id="floatingMenu"
                 class="absolute right-6 top-6 bottom-6 w-96 flex-shrink-0 overflow-hidden z-30 shadow-lg rounded-2xl bg-white border border-gray-200 transition-transform duration-300"
                 style="transform: translateX(110%);">
