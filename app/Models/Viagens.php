@@ -10,6 +10,15 @@ class Viagens extends Model
     public $incrementing = true; 
     public $keyType = 'int';
     
+    protected $fillable = [
+        'destino_viagem',
+        'data_inicio_viagem',
+        'data_final_viagem',
+        'origem_viagem',
+        'orcamento_viagem',
+        'fk_id_usuario',
+    ];
+
     // Relação com o usuário (User)
     public function user()
     {

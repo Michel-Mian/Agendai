@@ -1,4 +1,4 @@
-<div id="sidebar" class="bg-white shadow-lg min-h-screen relative flex flex-col sidebar-expanded">
+<div id="sidebar" class="fixed top-0 left-0 h-screen w-[250px] bg-white shadow-lg flex flex-col sidebar-expanded z-40">
     <!-- Header com Logo e Toggle -->
     <div id="sidebar-header" class="flex items-center justify-between p-2 border-b border-gray-200 transition-all duration-300" style="background-color: #f7faf8;">
         <div id="logo-container" class="flex items-center justify-center w-full space-x-3">
@@ -60,16 +60,9 @@
     <div class="border-t border-gray-200 p-4">
         <div class="relative">
             <button id="profile-button" class="flex items-center space-x-3 w-full rounded-lg hover:bg-gray-50 transition-colors profile-toggle">
-
-                @if(Auth::check())
-                    <img src="{{ Auth::user()->profile_photo_url ? asset(Auth::user()->profile_photo_url) : asset('imgs/default-profile.png') }}"
-                         alt="Foto do perfil" 
-                         class="w-8 h-8 rounded-full object-cover">
-                @else
-                    <img src="{{ asset('imgs/default-profile.png') }}"
-                         alt="Foto do perfil" 
-                         class="w-8 h-8 rounded-full object-cover">
-                @endif
+                <img src="{{ Auth::user()->profile_photo_url ? asset(Auth::user()->profile_photo_url) : asset('imgs/default-profile.png') }}"
+                     alt="Foto do perfil" 
+                     class="w-8 h-8 rounded-full object-cover">
                 
                 <div class="flex-1 text-left profile-info">
                     @if(Auth::check())
@@ -118,3 +111,4 @@
         </div>
     </div>
 </div>
+
