@@ -109,8 +109,6 @@ class ViagensController extends Controller
                 $eventos[] = $evento;
             }
 
-        } else {
-            Log::error("Erro ao acessar SerpAPI");
         }
 
         //Busca o clima na Open-Meteo
