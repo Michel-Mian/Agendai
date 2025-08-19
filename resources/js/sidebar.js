@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.body.classList.remove('body-sidebar-collapsed');
             if (logo) logo.classList.remove('hidden');
             localStorage.setItem('sidebar-collapsed', false);
-            // Aguarda animação antes de mostrar o dropdown
+            // Aguarda animação antes de mostrar o dropdown 
             setTimeout(function() {
                 profileDropdown.classList.toggle('hidden');
             }, 400); // tempo igual ao transition do CSS

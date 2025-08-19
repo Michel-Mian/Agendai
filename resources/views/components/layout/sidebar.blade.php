@@ -56,7 +56,7 @@
         </ul>
     </nav>
 
-    <!-- User Profile Section -->
+    <!-- User Profile Section  -->
     <div class="border-t border-gray-200 p-4">
         <div class="relative">
             <button id="profile-button" class="flex items-center space-x-3 w-full rounded-lg hover:bg-gray-50 transition-colors profile-toggle">

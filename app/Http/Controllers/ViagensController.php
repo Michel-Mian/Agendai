@@ -24,7 +24,7 @@ class ViagensController extends Controller
         // Quantidade de viagens do usuário
         $totalViagens = Viagens::where('fk_id_usuario', $user->id)->count();
 
-        $hoje = \Carbon\Carbon::today(); // só a data, sem hora
+        $hoje = \Carbon\Carbon::today(); // só a data
         $proximaViagem = Viagens::where('fk_id_usuario', $user->id)
             ->whereDate('data_inicio_viagem', '>=', $hoje)
             ->orderBy('data_inicio_viagem', 'asc')

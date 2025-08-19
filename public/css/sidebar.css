@@ -94,7 +94,7 @@
 /* Conteúdo com sidebar fechada */
 .body-sidebar-collapsed #main-content,
 .sidebar-collapsed #main-content {
-    margin-left: 70px; /* igual à largura da sidebar fechada */
+    margin-left: 70px; /* igual a largura da sidebar fechada */
 }
 
 
