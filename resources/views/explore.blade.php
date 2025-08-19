@@ -52,6 +52,11 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582M20 20v-5h-.581M5 9A7 7 0 0112 5a7 7 0 017 7v3a7 7 0 01-7 7 7 7 0 01-7-7V9z" />
                                     </svg>
                                 </button>
+                                <a href="/viagens/{{ session('trip_id') }}"
+                                   class="ml-2 px-3 py-2 rounded-lg border border-blue-500 bg-blue-500 text-white hover:bg-blue-600 hover:border-blue-600 transition-all duration-150 text-sm font-medium shadow-sm flex items-center gap-1">
+                                    <i class="fa-solid fa-plane"></i>
+                                    <span class="ml-1">Ir para viagem</span>
+                                </a>
                             @endif
                         </div>
                     </div>
