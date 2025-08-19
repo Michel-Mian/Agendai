@@ -21,7 +21,8 @@ class FormController extends Controller
      */
     public function create()
     {
-        return view('formTrip', ['title' => 'Criar Viagem']);
+    $insurances = [];
+    return view('formTrip', ['title' => 'Criar Viagem', 'insurances' => $insurances]);
     }
 
     public function store(Request $request)

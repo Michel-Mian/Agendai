@@ -37,6 +37,68 @@
 @endsection
 
 
+<style>
+    .insurance-card {
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        background: #fff;
+        min-height: 260px;
+        max-height: 260px;
+        height: 260px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        transition: border-color 0.2s, background 0.2s;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        cursor: pointer;
+        padding: 18px 16px;
+        margin-bottom: 12px;
+        overflow: hidden;
+    }
+    .insurance-card.selected {
+        border: 2.5px solid #2ecc40 !important;
+        background: #eafaf1 !important;
+        box-shadow: 0 0 0 2px #2ecc4033 !important;
+    }
+    .insurance-card h5 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    .insurance-card .insurance-data {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    .insurance-card .insurance-data > div {
+        padding: 2px 0;
+        border-bottom: 1px solid #f0f0f0;
+        word-break: break-word;
+    }
+    .insurance-card a {
+        margin-top: 8px;
+        color: #2ecc40;
+        font-weight: 500;
+        text-decoration: underline;
+    }
+</style>
+<div id="insuranceCards" class="row">
+    @foreach ($insurances as $insurance)
+        <div class="col-md-4 mb-3">
+            <div class="insurance-card" data-id="{{ $insurance['id'] }}">
+                <h5>{{ $insurance['company'] }} - {{ $insurance['plan'] }}</h5>
+                <div class="insurance-data">
+                    <div><strong>Despesa médica hospitalar:</strong><br>{{ $insurance['medical_coverage'] }}</div>
+                    <div><strong>Seguro bagagem:</strong><br>{{ $insurance['baggage_coverage'] }}</div>
+                    <div><strong>Preço PIX:</strong><br>{{ $insurance['price_pix'] }}</div>
+                    <div><strong>Preço Cartão:</strong><br>{{ $insurance['price_card'] }}</div>
+                </div>
+                <a href="{{ $insurance['link'] }}" target="_blank">Ver detalhes</a>
+            </div>
+        </div>
+    @endforeach
+</div>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     // Campos de idade dinâmicos
@@ -90,20 +152,21 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
             })
             .then(res => res.json())
+
             .then(data => {
                 if (data.frases && data.frases.length) {
                     let html = '<h3 class="mt-10 mb-8 text-center text-blue-700 font-extrabold text-2xl tracking-tight">Resultados dos Seguros</h3>';
-                    html += '<div class="flex flex-col gap-6">';
-                    data.frases.forEach(seguro => {
+                    html += '<div id="seguros-list" class="flex flex-col gap-6">';
+                    data.frases.forEach((seguro, idx) => {
                         html += `
-                            <div class="flex flex-col md:flex-row items-stretch bg-white/90 border border-blue-100 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                            <div class="seguro-card flex flex-col md:flex-row items-stretch bg-white/90 border border-blue-100 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden cursor-pointer" data-idx="${idx}" data-seguro='${JSON.stringify(seguro)}'>
                                 <div class="flex items-center justify-center md:w-40 bg-gradient-to-br from-blue-100 to-green-100 p-6">
                                     <span class="text-5xl text-blue-400">🛡️</span>
                                 </div>
                                 <div class="flex-1 flex flex-col justify-between p-6">
                                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
                                         <span class="text-lg font-semibold text-blue-700">${seguro.site || 'Site Desconhecido'}</span>
-                                        ${seguro.preco ? `<span class="text-green-600 font-bold text-lg bg-green-50 px-3 py-1 rounded-full">${seguro.preco}</span>` : ''}}
+                                        ${seguro.preco ? `<span class="text-green-600 font-bold text-lg bg-green-50 px-3 py-1 rounded-full">${seguro.preco}</span>` : ''}
                                     </div>
                                     <div class="text-gray-700 text-sm flex flex-wrap gap-x-6 gap-y-1 mb-4">
                                         ${(seguro.dados || []).map(linha => `<span class="inline-block">${linha}</span>`).join('')}
@@ -122,6 +185,37 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
                     html += '</div>';
                     resultado.innerHTML = html;
+
+                    // Seleção de seguro
+                    // Do NOT preselect any insurance
+                    sessionStorage.removeItem('selectedSeguroIdx');
+                    sessionStorage.removeItem('selectedSeguroName');
+                    const segurosCards = document.querySelectorAll('.seguro-card');
+                    segurosCards.forEach(card => {
+                        card.classList.remove('border-green-500', 'border-blue-600', 'ring-2', 'ring-purple-200', 'shadow-md');
+                        card.addEventListener('click', function() {
+                            segurosCards.forEach(c => c.classList.remove('border-green-500', 'border-blue-600', 'ring-2', 'ring-blue-200', 'shadow-md'));
+                            card.classList.add('border-blue-600', 'ring-2', 'ring-blue-200', 'shadow-md');
+                            sessionStorage.setItem('selectedSeguroIdx', card.getAttribute('data-idx'));
+                            // Salva nome completo do seguro selecionado (site + nome do seguro)
+                            const seguroData = JSON.parse(card.getAttribute('data-seguro'));
+                            let fullName = seguroData.site || '';
+                            if (seguroData.dados && seguroData.dados.length > 0) {
+                                fullName += ' ' + seguroData.dados[0];
+                            }
+                            sessionStorage.setItem('selectedSeguroName', fullName.trim());
+                            // Salva no banco via AJAX, incluindo nome completo
+                            seguroData.site = fullName.trim();
+                            fetch("/trip/salvar-seguro", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRF-TOKEN": token
+                                },
+                                body: JSON.stringify(seguroData)
+                            });
+                        });
+                    });
                 } else {
                     resultado.innerHTML = '<div class="text-red-500">Nenhum seguro encontrado.</div>';
                 }
@@ -131,5 +225,10 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
     }
+
+    $(document).on('click', '.insurance-card', function() {
+        $('.insurance-card').removeClass('selected');
+        $(this).addClass('selected');
+    });
 });
 </script>

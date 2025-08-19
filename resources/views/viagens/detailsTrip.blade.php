@@ -297,9 +297,9 @@
                     <div class="tab-content">
                         <div id="content-visao-geral" class="tab-panel active">
                             @include('components/myTrips/screenSections/visaoGeral', ['viagem' => $viagem, 'usuario' => $usuario])
-                        </div>
-                        <div id="content-rotas-mapa" class="tab-panel hidden">
-                            @include('components/myTrips/screenSections/rotasMapa', ['viagem' => $viagem, 'usuario' => $usuario])
+                            {{-- Add flights section here if not already included --}}
+                            {{-- Add insurance section below flights section --}}
+                            @include('components/myTrips/screenSections/themes/insuranceSection', ['seguros' => $seguros])
                         </div>
                         <div id="content-informacoes-estatisticas" class="tab-panel hidden">
                             @include('components/myTrips/screenSections/informacoesEstatisticas', ['viagem' => $viagem, 'usuario' => $usuario])
@@ -326,6 +326,11 @@
     @include('components.myTrips.modals.addViajantesModal')
 
     @include('components/explore/detailsModal')
+
+    <!-- Insurance modals (add and details) -->
+    @include('components.myTrips.modals.addInsurance')
+    @include('components.myTrips.modals.insuranceModal')
+
     <script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places&libraries=geometry&callback=checkGoogleMapsLoaded" async defer></script>
     
     <!-- Script para controle das tabs -->
