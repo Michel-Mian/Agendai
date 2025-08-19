@@ -1,4 +1,6 @@
 <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-6 md:gap-12 mb-10 md:mb-16">
+
+    {{-- Viagens Planejadas --}}
     <div class="bg-white rounded-xl shadow p-4 md:p-6 flex flex-col justify-between h-full">
         <div>
             <div class="text-gray-500 text-sm">Viagens Planejadas</div>
@@ -6,18 +8,22 @@
         </div>
         <div class="self-end mt-4">
             <span class="bg-green-100 p-2 rounded-lg">
-                <i class="fa-solid fa-calendar" style="color:rgb(85, 201, 166);"></i>                        
+                <i class="fa-solid fa-calendar" style="color:rgb(85, 201, 166);"></i>
             </span>
         </div>
     </div>
+
+    {{-- Moeda Preferida --}}
     <div class="bg-white rounded-xl shadow p-4 md:p-6 flex flex-col justify-between h-full">
         <div>
             <div class="text-gray-500 text-sm">Sua moeda preferida</div>
             <div class="text-2xl md:text-3xl font-bold mt-2">
-                @if(isset($currencies[$user->currency]))
+                @if($user && isset($currencies[$user->currency]))
                     {{ $currencies[$user->currency] }} ({{ $user->currency }})
-                @else
+                @elseif($user)
                     {{ $user->currency }}
+                @else
+                    --
                 @endif
             </div>
             @if(is_null($cotacao))
@@ -30,10 +36,13 @@
         </div>
         <div class="self-end mt-4">
             <span class="bg-blue-100 p-2 rounded-lg">
-                <i class="fa-solid fa-file-invoice-dollar cursor-pointer hover:scale-130 transition-transform duration-200" style="color: #74C0FC;" id="modal-currency"></i>                       
+                <i class="fa-solid fa-file-invoice-dollar cursor-pointer hover:scale-130 transition-transform duration-200"
+                   style="color: #74C0FC;" id="modal-currency"></i>
             </span>
         </div>
     </div>
+
+    {{-- Próxima Viagem --}}
     <div class="bg-white rounded-xl shadow p-4 md:p-6 flex flex-col justify-between h-full">
         <div>
             <div class="text-gray-500 text-sm">Próxima Viagem</div>

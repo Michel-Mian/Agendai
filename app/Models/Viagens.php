@@ -10,7 +10,7 @@ class Viagens extends Model
     public $incrementing = true; 
     public $keyType = 'int';
     
-    // Relação com o usuário (User)
+    // Relação com  usuário (User)
     public function user()
     {
         return $this->belongsTo(User::class, 'fk_id_usuario', 'id');
