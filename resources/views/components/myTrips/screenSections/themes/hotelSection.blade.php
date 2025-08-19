@@ -1,15 +1,33 @@
 @php
-    $hotels = $hotel ?? collect();
-    if (is_object($hotels) && !method_exists($hotels, 'count')) {
-        // Se é um objeto único, transformar em collection
-        $hotels = collect([$hotels]);
+    // Garantir que $hotel seja uma collection
+    if (isset($hotel)) {
+        if (is_object($hotel) && method_exists($hotel, 'count')) {
+            // Se já é uma collection
+            $hotels = $hotel;
+        } elseif (is_object($hotel)) {
+            // Se é um objeto único, transformar em collection
+            $hotels = collect([$hotel]);
+        } elseif (is_array($hotel)) {
+            // Se é um array, transformar em collection
+            $hotels = collect($hotel);
+        } else {
+            $hotels = collect();
+        }
+    } else {
+        $hotels = collect();
     }
 @endphp
 
 <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-    <div class="flex items-center mb-4 gap-2">
-        <i class="fa-solid fa-hotel text-pink-600"></i>
-        <h3 class="text-xl font-semibold text-pink-600">Hospedagem</h3>
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-hotel text-pink-600"></i>
+            <h3 class="text-xl font-semibold text-pink-600">Hospedagem</h3>
+        </div>
+        <a href="{{ route('hotels.search') }}" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+            <i class="fas fa-plus"></i>
+            Adicionar hospedagem
+        </a>
     </div>
 
     @if($hotels && $hotels->count() > 0)
@@ -157,7 +175,11 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-2 0H9m-2 0H5m2 0v-4a2 2 0 012-2h2a2 2 0 012 2v4"></path>
             </svg>
             <p class="text-lg">Nenhuma hospedagem cadastrada para esta viagem</p>
-            <p class="text-sm mt-1">Adicione informações do hotel para visualizar os detalhes aqui</p>
+            <p class="text-sm mt-1 mb-4">Adicione informações do hotel para visualizar os detalhes aqui</p>
+            <a href="{{ route('hotels.search') }}" class="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center gap-2">
+                <i class="fas fa-plus"></i>
+                Adicionar primeira hospedagem
+            </a>
         </div>
     @endif
 </div>
