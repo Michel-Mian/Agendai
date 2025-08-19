@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const seguro = seguroSelect ? seguroSelect.value : '';
         const preferences = preferencesInput ? preferencesInput.value.split(',').filter(p => p.trim() !== '') : [];
         let voo = '';
-        let infoSeguro = '';
+        let nomeSeguro = '';
         if (meio === 'Avião') {
             const idxSelecionado = document.getElementById('selected_flight_index').value;
             if (idxSelecionado !== '' && voosCarregados[idxSelecionado]) {
@@ -151,15 +151,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
+        // Recupera nome completo do seguro selecionado da sessionStorage
         if (seguro === 'Sim') {
-            document.querySelectorAll('.space-y-4 > div').forEach((div, i) => {
-                if (div.classList.contains('border-blue-500')) {
-                    infoSeguro = div.innerText.replace(/\s+/g, ' ').trim();
-                }
-                else {
-                    infoSeguro = 'Nenhum seguro selecionado';
-                }
-            });
+            nomeSeguro = sessionStorage.getItem('selectedSeguroName') || 'Nenhum seguro selecionado';
         }
 
         reviewList.innerHTML = `
@@ -171,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <li><b>Meio de locomoção:</b> ${meio}</li>
             <li><b>Orçamento:</b> R$ ${orcamento}</li>
             ${meio === 'Avião' ? `<li><b>Companhia aérea:</b> ${voo}</li>` : ''}
-            ${seguro === 'Sim' ? `<li><b>Seguro de viagem:</b> ${infoSeguro}</li>` : ''}
+            ${seguro === 'Sim' ? `<li><b>Seguro de viagem:</b> ${nomeSeguro}</li>` : ''}
             <li><b>Preferências:</b> ${preferences.length > 0 ? preferences.join(', ') : 'Nenhuma'}</li>
         `;
     }
@@ -523,4 +517,13 @@ document.addEventListener('DOMContentLoaded', function() {
             preferencesInput.value = selectedPrefs.join(',');
         });
     });
+});
+
+// -------------------- Tratamento de seleção de seguro (nova lógica) --------------------
+$(document).on('click', '.insurance-card', function() {
+    $('.insurance-card').removeClass('selected');
+    $(this).addClass('selected');
+    // Salva nome do seguro selecionado para revisão
+    var name = $(this).find('h5').text();
+    sessionStorage.setItem('selectedSeguroName', name);
 });
