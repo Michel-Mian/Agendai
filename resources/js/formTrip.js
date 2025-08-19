@@ -1,29 +1,63 @@
 // -------------------- Autocomplete Google Places (Destino) --------------------
-function initPlacesAutocomplete() {
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput && typeof google !== 'undefined' && google.maps && google.maps.places) {
-        if (!searchInput._autocompleteInitialized) {
-            const autocomplete = new google.maps.places.Autocomplete(searchInput, {
-                types: ['(regions)'],
-            });
-            autocomplete.addListener('place_changed', function() {
-                // Trate o place se necessário
-            });
-            searchInput._autocompleteInitialized = true;
+function initPlacesAutocompleteStrict() {
+    const fields = [
+        { id: 'tripDestination' },
+        { id: 'origem' }
+    ];
+
+    fields.forEach(field => {
+        const input = document.getElementById(field.id);
+        if (input && typeof google !== 'undefined' && google.maps && google.maps.places) {
+            if (!input._autocompleteInitialized) {
+                const autocomplete = new google.maps.places.Autocomplete(input, {
+                    types: ['(regions)'],
+                });
+                input._autocompleteInitialized = true;
+
+                // Armazena se o usuário selecionou uma sugestão válida
+                input._placeSelected = false;
+
+                autocomplete.addListener('place_changed', function() {
+                    const place = autocomplete.getPlace();
+                    if (place && place.place_id) {
+                        input._placeSelected = true;
+                        input.classList.remove('border-red-500');
+                    } else {
+                        input._placeSelected = false;
+                        input.classList.add('border-red-500');
+                    }
+                });
+
+                // Ao digitar, reseta o status de seleção
+                input.addEventListener('input', function() {
+                    input._placeSelected = false;
+                    input.classList.remove('border-red-500');
+                });
+
+                // Ao sair do campo, verifica se selecionou uma sugestão
+                input.addEventListener('blur', function(e) {
+                    setTimeout(() => {
+                        if (!input._placeSelected) {
+                            input.classList.add('border-red-500');
+                            input.focus();
+                        }
+                    }, 200);
+                });
+            }
         }
-    }
+    });
 }
 
 // Callback global do Google Maps
-window.initMap = function() {
-    initPlacesAutocomplete();
+window.initTripFormMap = function() {
+    initPlacesAutocompleteStrict();
 };
 
 // Fallback caso a API já esteja carregada antes do DOM
 document.addEventListener('DOMContentLoaded', function() {
 
     if (typeof google !== 'undefined' && google.maps && google.maps.places) {
-        initPlacesAutocomplete();
+        initPlacesAutocompleteStrict();
     }
 
     // -------------------- Variáveis Globais e Steps --------------------
@@ -119,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('reviewList não encontrado');
             return;
         }
-        const destino = document.getElementById('searchInput').value;
+        const destino = document.getElementById('tripDestination').value;
         const adultosSelect = document.querySelectorAll('.form-step')[0]?.querySelectorAll('select')[0];
         const dataIdaInput = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[0];
         const dataVoltaInput = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[1];
@@ -374,8 +408,8 @@ document.getElementById('multiStepForm').addEventListener('submit', function (e)
 // -------------------- Tratamento de erros e mensagens de feedback --------------------
 function validarStep(idx) {
     if (idx === 0) {
-        const destino = document.getElementById('searchInput');
-        const idades = document.getElementById('idades');
+        const destino = document.getElementById('tripDestination');
+        const origem = document.getElementById('origem');
         const adultos = document.querySelectorAll('.form-step')[0]?.querySelectorAll('select')[0];
         const dataIda = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[0];
         const dataVolta = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[1];
@@ -383,6 +417,23 @@ function validarStep(idx) {
         if (!destino.value.trim()) {
             alert('Informe o destino.');
             destino.focus();
+            return false;
+        }
+        if (!destino._placeSelected) {
+            alert('Selecione um destino válido da lista sugerida.');
+            destino.classList.add('border-red-500');
+            destino.focus();
+            return false;
+        }
+        if (!origem.value.trim()) {
+            alert('Informe a origem.');
+            origem.focus();
+            return false;
+        }
+        if (!origem._placeSelected) {
+            alert('Selecione uma origem válida da lista sugerida.');
+            origem.classList.add('border-red-500');
+            origem.focus();
             return false;
         }
         if (!adultos || !adultos.value) {
