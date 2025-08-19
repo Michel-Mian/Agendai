@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Http;
  */
 class DashBoardController extends Controller
 {
+    
     /**
      * Displays the dashboard view with user data, currency info, and historical exchange rates.
      *
