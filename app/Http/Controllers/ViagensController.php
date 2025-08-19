@@ -6,15 +6,41 @@ use App\Models\Viajantes;
 use App\Models\Objetivos;
 use App\Models\Hotel;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse; 
+use Illuminate\Http\RedirectResponse;
 use App\Models\PontoInteresse;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\Auth;
 Carbon::setLocale('pt_BR');
+
 
 class ViagensController extends Controller
 {
+    public function dashboardData()
+    {
+        $user = Auth::user();
+
+        // Quantidade de viagens do usuário
+        $totalViagens = Viagens::where('fk_id_usuario', $user->id)->count();
+
+        $hoje = \Carbon\Carbon::today(); // só a data, sem hora
+        $proximaViagem = Viagens::where('fk_id_usuario', $user->id)
+            ->whereDate('data_inicio_viagem', '>=', $hoje)
+            ->orderBy('data_inicio_viagem', 'asc')
+            ->first();;
+
+
+
+
+        return view('dashboard', [
+            'user' => $user,
+            'totalViagens' => $totalViagens,
+            'proximaViagem' => $proximaViagem,
+        ]);
+
+    }
+
     public function index()
     {
         $user = auth()->user();
@@ -43,10 +69,10 @@ class ViagensController extends Controller
         $apiKey = env('SERPAPI_KEY');
         $categorias = [
             'Cultura' => "Cultura em $destino",
-            'Saúde'   => "Saúde em $destino",
-            'Entretenimento'   => "Entretenimento em $destino",
+            'Saúde' => "Saúde em $destino",
+            'Entretenimento' => "Entretenimento em $destino",
             'Esportes' => "Jogos de esporte em $destino",
-            'Local'   => "Notícias locais na região de $destino"
+            'Local' => "Notícias locais na região de $destino"
         ];
         $noticias = [];
         foreach ($categorias as $tipo => $query) {
@@ -119,26 +145,25 @@ class ViagensController extends Controller
         $data_inicio = Carbon::parse($viagem->data_inicio_viagem)->format('Y-m-d');
         $data_fim = Carbon::parse($viagem->data_final_viagem)->format('Y-m-d');
         $hoje = Carbon::today();
-        $diasDiferenca = $hoje->diffInDays($data_inicio, false); 
+        $diasDiferenca = $hoje->diffInDays($data_inicio, false);
 
         $climas = [];
-        if($diasDiferenca < 7){
+        if ($diasDiferenca < 7) {
             if ($coordenadas) {
-            $latitude = $coordenadas['lat'];
-            $longitude = $coordenadas['lng'];
-            $weatherUrl = "https://api.open-meteo.com/v1/forecast?latitude={$latitude}&longitude={$longitude}&daily=temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_sum,rain_sum,precipitation_probability_max&start_date={$data_inicio}&end_date={$data_fim}";
-            $weatherResponse = file_get_contents($weatherUrl);
-            $clima = json_decode($weatherResponse, true);
+                $latitude = $coordenadas['lat'];
+                $longitude = $coordenadas['lng'];
+                $weatherUrl = "https://api.open-meteo.com/v1/forecast?latitude={$latitude}&longitude={$longitude}&daily=temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_sum,rain_sum,precipitation_probability_max&start_date={$data_inicio}&end_date={$data_fim}";
+                $weatherResponse = file_get_contents($weatherUrl);
+                $clima = json_decode($weatherResponse, true);
 
-            $climas[] = $clima;
+                $climas[] = $clima;
             } else {
                 $clima = null;
             }
-        }
-        else{
+        } else {
             $clima = null;
         }
-        
+
 
         return view('viagens/detailsTrip', [
             'title' => 'Detalhes da Viagem',

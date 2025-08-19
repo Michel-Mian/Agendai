@@ -10,6 +10,32 @@ use Illuminate\Support\Facades\Http;
  */
 class DashBoardController extends Controller
 {
+    public function index()
+{
+    $user = auth()->user();
+
+    // Total de viagens do usuário logado
+    $totalViagens = Viagens::where('fk_id_usuario', $user->id)->count();
+
+    // Próxima viagem do usuário logado (menor data futura)
+    $proximaViagem = Viagens::where('fk_id_usuario', $user->id)
+        ->whereDate('data_inicio', '>=', now())
+        ->orderBy('data_inicio', 'asc')
+        ->first();
+
+    // Exemplo: moedas já funcionando
+    $currencies = [ 'USD' => 'Dólar', 'BRL' => 'Real', 'EUR' => 'Euro' ];
+    $cotacao = null; // já deve estar na sua lógica
+
+    return view('dashboard', compact(
+        'user',
+        'totalViagens',
+        'proximaViagem',
+        'currencies',
+        'cotacao'
+    ));
+}
+
     /**
      * Displays the dashboard view with user data, currency info, and historical exchange rates.
      *

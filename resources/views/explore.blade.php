@@ -22,9 +22,9 @@
             <div id="floatingMenu"
                 class="absolute right-6 top-6 bottom-6 w-96 flex-shrink-0 overflow-hidden z-30 shadow-lg rounded-2xl bg-white border border-gray-200 transition-transform duration-300"
                 style="transform: translateX(110%);">
-                <div class="flex flex-col h-full w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+                <div class="flex flex-col h-full w-full bg-white rounded-2xl overflow-hidden">
                     <div class="mb-6 flex-shrink-0 px-4 pt-4">
-                        <div class="my-4 flex items-center gap-2">
+                        <div class="my-4 flex items-center">
                             <div class="relative flex-1">
                                 <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -43,7 +43,7 @@
                             </button>
                         </div>
 
-                        <div class="flex flex-wrap justify-center items-center gap-1">
+                        <div class="flex flex-wrap justify-center items-center">
                             @include('components.explore.filter-modal')
                             @if($hasTrip)
                                 <button type="button" onclick="updateItineraryDisplay()"
@@ -57,7 +57,7 @@
                     </div>
                     @if(!$hasTrip)
                         <div class="flex flex-col justify-center items-center h-[450px] my-8">
-                            <a href="" id="createTripButton"
+                            <a href="/formTrip" id="createTripButton"
                             class="block">
                                 <div class="flex flex-col items-center justify-center h-50 rounded-xl border-2 border-dashed border-gray-0 bg-white transition-all duration-200 cursor-pointer py-2 select-none hover:border-blue-500">
                                     <span class="flex items-center justify-center w-10 h-10 mb-2 rounded-full bg-gray-100">

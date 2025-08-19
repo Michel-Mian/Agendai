@@ -20,7 +20,7 @@
         @vite(['resources/css/app.css', 'resources/css/explore.css', 'resources/js/app.js', 'resources/js/dashBoard.js', 'resources/js/searchFlights.js', 'resources/js/formTrip.js' , 'resources/js/hotels.js'])
     </head>
     <body>
-            <main class="">
+            <main id="main-content" class="transition-all duration-300 ml-[320px]">
                 @yield('content')
             </main>
     </body>

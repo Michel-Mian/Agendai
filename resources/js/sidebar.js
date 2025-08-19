@@ -12,11 +12,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (isCollapsed) {
             // Abrindo: mostra o logo
             sidebar.classList.remove('collapsed');
+            document.body.classList.remove('body-sidebar-collapsed');
             if (logo) logo.classList.remove('hidden');
             localStorage.setItem('sidebar-collapsed', false);
         } else {
             // Fechando: esconde o logo
             sidebar.classList.add('collapsed');
+            document.body.classList.add('body-sidebar-collapsed');
             if (logo) logo.classList.add('hidden');
             localStorage.setItem('sidebar-collapsed', true);
         }
@@ -24,7 +26,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     profileButton.addEventListener('click', function (e) {
         e.stopPropagation();
-        profileDropdown.classList.toggle('hidden');
+        // Se a sidebar estiver fechada, abra antes de mostrar o dropdown
+        if (sidebar.classList.contains('collapsed')) {
+            sidebar.classList.remove('collapsed');
+            document.body.classList.remove('body-sidebar-collapsed');
+            if (logo) logo.classList.remove('hidden');
+            localStorage.setItem('sidebar-collapsed', false);
+            // Aguarda animação antes de mostrar o dropdown
+            setTimeout(function() {
+                profileDropdown.classList.toggle('hidden');
+            }, 400); // tempo igual ao transition do CSS
+        } else {
+            profileDropdown.classList.toggle('hidden');
+        }
     });
 
     document.addEventListener('click', function () {
@@ -41,9 +55,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
     if (isCollapsed) {
         sidebar.classList.add('collapsed');
+        document.body.classList.add('body-sidebar-collapsed');
         if (logo) logo.classList.add('hidden');
     } else {
         sidebar.classList.remove('collapsed');
+        document.body.classList.remove('body-sidebar-collapsed');
         if (logo) logo.classList.remove('hidden');
     }
 });
