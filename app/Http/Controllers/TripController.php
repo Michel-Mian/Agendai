@@ -29,6 +29,7 @@ class TripController extends Controller
 
         $qtd = (int) $request->qtd_passageiros;
         $idades = $request->idades;
+
         for ($i = count($idades); $i < 8; $i++) {
             $idades[] = '0';
         }
