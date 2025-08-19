@@ -192,10 +192,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     sessionStorage.removeItem('selectedSeguroName');
                     const segurosCards = document.querySelectorAll('.seguro-card');
                     segurosCards.forEach(card => {
-                        card.classList.remove('border-green-500', 'border-purple-600', 'ring-2', 'ring-purple-200', 'shadow-md');
+                        card.classList.remove('border-green-500', 'border-blue-600', 'ring-2', 'ring-purple-200', 'shadow-md');
                         card.addEventListener('click', function() {
-                            segurosCards.forEach(c => c.classList.remove('border-green-500', 'border-purple-600', 'ring-2', 'ring-purple-200', 'shadow-md'));
-                            card.classList.add('border-purple-600', 'ring-2', 'ring-purple-200', 'shadow-md');
+                            segurosCards.forEach(c => c.classList.remove('border-green-500', 'border-blue-600', 'ring-2', 'ring-blue-200', 'shadow-md'));
+                            card.classList.add('border-blue-600', 'ring-2', 'ring-blue-200', 'shadow-md');
                             sessionStorage.setItem('selectedSeguroIdx', card.getAttribute('data-idx'));
                             // Salva nome completo do seguro selecionado (site + nome do seguro)
                             const seguroData = JSON.parse(card.getAttribute('data-seguro'));
