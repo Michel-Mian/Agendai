@@ -332,8 +332,21 @@ class TripController extends Controller
         }
         return null;
     }
-}
 
+    public function showTripDetails($tripId)
+{
+    $viagem = Trip::findOrFail($tripId);
+    $usuario = $viagem->user;
+
+    // Seguros do banco
+    $seguros = Seguro::where('trip_id', $tripId)->get();
+
+    // Seguros do scraping, se existir na session
+    $scrapingInsurances = session('scraping_insurances', []);
+
+    return view('viagens.detailsTrip', compact('viagem', 'usuario', 'seguros', 'scrapingInsurances'));
+}
+}
 
 
 
