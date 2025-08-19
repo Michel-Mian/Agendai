@@ -1,5 +1,4 @@
-<div id="sidebar" class="fixed top-0 left-0 h-screen w-[250px] bg-white shadow-lg flex flex-col sidebar-expanded z-40">
-    <!-- Header com Logo e Toggle -->
+<div id="sidebar" class="bg-white shadow-lg min-h-screen relative flex flex-col sidebar-expanded">    <!-- Header com Logo e Toggle -->
     <div id="sidebar-header" class="flex items-center justify-between p-2 border-b border-gray-200 transition-all duration-300" style="background-color: #f7faf8;">
         <div id="logo-container" class="flex items-center justify-center w-full space-x-3">
             <div class="w-24 h-24 rounded-lg flex items-center justify-center p-0" id="logo">
