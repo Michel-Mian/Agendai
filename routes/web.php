@@ -73,4 +73,6 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/hotels', [HotelsController::class, 'index']);
     Route::post('/hotels/search', [HotelsController::class, 'search']);
     Route::post('/hotels/{id}', [HotelsController::class, 'addToTrip'])->name('hotels.addToTrip');
+    Route::get('/trip/insurances', [TripController::class, 'getInsurancesAjax']);
+    Route::post('/trip/update-insurance', [TripController::class, 'updateInsuranceAjax']);
 });

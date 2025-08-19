@@ -50,12 +50,14 @@ function fetchInsurances() {
                     const div = document.createElement('div');
                     div.className = 'p-4 bg-green-50 border border-green-200 rounded-lg flex flex-col space-y-2';
                     div.innerHTML = `
-                        <div class="font-bold text-green-800">${seguro.nome ?? seguro.nome_seguro ?? 'Seguro'}</div>
-                        <div class="text-sm text-gray-600">${seguro.detalhes ?? seguro.dados ?? ''}</div>
+                        <div class="font-bold text-green-800">${seguro.site ?? seguro.nome ?? 'Seguro'}</div>
+                        <div class="text-sm text-gray-600">${seguro.dados ?? seguro.detalhes ?? ''}</div>
                         <div class="flex space-x-2 mt-2">
-                            <button class="change-insurance-btn bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors" data-id="${seguro.id}">
+                            ${seguro.is_selected ? `<span class="bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold">Selecionado</span>` : `
+                            <button class="change-insurance-btn bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors" data-id="${seguro.pk_id_seguro}">
                                 Trocar para este seguro
                             </button>
+                            `}
                         </div>
                     `;
                     insuranceList.appendChild(div);
@@ -86,6 +88,8 @@ insuranceList?.addEventListener('click', function(e) {
                 setTimeout(() => {
                     insuranceChangeMessage.classList.add('hidden');
                     closeInsuranceModal();
+                    // Atualiza a seção de seguros na tela principal (opcional)
+                    location.reload();
                 }, 1500);
             } else {
                 insuranceChangeMessage.textContent = data.mensagem || 'Erro ao trocar seguro.';

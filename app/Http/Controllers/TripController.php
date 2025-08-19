@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Seguros;
+use Illuminate\Support\Facades\DB;
 
 class TripController extends Controller
 {
@@ -263,6 +264,40 @@ class TripController extends Controller
         return response()->json(['mensagem' => 'Seguro salvo com sucesso!']);
     }
 
+    // AJAX: Retorna todos os seguros da viagem
+    public function getInsurancesAjax(Request $request)
+    {
+        // Tenta pegar o trip_id da requisição, senão pega da sessão
+        $tripId = $request->input('trip_id') ?? session('trip_id');
+        if (!$tripId) {
+            // Retorna vazio se não houver trip_id
+            return response()->json(['seguros' => []]);
+        }
+        // Busca todos os seguros da viagem
+        $seguros = \App\Models\Seguros::where('fk_id_viagem', $tripId)->get();
+        return response()->json(['seguros' => $seguros]);
+    }
+
+    // AJAX: Troca o seguro selecionado da viagem
+    public function updateInsuranceAjax(Request $request)
+    {
+        $tripId = $request->input('trip_id') ?? session('trip_id');
+        $seguroId = $request->input('seguro_id');
+        if (!$tripId || !$seguroId) {
+            return response()->json(['success' => false, 'mensagem' => 'Dados inválidos']);
+        }
+        // Desmarca todos os seguros
+        \App\Models\Seguros::where('fk_id_viagem', $tripId)->update(['is_selected' => false]);
+        // Marca o novo seguro
+        $seguro = \App\Models\Seguros::where('pk_id_seguro', $seguroId)->where('fk_id_viagem', $tripId)->first();
+        if ($seguro) {
+            $seguro->is_selected = true;
+            $seguro->save();
+            return response()->json(['success' => true, 'mensagem' => 'Seguro alterado com sucesso!']);
+        }
+        return response()->json(['success' => false, 'mensagem' => 'Seguro não encontrado']);
+    }
+
     // Funções auxiliares para parsear e formatar saída dos scripts
     private function parseOutput($output)
     {
@@ -332,21 +367,8 @@ class TripController extends Controller
         }
         return null;
     }
-
-    public function showTripDetails($tripId)
-{
-    $viagem = Trip::findOrFail($tripId);
-    $usuario = $viagem->user;
-
-    // Seguros do banco
-    $seguros = Seguro::where('trip_id', $tripId)->get();
-
-    // Seguros do scraping, se existir na session
-    $scrapingInsurances = session('scraping_insurances', []);
-
-    return view('viagens.detailsTrip', compact('viagem', 'usuario', 'seguros', 'scrapingInsurances'));
 }
-}
+
 
 
 
