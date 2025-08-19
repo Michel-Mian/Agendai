@@ -10,9 +10,9 @@
                     <p class="text-blue-600 text-sm">{{ $voos->count() }} {{ $voos->count() == 1 ? 'voo' : 'voos' }} cadastrados</p>
                 </div>
             </div>
-            <button class="bg-white/20 hover:bg-white/30 text-blue-800 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <a href="{{ route('flights.search') }}" class="bg-white/20 hover:bg-white/30 text-blue-800 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                 <i class="fas fa-plus mr-2"></i>Adicionar voo
-            </button>
+            </a>
         </div>
     </div>
     
@@ -72,9 +72,9 @@
                 </div>
                 <h3 class="text-lg font-semibold text-gray-800 mb-2">Nenhum voo cadastrado</h3>
                 <p class="text-gray-500 mb-6">Adicione informações sobre seus voos para manter tudo organizado</p>
-                <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
+                <a href="{{ route('flights.search') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
                     <i class="fas fa-plus mr-2"></i>Adicionar primeiro voo
-                </button>
+                </a>
             </div>
         @endif
     </div>
