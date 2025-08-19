@@ -7,7 +7,7 @@
             @include('components/layout/header')
             <main class="flex-1 p-8">
                 <!-- Cards superiores -->
-                @include('components/dashboard/superiorCards', ['proximaViagem' => $proximaViagem ?? null, 'totalViagens' => $totalViagens ?? 0, 'user' => $user ?? null, 'currencies' => $currencies ?? [], 'cotacao' => $cotacao ?? null])
+                @include('components/dashboard/superiorCards')
 
                 <!-- Ações rápidas -->
                 @include('components/dashboard/actionFast')
