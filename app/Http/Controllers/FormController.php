@@ -58,6 +58,7 @@ class FormController extends Controller
                 : now();
             $voo->companhia_voo = $primeiroTrecho['airline'] ?? '';
             $voo->fk_id_viagem = $viagem->pk_id_viagem;
+            $voo->preco_voo = $flightData['price'] ?? 0;
             $voo->save();
         }
 
