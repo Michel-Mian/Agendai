@@ -5,31 +5,44 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
                     <div class="bg-white/20 rounded-lg p-3">
-                        <i class="fas fa-shield-alt text-green-200 text-2xl"></i>
+                        <i class="fas fa-shield-alt text-white text-2xl"></i>
                     </div>
                     <div>
-                        <h2 class="text-xl font-bold text-white">Adicionar Seguro</h2>
+                        <h2 class="text-2xl font-bold text-white">Adicionar Seguro</h2>
+                        <p class="text-green-100 text-base">Inclua um novo seguro à viagem</p>
                     </div>
                 </div>
                 <button id="close-add-insurance-modal-btn" class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg transition-colors">
-                    <i class="fas fa-times text-lg"></i>
+                    <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
         </div>
         <div class="p-8">
             <form id="add-insurance-form" method="POST" action="#" class="space-y-8">
                 @csrf
-                <div>
-                    <label for="nome_seguro" class="block text-sm font-medium text-gray-700">Nome do Seguro</label>
-                    <input type="text" id="nome_seguro" name="nome_seguro" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" required>
+                <div class="space-y-3">
+                    <label for="nome_seguro" class="flex items-center space-x-3 text-base font-semibold text-gray-700">
+                        <i class="fas fa-shield-alt text-green-500 text-xl"></i>
+                        <span>Nome do Seguro</span>
+                    </label>
+                    <input type="text" id="nome_seguro" name="nome_seguro" maxlength="100" class="w-full border-2 border-gray-200 rounded-xl px-5 py-4 focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-200 bg-gray-50 focus:bg-white text-base" placeholder="Digite o nome do seguro..." required>
                 </div>
-                <div>
-                    <label for="detalhes_seguro" class="block text-sm font-medium text-gray-700">Detalhes</label>
-                    <textarea id="detalhes_seguro" name="detalhes_seguro" rows="4" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" required></textarea>
+                <div class="space-y-3">
+                    <label for="detalhes_seguro" class="flex items-center space-x-3 text-base font-semibold text-gray-700">
+                        <i class="fas fa-info-circle text-green-500 text-xl"></i>
+                        <span>Detalhes</span>
+                    </label>
+                    <textarea id="detalhes_seguro" name="detalhes_seguro" rows="4" class="w-full border-2 border-gray-200 rounded-xl px-5 py-4 focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-200 bg-gray-50 focus:bg-white text-base" placeholder="Descreva os detalhes do seguro..." required></textarea>
                 </div>
-                <div class="flex justify-end space-x-3">
-                    <button type="button" id="cancel-add-insurance-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors">Cancelar</button>
-                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">Salvar Seguro</button>
+                <div class="flex space-x-4 pt-6">
+                    <button type="button" id="cancel-add-insurance-btn" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-4 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 text-lg">
+                        <i class="fas fa-times text-lg"></i>
+                        <span>Cancelar</span>
+                    </button>
+                    <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-4 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center space-x-2 transform hover:scale-105 text-lg">
+                        <i class="fas fa-check text-lg"></i>
+                        <span>Salvar Seguro</span>
+                    </button>
                 </div>
             </form>
         </div>
