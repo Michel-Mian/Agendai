@@ -11,36 +11,12 @@ use App\Models\PontoInteresse;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Carbon\CarbonInterface;
-use Illuminate\Support\Facades\Auth;
 Carbon::setLocale('pt_BR');
 
 
 class ViagensController extends Controller
 {
-    public function dashboardData()
-    {
-        $user = Auth::user();
-
-        // Quantidade de viagens do usuário
-        $totalViagens = Viagens::where('fk_id_usuario', $user->id)->count();
-
-        $hoje = \Carbon\Carbon::today(); // só a data
-        $proximaViagem = Viagens::where('fk_id_usuario', $user->id)
-            ->whereDate('data_inicio_viagem', '>=', $hoje)
-            ->orderBy('data_inicio_viagem', 'asc')
-            ->first();;
-
-
-
-
-        return view('dashboard', [
-            'user' => $user,
-            'totalViagens' => $totalViagens,
-            'proximaViagem' => $proximaViagem,
-        ]);
-
-    }
-
+    
     public function index()
     {
         $user = auth()->user();
