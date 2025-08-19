@@ -33,6 +33,7 @@ return new class extends Migration
             $table->boolean('cobertura_telemedicina')->nullable();
             $table->unsignedBigInteger('fk_id_viagem');
             $table->foreign('fk_id_viagem')->references('pk_id_viagem')->on('viagens')->onDelete('cascade');
+            $table->boolean('is_selected')->default(false);
             $table->timestamps();
         });
     }

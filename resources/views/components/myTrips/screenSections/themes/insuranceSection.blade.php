@@ -17,6 +17,23 @@
     </div>
     <div class="p-6">
         @if(isset($seguros) && count($seguros))
+            @php
+                $seguroSelecionado = $seguros->where('is_selected', true)->first();
+            @endphp
+            @if($seguroSelecionado)
+                <div class="mb-6">
+                    <div class="bg-green-100 border border-green-300 rounded-lg p-4 flex items-center space-x-4">
+                        <i class="fas fa-shield-alt text-green-600 text-2xl"></i>
+                        <div>
+                            <div class="font-bold text-green-800">{{ $seguroSelecionado->site ?? $seguroSelecionado->nome ?? 'Seguro' }}</div>
+                            <div class="text-sm text-gray-700">{{ $seguroSelecionado->dados ?? $seguroSelecionado->detalhes ?? '' }}</div>
+                        </div>
+                        <button type="button" class="ml-auto bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg" onclick="window.openInsuranceModal()">
+                            Trocar seguro
+                        </button>
+                    </div>
+                </div>
+            @endif
             <div class="overflow-hidden">
                 <div class="space-y-4">
                     @foreach($seguros as $index => $seguro)
@@ -27,10 +44,13 @@
                                         {{ $index + 1 }}
                                     </div>
                                     <div>
-                                        <div class="font-semibold text-gray-800">{{ $seguro->nome }}</div>
-                                        <div class="text-sm text-gray-600">{{ $seguro->detalhes }}</div>
+                                        <div class="font-semibold text-gray-800">{{ $seguro->site ?? $seguro->nome ?? 'Seguro' }}</div>
+                                        <div class="text-sm text-gray-600">{{ $seguro->dados ?? $seguro->detalhes ?? '' }}</div>
                                     </div>
                                 </div>
+                                @if($seguro->is_selected)
+                                    <span class="bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold">Selecionado</span>
+                                @endif
                             </div>
                         </div>
                     @endforeach
