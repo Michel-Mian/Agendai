@@ -523,7 +523,31 @@ document.addEventListener('DOMContentLoaded', function() {
 $(document).on('click', '.insurance-card', function() {
     $('.insurance-card').removeClass('selected');
     $(this).addClass('selected');
+
     // Salva nome do seguro selecionado para revisão
     var name = $(this).find('h5').text();
     sessionStorage.setItem('selectedSeguroName', name);
+
+    // Se o cartão contém o atributo data-seguro (JSON), atualiza o hidden input e pending storage
+    var seguroDataAttr = $(this).attr('data-seguro') || $(this).attr('data-id') && null;
+    if (seguroDataAttr) {
+        try {
+            var seguroData = JSON.parse(seguroDataAttr);
+            seguroData.site = name;
+            // atualiza hidden input se existir no DOM
+            var hidden = document.getElementById('seguroSelecionadoInput');
+            if (hidden) hidden.value = JSON.stringify(seguroData);
+            sessionStorage.setItem('pendingSeguro', JSON.stringify(seguroData));
+        } catch (e) {
+            // se não for JSON, apenas salva o nome
+            sessionStorage.setItem('pendingSeguro', JSON.stringify({ site: name }));
+            var hidden2 = document.getElementById('seguroSelecionadoInput');
+            if (hidden2) hidden2.value = JSON.stringify({ site: name });
+        }
+    } else {
+        // fallback: apenas o nome
+        sessionStorage.setItem('pendingSeguro', JSON.stringify({ site: name }));
+        var hidden3 = document.getElementById('seguroSelecionadoInput');
+        if (hidden3) hidden3.value = JSON.stringify({ site: name });
+    }
 });

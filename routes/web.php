@@ -29,7 +29,6 @@ Route::post('/reset-password', [UserController::class, 'resetPassword'])->middle
 Route::post('/change-password', [UserController::class, 'changePassword'])->middleware('auth')->name('password.change');
 
 Route::middleware(['auth'])->group(function (){
-    Route::get('/dashboard', [ViagensController::class, 'dashboardData'])->name('show.Data');
     Route::get('/trip/form', [TripController::class, 'showForm'])->name('show.Form');
     Route::post('/trip/insurance-ajax', [TripController::class, 'scrapingAjax'])->name('run.Scraping.ajax');
     Route::post('/trip/salvar-seguro', [TripController::class, 'salvarSeguro']);

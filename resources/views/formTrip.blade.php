@@ -12,6 +12,10 @@
             <div class="bg-white rounded-2xl shadow-xl p-10 mb-10 animate-fade-in">
                 <form id="multiStepForm" method="POST" action="{{ route('formTrip.store') }}">
                     @csrf
+
+                    <!-- hidden input para enviar seguro selecionado no submit final -->
+                    <input type="hidden" name="seguroSelecionado" id="seguroSelecionadoInput" value="">
+
                     <!-- Passo 1 -->
                     @include('trip.step1')
 
@@ -152,7 +156,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
             })
             .then(res => res.json())
-
             .then(data => {
                 if (data.frases && data.frases.length) {
                     let html = '<h3 class="mt-10 mb-8 text-center text-blue-700 font-extrabold text-2xl tracking-tight">Resultados dos Seguros</h3>';
@@ -187,7 +190,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     resultado.innerHTML = html;
 
                     // Seleção de seguro
-                    // Do NOT preselect any insurance
                     sessionStorage.removeItem('selectedSeguroIdx');
                     sessionStorage.removeItem('selectedSeguroName');
                     const segurosCards = document.querySelectorAll('.seguro-card');
@@ -196,6 +198,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         card.addEventListener('click', function() {
                             segurosCards.forEach(c => c.classList.remove('border-green-500', 'border-blue-600', 'ring-2', 'ring-blue-200', 'shadow-md'));
                             card.classList.add('border-blue-600', 'ring-2', 'ring-blue-200', 'shadow-md');
+
                             sessionStorage.setItem('selectedSeguroIdx', card.getAttribute('data-idx'));
                             // Salva nome completo do seguro selecionado (site + nome do seguro)
                             const seguroData = JSON.parse(card.getAttribute('data-seguro'));
@@ -203,17 +206,15 @@ document.addEventListener("DOMContentLoaded", function () {
                             if (seguroData.dados && seguroData.dados.length > 0) {
                                 fullName += ' ' + seguroData.dados[0];
                             }
-                            sessionStorage.setItem('selectedSeguroName', fullName.trim());
-                            // Salva no banco via AJAX, incluindo nome completo
-                            seguroData.site = fullName.trim();
-                            fetch("/trip/salvar-seguro", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "X-CSRF-TOKEN": token
-                                },
-                                body: JSON.stringify(seguroData)
-                            });
+                            fullName = fullName.trim();
+                            sessionStorage.setItem('selectedSeguroName', fullName);
+                            // Não salvar direto no banco aqui — guardar no hidden input para submeter junto com o form
+                            seguroData.site = fullName;
+                            // guarda para o submit final do formulário
+                            const hidden = document.getElementById('seguroSelecionadoInput');
+                            if (hidden) hidden.value = JSON.stringify(seguroData);
+                            // também armazena em sessionStorage para uso imediato na UI/revisão
+                            sessionStorage.setItem('pendingSeguro', JSON.stringify(seguroData));
                         });
                     });
                 } else {

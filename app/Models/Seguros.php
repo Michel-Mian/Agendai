@@ -45,6 +45,7 @@ class Seguros extends Model
         'cobertura_pet',
         'cobertura_sala_vip',
         'cobertura_telemedicina',
+        'is_selected',
     ];
 
     // Se quiser acessar a viagem relacionada
