@@ -10,15 +10,6 @@ class Viagens extends Model
     public $incrementing = true; 
     public $keyType = 'int';
     
-    protected $fillable = [
-        'destino_viagem',
-        'data_inicio_viagem',
-        'data_final_viagem',
-        'origem_viagem',
-        'orcamento_viagem',
-        'fk_id_usuario',
-    ];
-
     // Relação com  usuário (User)
     public function user()
     {
@@ -58,5 +49,11 @@ class Viagens extends Model
     public function seguros()
     {
         return $this->hasMany(Seguros::class, 'fk_id_viagem', 'pk_id_viagem');
+    }
+
+    // Relação com o seguro selecionado
+    public function seguroSelecionado()
+    {
+        return $this->belongsTo(Seguros::class, 'fk_id_seguro_selecionado', 'pk_id_seguro');
     }
 }

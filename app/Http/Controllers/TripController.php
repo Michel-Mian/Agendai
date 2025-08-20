@@ -119,8 +119,8 @@ class TripController extends Controller
     // Salva o seguro selecionado no banco de dados
     public function salvarSeguro(Request $request)
     {
-    $data = $request->all();
-    \Log::debug('SalvarSeguro request data', ['data' => $data, 'session_trip_id' => session('trip_id')]);
+        $data = $request->all();
+        // Garante que 'dados' seja sempre um array antes de salvar
         if (is_string($data['dados'])) {
             $data['dados'] = json_decode($data['dados'], true);
         }
@@ -236,9 +236,12 @@ class TripController extends Controller
         $titulo_bruto = $data['dados'][0] ?? 'Título não informado';
         $titulo_limpo = trim($titulo_bruto);
         $titulo_limpo = str_replace(['\"', "\'", '"', "'"], '', $titulo_limpo);
+    $tripId = $request->input('trip_id') ?? session('trip_id');
+    // Desmarca todos os outros seguros antes de adicionar o novo
+    \App\Models\Seguros::where('fk_id_viagem', $tripId)->update(['is_selected' => false]);
     $seguro = new Seguros();
     $seguro->site = $data['site'];
-    $seguro->dados = json_encode($data['dados']);
+    $seguro->dados = json_encode($data['dados']); // Sempre salva como JSON
     $seguro->link = !empty($data['link']) ? $data['link'] : null;
     $seguro->preco = $preco;
     $seguro->preco_pix = $preco_pix;
@@ -258,8 +261,7 @@ class TripController extends Controller
     // Adiciona o id da viagem atual (da sessão)
     $tripId = session('trip_id');
     $seguro->fk_id_viagem = $tripId;
-    // Remove seguro anterior da mesma viagem
-    \App\Models\Seguros::where('fk_id_viagem', $tripId)->delete();
+    $seguro->is_selected = true;
     $seguro->save();
         return response()->json(['mensagem' => 'Seguro salvo com sucesso!']);
     }

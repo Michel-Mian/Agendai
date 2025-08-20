@@ -18,7 +18,7 @@
     <div class="p-6">
         @if(isset($seguros) && count($seguros))
             @php
-                $seguroSelecionado = $seguros->where('is_selected', true)->first();
+                $seguroSelecionado = $seguros->where('is_selected', true)->last();
             @endphp
             @if($seguroSelecionado)
                 <div class="mb-6">
@@ -26,7 +26,15 @@
                         <i class="fas fa-shield-alt text-green-600 text-2xl"></i>
                         <div>
                             <div class="font-bold text-green-800">{{ $seguroSelecionado->site ?? $seguroSelecionado->nome ?? 'Seguro' }}</div>
-                            <div class="text-sm text-gray-700">{{ $seguroSelecionado->dados ?? $seguroSelecionado->detalhes ?? '' }}</div>
+                            <div class="text-sm text-gray-700">
+                                @php
+                                    $dados = $seguroSelecionado->dados;
+                                    if (is_string($dados)) {
+                                        try { $dados = json_decode($dados, true); } catch (\Exception $e) {}
+                                    }
+                                @endphp
+                                {!! is_array($dados) ? implode('<br>', $dados) : ($dados ?? $seguroSelecionado->detalhes ?? '') !!}
+                            </div>
                         </div>
                         <button type="button" class="ml-auto bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg" onclick="window.openInsuranceModal()">
                             Trocar seguro
@@ -34,28 +42,6 @@
                     </div>
                 </div>
             @endif
-            <div class="overflow-hidden">
-                <div class="space-y-4">
-                    @foreach($seguros as $index => $seguro)
-                        <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4 border border-green-200 hover:shadow-md transition-shadow">
-                            <div class="flex items-center justify-between mb-3">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">
-                                        {{ $index + 1 }}
-                                    </div>
-                                    <div>
-                                        <div class="font-semibold text-gray-800">{{ $seguro->site ?? $seguro->nome ?? 'Seguro' }}</div>
-                                        <div class="text-sm text-gray-600">{{ $seguro->dados ?? $seguro->detalhes ?? '' }}</div>
-                                    </div>
-                                </div>
-                                @if($seguro->is_selected)
-                                    <span class="bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold">Selecionado</span>
-                                @endif
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
         @else
             <div class="text-center py-12">
                 <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
