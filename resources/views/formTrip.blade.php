@@ -217,12 +217,14 @@ document.addEventListener("DOMContentLoaded", function () {
                             sessionStorage.setItem('pendingSeguro', JSON.stringify(seguroData));
                         });
                     });
+                } else if (data.error) {
+                    resultado.innerHTML = `<div class="text-red-500">${data.error}</div>`;
                 } else {
                     resultado.innerHTML = '<div class="text-red-500">Nenhum seguro encontrado.</div>';
                 }
             })
-            .catch(() => {
-                resultado.innerHTML = '<div class="text-red-500">Erro ao buscar seguros.</div>';
+            .catch((err) => {
+                resultado.innerHTML = `<div class="text-red-500">Erro ao buscar seguros: ${err.message}</div>`;
             });
         });
     }

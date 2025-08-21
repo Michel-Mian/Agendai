@@ -112,13 +112,8 @@ function fetchInsurances() {
     fetch(`/trip/insurances?trip_id=${tripId}`)
         .then(res => res.json())
         .then(data => {
-            // Mostra apenas o seguro selecionado mais recente
-            const selected = data.seguros.filter(s => s.is_selected).pop();
-            if (selected) {
-                renderInsuranceCards([selected]);
-            } else {
-                insuranceList.innerHTML = '<div class="text-gray-500">Nenhum seguro selecionado para esta viagem.</div>';
-            }
+            // Mostra todos os seguros cadastrados, não só o selecionado
+            renderInsuranceCards(data.seguros);
         });
 }
 
@@ -145,7 +140,7 @@ buscarNovosSegurosBtn?.addEventListener('click', function() {
     });
 });
 
-// Troca o seguro selecionado no banco e reseta scraping
+// Troca o seguro selecionado no banco e atualiza instantaneamente o modal
 insuranceList?.addEventListener('click', function(e) {
     const card = e.target.closest('.insurance-card[data-id]');
     if (card && card.dataset.id) {
@@ -167,9 +162,8 @@ insuranceList?.addEventListener('click', function(e) {
                 insuranceChangeMessage.textContent = data.mensagem;
                 setTimeout(() => {
                     insuranceChangeMessage.classList.add('hidden');
-                    fetchInsurances();
-                    insuranceScrapingList.innerHTML = ''; // Limpa scraping para permitir nova busca
-                }, 1200);
+                    fetchInsurances(); // Atualiza o modal instantaneamente
+                }, 800);
             } else {
                 insuranceChangeMessage.textContent = data.mensagem || 'Erro ao trocar seguro.';
             }
@@ -177,7 +171,7 @@ insuranceList?.addEventListener('click', function(e) {
     }
 });
 
-// Adiciona seguro do scraping e marca como selecionado, desmarcando os outros
+// Adiciona seguro do scraping e marca como selecionado, desmarcando os outros, atualiza instantaneamente
 insuranceScrapingList?.addEventListener('click', function(e) {
     const card = e.target.closest('.insurance-card[data-seguro]');
     if (card && card.dataset.seguro) {
@@ -198,9 +192,8 @@ insuranceScrapingList?.addEventListener('click', function(e) {
             insuranceChangeMessage.textContent = data.mensagem || 'Seguro adicionado!';
             setTimeout(() => {
                 insuranceChangeMessage.classList.add('hidden');
-                fetchInsurances();
-                insuranceScrapingList.innerHTML = ''; // Limpa scraping para permitir nova busca
-            }, 1200);
+                fetchInsurances(); // Atualiza o modal instantaneamente
+            }, 800);
         });
     }
 });
