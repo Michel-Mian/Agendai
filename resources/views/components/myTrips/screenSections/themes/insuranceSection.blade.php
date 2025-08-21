@@ -25,7 +25,7 @@
                     <div class="bg-green-100 border border-green-300 rounded-lg p-4 flex items-center space-x-4">
                         <i class="fas fa-shield-alt text-green-600 text-2xl"></i>
                         <div>
-                            <div class="font-bold text-green-800">{{ $seguroSelecionado->site ?? $seguroSelecionado->nome ?? 'Seguro' }}</div>
+                            <div class="font-bold text-green-800">{{ $seguroSelecionado->site ?? 'Seguro' }}</div>
                             <div class="text-sm text-gray-700">
                                 @php
                                     $dados = $seguroSelecionado->dados;
@@ -33,7 +33,7 @@
                                         try { $dados = json_decode($dados, true); } catch (\Exception $e) {}
                                     }
                                 @endphp
-                                {!! is_array($dados) ? implode('<br>', $dados) : ($dados ?? $seguroSelecionado->detalhes ?? '') !!}
+                                {!! is_array($dados) ? implode('<br>', $dados) : ($dados ?? '') !!}
                             </div>
                         </div>
                         <button type="button" class="ml-auto bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg" onclick="window.openInsuranceModal()">
