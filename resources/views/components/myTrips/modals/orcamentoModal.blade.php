@@ -35,7 +35,7 @@
                 <div class="mb-4 p-4 rounded-lg border border-gray-100 shadow-sm bg-gray-50">
                     <div class="flex justify-between items-center">
                         <span class="font-semibold text-gray-700">{{ $hotel->nome_hotel }}</span>
-                        <div class="flex items-center space-x-2 column">
+                        <div class="flex flex-col gap-1">
                             <span class="text-green-700 font-bold">preço por noite R$ {{ number_format($hotel->preco, 2, ',', '.') }}</span>
                             <span class="text-green-700 font-bold">preço total R$ {{ number_format($preco_total, 2, ',', '.') }}</span>
                         </div>

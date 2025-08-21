@@ -111,7 +111,6 @@ class ViagensController extends Controller
                 $eventos[] = $evento;
             }
 
-        } else {
         }
 
         //Busca o clima na Open-Meteo

@@ -21,3 +21,5 @@
         </main>
     </div>
 </div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places&callback=initTripFormMap" async defer></script>
