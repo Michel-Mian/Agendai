@@ -8,6 +8,7 @@ use App\http\controllers\UserController;
 use App\http\controllers\ExploreController;
 use App\http\controllers\ViagensController;
 use App\http\controllers\HotelsController;
+use App\http\controllers\MobileController;
 use Illuminate\Http\Request;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 use App\Http\Controllers\TripController;
