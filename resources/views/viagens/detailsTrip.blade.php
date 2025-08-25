@@ -451,4 +451,36 @@
 <script>
     
 </script>
+{{-- Mostra o seguro apenas se houver valor --}}
+@php
+    $seguroSelecionado = $seguroSelecionado ?? '';
+@endphp
+@if(!empty($seguroSelecionado))
+<li>
+    <b>Seguro de viagem:</b>
+    <span id="seguro-detalhe">
+        {{ $seguroSelecionado }}
+    </span>
+</li>
+@endif
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    let seguro = sessionStorage.getItem('selectedSeguroName');
+    if (seguro) {
+        document.getElementById('seguro-detalhe')?.innerText = seguro;
+    }
+});
+</script>
+
+{{-- Exibe o seguro de viagem escolhido, se houver --}}
+@isset($viagem->seguro_nome)
+    @if(!empty($viagem->seguro_nome))
+        <li>
+            <b>Seguro de viagem:</b>
+            <span id="seguro-detalhe">
+                {{ $viagem->seguro_nome }}
+            </span>
+        </li>
+    @endif
+@endisset
 @endsection
