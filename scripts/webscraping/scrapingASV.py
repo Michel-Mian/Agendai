@@ -24,6 +24,20 @@ with sync_playwright() as p:
     try:
         page.goto("https://www.affinityseguro.com.br/home/", timeout=20000)
         page.wait_for_selector("#categoria", timeout=10000)
+        # --- NOVO: Fecha modal de bloqueio se aparecer ---
+        try:
+            # Espera até 2s para o modal aparecer (ajuste se necessário)
+            modal = page.query_selector("div[role='dialog'], div:has-text('Imagem')")
+            if modal:
+                # Tenta clicar no fundo da página para fechar o modal
+                page.mouse.click(100, 100)
+                page.wait_for_timeout(300)
+                # Ou tenta pressionar ESC
+                page.keyboard.press("Escape")
+                page.wait_for_timeout(300)
+        except Exception:
+            pass
+        # --- FIM NOVO ---
     except Exception:
         browser.close()
         sys.exit(1)
@@ -116,6 +130,7 @@ with sync_playwright() as p:
 
     cards = page.locator(".cardiculo")
     total = cards.count()
+    print(f"[DEBUG] Total de cards encontrados: {total}", file=sys.stderr)  # <-- ADICIONE ESTA LINHA
 
     for i in range(total):
         c = cards.nth(i)
@@ -135,7 +150,7 @@ with sync_playwright() as p:
                     print(link)
                 else:
                     print("https://www.affinityseguro.com.br")
-            except Exception as e:
+            except Exception:
                 print("https://www.affinityseguro.com.br")
 
             print("=====")

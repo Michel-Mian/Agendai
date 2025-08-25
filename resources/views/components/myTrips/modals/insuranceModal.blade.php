@@ -18,11 +18,8 @@
             </div>
         </div>
         <div class="p-8">
-            <button id="buscar-novos-seguros-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold mb-4">
-                Buscar Novos Seguros
-            </button>
+            <div id="selected-insurance-info" class="mb-6"></div>
             <div id="insurance-list" class="flex flex-wrap gap-6 max-h-[400px] overflow-y-auto"></div>
-            <div id="insurance-scraping-list" class="flex flex-wrap gap-6 mt-6"></div>
             <div id="insurance-change-message" class="mt-4 text-green-600 font-semibold hidden"></div>
             <div class="flex justify-end mt-6">
                 <button type="button" id="close-insurance-modal-btn-footer" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg transition-colors">
@@ -33,209 +30,108 @@
     </div>
 </div>
 <script>
-const closeInsuranceModalBtn = document.getElementById('close-insurance-modal-btn');
-const closeInsuranceModalFooterBtn = document.getElementById('close-insurance-modal-btn-footer');
-const insuranceModal = document.getElementById('insurance-modal');
-const insuranceModalPanel = document.getElementById('insurance-modal-panel');
-const insuranceModalOverlay = document.getElementById('insurance-modal-overlay');
-const insuranceList = document.getElementById('insurance-list');
-const insuranceChangeMessage = document.getElementById('insurance-change-message');
-const buscarNovosSegurosBtn = document.getElementById('buscar-novos-seguros-btn');
-const insuranceScrapingList = document.getElementById('insurance-scraping-list');
-
-// 1. Carrega todos os seguros do banco (sem duplicidade do selecionado)
-function renderInsuranceCards(insurances) {
-    insuranceList.innerHTML = '';
-    if (insurances && insurances.length) {
-        let selectedFound = false;
-        insurances.forEach((seguro, idx) => {
-            let dados = seguro.dados;
+document.addEventListener("DOMContentLoaded", function () {
+    // Função para renderizar o seguro selecionado
+    function renderSelectedInsurance(insurances) {
+        const selectedDiv = document.getElementById('selected-insurance-info');
+        if (!selectedDiv) return;
+        const selected = (insurances || []).find(s => s.is_selected);
+        if (selected) {
+            let dados = selected.dados;
             if (typeof dados === 'string') {
                 try { dados = JSON.parse(dados); } catch (e) {}
             }
-            const isSelected = seguro.is_selected;
-            // Só destaca o selecionado uma vez
-            if (isSelected && selectedFound) return;
-            if (isSelected) selectedFound = true;
-            insuranceList.innerHTML += `
-                <div class="insurance-card ${isSelected ? 'selected border-2 border-green-600 bg-green-50 shadow-lg' : 'border border-gray-200 bg-white'} rounded-xl p-4 flex-1 min-w-[260px] max-w-[320px] flex flex-col justify-between cursor-pointer transition-all duration-200 mb-3"
-                    data-id="${seguro.pk_id_seguro}">
-                    <h5 class="font-bold text-green-800 mb-2">${seguro.site ?? seguro.nome ?? 'Seguro'}</h5>
-                    <div class="insurance-data flex flex-col gap-2 mb-2">
-                        ${Array.isArray(dados) ? dados.map(l => `<div>${l}</div>`).join('') : (dados ?? seguro.detalhes ?? '')}
+            selectedDiv.innerHTML = `
+                <div class="bg-green-100 border border-green-300 rounded-lg p-4 flex items-center space-x-4 mb-2">
+                    <i class="fas fa-shield-alt text-green-600 text-2xl"></i>
+                    <div>
+                        <div class="font-bold text-green-800">${selected.site ?? selected.nome ?? 'Seguro'}</div>
+                        <div class="text-sm text-gray-700">
+                            ${Array.isArray(dados) ? dados.join('<br>') : (dados ?? selected.detalhes ?? '')}
+                        </div>
                     </div>
-                    ${seguro.link ? `<a href="${seguro.link}" target="_blank" class="text-green-600 font-semibold underline mb-2">Ver detalhes</a>` : ''}
-                    <div class="flex space-x-2 mt-2">
-                        ${isSelected
-                            ? `<span class="bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold">Selecionado</span>`
-                            : `<span class="text-green-600 text-xs">Clique para selecionar</span>`
-                        }
-                    </div>
+                    <span class="ml-auto bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold">Selecionado</span>
                 </div>
             `;
-        });
-    } else {
-        insuranceList.innerHTML = '<div class="text-gray-500">Nenhum seguro cadastrado para esta viagem.</div>';
-    }
-}
-
-// 2. Carrega todos os seguros do scraping (todos scripts)
-function renderScrapingCards(scrapingInsurances) {
-    insuranceScrapingList.innerHTML = '';
-    if (scrapingInsurances && scrapingInsurances.length) {
-        scrapingInsurances.forEach((seguro, idx) => {
-            let dados = seguro.dados;
-            if (typeof dados === 'string') {
-                try { dados = JSON.parse(dados); } catch (e) {}
-            }
-            insuranceScrapingList.innerHTML += `
-                <div class="insurance-card border border-blue-300 rounded-xl p-4 flex-1 min-w-[260px] max-w-[320px] flex flex-col justify-between cursor-pointer transition-all duration-200 mb-3 bg-blue-50"
-                    data-seguro='${JSON.stringify(seguro)}'>
-                    <h5 class="font-bold text-blue-800 mb-2">${seguro.site ?? seguro.nome ?? 'Seguro'}</h5>
-                    <div class="insurance-data flex flex-col gap-2 mb-2">
-                        ${Array.isArray(dados) ? dados.map(l => `<div>${l}</div>`).join('') : (dados ?? seguro.detalhes ?? '')}
-                    </div>
-                    ${seguro.link ? `<a href="${seguro.link}" target="_blank" class="text-blue-600 font-semibold underline mb-2">Ver detalhes</a>` : ''}
-                    <div class="flex space-x-2 mt-2">
-                        <span class="text-blue-600 text-xs">Clique para adicionar</span>
-                    </div>
-                </div>
-            `;
-        });
-    }
-}
-
-function fetchInsurances() {
-    insuranceList.innerHTML = '<div class="text-gray-500 text-center py-8 w-full">Carregando seguros...</div>';
-    insuranceScrapingList.innerHTML = '';
-    const tripId = window.tripId || '{{ session('trip_id') }}';
-    fetch(`/trip/insurances?trip_id=${tripId}`)
-        .then(res => res.json())
-        .then(data => {
-            // Mostra todos os seguros cadastrados, não só o selecionado
-            renderInsuranceCards(data.seguros);
-        });
-}
-
-buscarNovosSegurosBtn?.addEventListener('click', function() {
-    insuranceScrapingList.innerHTML = '<div class="text-gray-500 text-center py-8 w-full">Buscando seguros...</div>';
-    // Use os dados reais do formulário ou da viagem
-    const motivo = 1, destino = 2, data_ida = '2024-07-20', data_volta = '2024-07-25', qtd_passageiros = 1, idades = [30];
-    fetch('/trip/insurance-ajax', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({ motivo, destino, data_ida, data_volta, qtd_passageiros, idades })
-    })
-    .then(res => res.json())
-    .then(data => {
-        // Mostra todos os seguros dos scripts (não só EasySeguroViagem)
-        if (data.frases && data.frases.length) {
-            renderScrapingCards(data.frases);
         } else {
-            insuranceScrapingList.innerHTML = '<div class="text-red-500">Nenhum seguro encontrado.</div>';
+            selectedDiv.innerHTML = '';
         }
+    }
+
+    // Função para renderizar os cards de seguros
+    function renderInsuranceCards(insurances) {
+        const list = document.getElementById('insurance-list');
+        if (!list) return;
+        list.innerHTML = '';
+        (insurances || []).forEach((seguro, idx) => {
+            let dados = seguro.dados;
+            if (typeof dados === 'string') {
+                try { dados = JSON.parse(dados); } catch (e) {}
+            }
+            let selected = seguro.is_selected ? 'selected' : '';
+            let html = `
+                <div class="seguro-card border rounded-xl p-4 mb-3 cursor-pointer ${selected}" data-idx="${idx}" data-seguro='${JSON.stringify(seguro)}'>
+                    <div class="font-bold text-blue-700">${seguro.site ?? seguro.nome ?? 'Seguro'}</div>
+                    <div class="text-sm text-gray-700 mb-2">
+                        ${Array.isArray(dados) ? dados.join('<br>') : (dados ?? seguro.detalhes ?? '')}
+                    </div>
+                    ${seguro.preco ? `<div class="text-green-700 font-bold">${seguro.preco}</div>` : ''}
+                    ${seguro.link ? `<a href="${seguro.link}" target="_blank" class="text-blue-500 underline">Ver detalhes</a>` : ''}
+                </div>
+            `;
+            list.innerHTML += html;
+        });
+
+        // Evento de seleção/troca de seguro
+        document.querySelectorAll('.seguro-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.seguro-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                // Salva seleção no backend
+                let seguroData = JSON.parse(card.getAttribute('data-seguro'));
+                seguroData.is_selected = true;
+                fetch("/trip/update-insurance", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value
+                    },
+                    body: JSON.stringify({ seguro_id: seguroData.id })
+                }).then(() => {
+                    // Atualiza sessionStorage para revisão
+                    let fullName = (seguroData.site || '') + (seguroData.dados && seguroData.dados[0] ? ' ' + seguroData.dados[0] : '');
+                    sessionStorage.setItem('selectedSeguroName', fullName.trim());
+                    document.getElementById('insurance-change-message').innerText = "Seguro alterado!";
+                    document.getElementById('insurance-change-message').classList.remove('hidden');
+                    setTimeout(() => {
+                        document.getElementById('insurance-change-message').classList.add('hidden');
+                    }, 1200);
+                });
+            });
+        });
+    }
+
+    // Carrega seguros ao abrir o modal
+    function fetchInsurances() {
+        const tripId = window.tripId || '{{ session('trip_id') }}';
+        fetch(`/trip/insurances?trip_id=${tripId}`)
+            .then(res => res.json())
+            .then(data => {
+                renderSelectedInsurance(data.seguros);
+                renderInsuranceCards(data.seguros);
+            });
+    }
+
+    // Chama ao abrir o modal
+    fetchInsurances();
+
+    // Atualiza seguro selecionado ao fechar o modal
+    document.getElementById('close-insurance-modal-btn-footer')?.addEventListener('click', function() {
+        fetchInsurances();
+        // Se quiser atualizar na tela principal, pode disparar um evento customizado aqui
+        // window.dispatchEvent(new Event('insuranceChanged'));
     });
 });
-
-// Troca o seguro selecionado no banco e atualiza instantaneamente o modal
-insuranceList?.addEventListener('click', function(e) {
-    const card = e.target.closest('.insurance-card[data-id]');
-    if (card && card.dataset.id) {
-        insuranceChangeMessage.textContent = 'Alterando seguro...';
-        insuranceChangeMessage.classList.remove('hidden');
-        const seguroId = card.dataset.id;
-        const tripId = window.tripId || '{{ session('trip_id') }}';
-        fetch('/trip/update-insurance', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({ seguro_id: seguroId, trip_id: tripId })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                insuranceChangeMessage.textContent = data.mensagem;
-                setTimeout(() => {
-                    insuranceChangeMessage.classList.add('hidden');
-                    fetchInsurances(); // Atualiza o modal instantaneamente
-                }, 800);
-            } else {
-                insuranceChangeMessage.textContent = data.mensagem || 'Erro ao trocar seguro.';
-            }
-        });
-    }
-});
-
-// Adiciona seguro do scraping e marca como selecionado, desmarcando os outros, atualiza instantaneamente
-insuranceScrapingList?.addEventListener('click', function(e) {
-    const card = e.target.closest('.insurance-card[data-seguro]');
-    if (card && card.dataset.seguro) {
-        insuranceChangeMessage.textContent = 'Adicionando seguro...';
-        insuranceChangeMessage.classList.remove('hidden');
-        const seguroData = card.dataset.seguro;
-        const tripId = window.tripId || '{{ session('trip_id') }}';
-        fetch('/trip/salvar-seguro', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({ ...JSON.parse(seguroData), trip_id: tripId, is_selected: true })
-        })
-        .then(res => res.json())
-        .then(data => {
-            insuranceChangeMessage.textContent = data.mensagem || 'Seguro adicionado!';
-            setTimeout(() => {
-                insuranceChangeMessage.classList.add('hidden');
-                fetchInsurances(); // Atualiza o modal instantaneamente
-            }, 800);
-        });
-    }
-});
-
-const openInsuranceModal = () => {
-    insuranceModal.classList.remove('hidden');
-    insuranceModal.classList.add('flex');
-    document.body.style.overflow = 'hidden';
-    setTimeout(() => {
-        insuranceModalPanel.classList.remove('scale-95', 'opacity-0');
-        insuranceModalPanel.classList.add('scale-100', 'opacity-100');
-        fetchInsurances();
-    }, 10);
-};
-
-const closeInsuranceModal = () => {
-    if (!insuranceModalPanel) return;
-    insuranceModalPanel.classList.remove('scale-100', 'opacity-100');
-    insuranceModalPanel.classList.add('scale-95', 'opacity-0');
-    setTimeout(() => {
-        insuranceModal.classList.add('hidden');
-        insuranceModal.classList.remove('flex');
-        document.body.style.overflow = '';
-        insuranceList.innerHTML = '';
-        insuranceScrapingList.innerHTML = '';
-        insuranceChangeMessage.classList.add('hidden');
-    }, 300);
-};
-
-if (closeInsuranceModalBtn) closeInsuranceModalBtn.addEventListener('click', closeInsuranceModal);
-if (closeInsuranceModalFooterBtn) closeInsuranceModalFooterBtn.addEventListener('click', closeInsuranceModal);
-if (insuranceModalOverlay) insuranceModalOverlay.addEventListener('click', closeInsuranceModal);
-
-document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-        if (insuranceModal && !insuranceModal.classList.contains('hidden')) {
-            closeInsuranceModal();
-        }
-    }
-});
-
-window.openInsuranceModal = openInsuranceModal;
 </script>
 <style>
 #insurance-list, #insurance-scraping-list {

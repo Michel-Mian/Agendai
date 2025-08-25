@@ -1,7 +1,7 @@
 import sys
 import io
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from playwright.sync_api import sync_playwright
 
 # Forçar UTF-8 na saída
@@ -37,14 +37,39 @@ def selecionar_data(page, data_obj, seletor_input):
 
         page.wait_for_selector(".react-datepicker__day", timeout=2000)
 
-    dia_str = str(data_obj.day)
-    dias_validos = page.locator(f".react-datepicker__day:not(.react-datepicker__day--disabled):text-is('{dia_str}')")
+    # Seleciona todos os dias do mês atual (incluindo desabilitados)
+    todos_dias = page.locator('.react-datepicker__day:not(.react-datepicker__day--outside-month)')
+    for i in range(todos_dias.count()):
+        el = todos_dias.nth(i)
+        texto = el.text_content().strip()
+        aria_disabled = el.get_attribute("aria-disabled")
+        # print(f"[DEBUG] Dia: {texto} | aria-disabled={aria_disabled} | html={el.inner_html()}")
 
-    if dias_validos.count() == 0:
-        # Dia inválido ou desabilitado no calendário
-        raise Exception(f"Dia {dia_str} não encontrado ou está desabilitado no calendário.")
-    
-    dias_validos.nth(0).click()
+    # Seleciona apenas dias clicáveis do mês atual
+    dias_validos = page.locator('.react-datepicker__day[aria-disabled="false"]:not(.react-datepicker__day--outside-month)')
+    for i in range(dias_validos.count()):
+        el = dias_validos.nth(i)
+        # print(f"[DEBUG] Dia disponível: texto={el.text_content().strip()} html={el.inner_html()}")
+
+    encontrado = False
+    dia_str = str(data_obj.day)
+
+    for i in range(dias_validos.count()):
+        el = dias_validos.nth(i)
+        texto = el.text_content().strip()
+        if texto == dia_str:
+            el.click()
+            encontrado = True
+            break
+
+    if not encontrado:
+        print(f"[ERRO] Dia {data_obj.day} não encontrado ou está desabilitado no calendário.", file=sys.stderr)
+        print("[DEBUG] Dias disponíveis:", file=sys.stderr)
+        for i in range(dias_validos.count()):
+            el = dias_validos.nth(i)
+            print(el.text_content().strip(), file=sys.stderr)
+        raise Exception(f"Dia {data_obj.day} não encontrado ou está desabilitado no calendário.")
+
     page.wait_for_timeout(200)  # pequena pausa para registrar o clique
 
 def main():
@@ -53,6 +78,12 @@ def main():
     # Verifica se recebeu os parâmetros necessários
     if len(sys.argv) != 7:
         # print("Uso: python scrapingSP.py <destino> <data_ida> <data_volta> <nome> <email> <celular>")
+        # Sugere datas futuras automaticamente
+        hoje = datetime.today()
+        data_ida = (hoje + timedelta(days=30)).strftime("%Y-%m-%d")
+        data_volta = (hoje + timedelta(days=37)).strftime("%Y-%m-%d")
+        print(f"Exemplo de uso com datas futuras:")
+        print(f"python scripts/webscraping/scrapingSP.py \"Europa\" {data_ida} {data_volta} \"SeuNome\" \"seu@email.com\" \"11999999999\"")
         return
 
     destino = sys.argv[1]
