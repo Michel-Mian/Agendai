@@ -140,55 +140,45 @@ document.addEventListener('DOMContentLoaded', function() {
     // Função para formatar data yyyy-mm-dd para dd/mm/aaaa
     function formatarDataBR(data) {
         if (!data) return '';
-        const partes = data.split('-');
-        if (partes.length !== 3) return data;
-        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        const [ano, mes, dia] = data.split('-');
+        return `${dia}/${mes}/${ano}`;
     }
 
-    // -------------------- Função para preencher revisão final --------------------
+    // Chame esta função ao exibir o passo 6!
     function preencherRevisao() {
-        console.log('Chamando revisão');
         const reviewList = document.getElementById('reviewList');
-        if (!reviewList) {
-            console.log('reviewList não encontrado');
-            return;
-        }
-        const destino = document.getElementById('tripDestination').value;
+        if (!reviewList) return;
+
+        // Pegue os campos do DOM conforme o seu form
+        const destino = document.getElementById('tripDestination')?.value || '';
         const adultosSelect = document.querySelectorAll('.form-step')[0]?.querySelectorAll('select')[0];
+        const adultos = adultosSelect ? adultosSelect.value : '';
         const dataIdaInput = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[0];
         const dataVoltaInput = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[1];
-        const meioSelect = document.querySelectorAll('.form-step')[1]?.querySelector('select');
-        const orcamentoInput = document.querySelectorAll('.form-step')[1]?.querySelector('input[type="number"]');
-        const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
-        const seguroSelect = document.getElementById('seguroViagem');
-        const preferencesInput = document.getElementById('preferences');
-
-        const adultos = adultosSelect ? adultosSelect.value : '';
         const dataIda = dataIdaInput ? dataIdaInput.value : '';
         const dataVolta = dataVoltaInput ? dataVoltaInput.value : '';
+        const meioSelect = document.querySelectorAll('.form-step')[1]?.querySelector('select');
         const meio = meioSelect ? meioSelect.value : '';
+        const orcamentoInput = document.querySelectorAll('.form-step')[1]?.querySelector('input[type="number"]');
         const orcamento = orcamentoInput ? orcamentoInput.value : '';
+        const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
         const idades = Array.from(idadeInputs).map(input => input.value).filter(value => value !== '');
+        const seguroSelect = document.getElementById('seguroViagem');
         const seguro = seguroSelect ? seguroSelect.value : '';
-        const preferences = preferencesInput ? preferencesInput.value.split(',').filter(p => p.trim() !== '') : [];
-        let voo = '';
         let nomeSeguro = '';
-        if (meio === 'Avião') {
-            const idxSelecionado = document.getElementById('selected_flight_index').value;
-            if (idxSelecionado !== '' && voosCarregados[idxSelecionado]) {
-                const vooSelecionado = voosCarregados[idxSelecionado];
-                voo = vooSelecionado.flights && vooSelecionado.flights.length > 0
-                    ? vooSelecionado.flights[0].airline
-                    : 'Companhia não informada';
-            } else {
-                voo = 'Nenhum voo selecionado';
-            }
+        if (seguro === 'Sim') {
+            nomeSeguro = sessionStorage.getItem('selectedSeguroName') || '';
         }
 
-        // Recupera nome completo do seguro selecionado da sessionStorage
-        if (seguro === 'Sim') {
-            nomeSeguro = sessionStorage.getItem('selectedSeguroName') || 'Nenhum seguro selecionado';
+        // Recupera preferências do input hidden (atualizado no step3)
+        const preferencesInput = document.getElementById('preferences');
+        let preferences = [];
+        if (preferencesInput && preferencesInput.value) {
+            preferences = preferencesInput.value.split(',').map(p => p.trim()).filter(p => p.length > 0);
         }
+
+        // --- DEBUG: Mostre no console o valor do seguro e nomeSeguro ---
+        // console.log('seguro:', seguro, 'nomeSeguro:', nomeSeguro);
 
         reviewList.innerHTML = `
             <li><b>Destino:</b> ${destino}</li>
@@ -199,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <li><b>Meio de locomoção:</b> ${meio}</li>
             <li><b>Orçamento:</b> R$ ${orcamento}</li>
             ${meio === 'Avião' ? `<li><b>Companhia aérea:</b> ${voo}</li>` : ''}
-            ${seguro === 'Sim' ? `<li><b>Seguro de viagem:</b> ${nomeSeguro}</li>` : ''}
+            ${seguro === 'Sim' && nomeSeguro ? `<li><b style="color:#fff">Seguro de viagem:</b> ${nomeSeguro}</li>` : ''}
             <li><b>Preferências:</b> ${preferences.length > 0 ? preferences.join(', ') : 'Nenhuma'}</li>
         `;
     }
@@ -571,16 +561,20 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // -------------------- Tratamento de seleção de seguro (nova lógica) --------------------
-$(document).on('click', '.insurance-card', function() {
-    $('.insurance-card').removeClass('selected');
+$(document).on('click', '.insurance-card, .seguro-card', function() {
+    $('.insurance-card, .seguro-card').removeClass('selected');
     $(this).addClass('selected');
 
     // Salva nome do seguro selecionado para revisão
-    var name = $(this).find('h5').text();
+    var name = $(this).find('h5').text() || $(this).find('.text-lg.font-semibold').text() || $(this).find('.text-blue-700').first().text();
+    if (!name) {
+        // fallback para scraping cards
+        name = $(this).find('.text-lg').text();
+    }
     sessionStorage.setItem('selectedSeguroName', name);
 
     // Se o cartão contém o atributo data-seguro (JSON), atualiza o hidden input e pending storage
-    var seguroDataAttr = $(this).attr('data-seguro') || $(this).attr('data-id') && null;
+    var seguroDataAttr = $(this).attr('data-seguro') || ($(this).attr('data-id') ? null : null);
     if (seguroDataAttr) {
         try {
             var seguroData = JSON.parse(seguroDataAttr);
@@ -590,15 +584,135 @@ $(document).on('click', '.insurance-card', function() {
             if (hidden) hidden.value = JSON.stringify(seguroData);
             sessionStorage.setItem('pendingSeguro', JSON.stringify(seguroData));
         } catch (e) {
-            // se não for JSON, apenas salva o nome
             sessionStorage.setItem('pendingSeguro', JSON.stringify({ site: name }));
             var hidden2 = document.getElementById('seguroSelecionadoInput');
             if (hidden2) hidden2.value = JSON.stringify({ site: name });
         }
     } else {
-        // fallback: apenas o nome
         sessionStorage.setItem('pendingSeguro', JSON.stringify({ site: name }));
         var hidden3 = document.getElementById('seguroSelecionadoInput');
         if (hidden3) hidden3.value = JSON.stringify({ site: name });
     }
 });
+
+// Seleção de seguro para cards dinâmicos (.seguro-card) e estáticos (.insurance-card)
+document.addEventListener('click', function(e) {
+    let card = e.target.closest('.seguro-card, .insurance-card');
+    if (card) {
+        document.querySelectorAll('.seguro-card, .insurance-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        // Extrai nome do seguro
+        let name = card.querySelector('h5')?.innerText
+            || card.querySelector('.text-lg.font-semibold')?.innerText
+            || card.querySelector('.text-blue-700')?.innerText
+            || card.querySelector('.text-lg')?.innerText
+            || '';
+        // Para scraping: site + nome do seguro
+        if (card.classList.contains('seguro-card')) {
+            try {
+                let seguroData = JSON.parse(card.getAttribute('data-seguro'));
+                let fullName = (seguroData.site || '') + (seguroData.dados && seguroData.dados[0] ? ' ' + seguroData.dados[0] : '');
+                sessionStorage.setItem('selectedSeguroName', fullName.trim());
+                // Salva no backend
+                seguroData.site = fullName.trim();
+                fetch("/trip/salvar-seguro", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": document.querySelector('input[name="_token"]').value
+                    },
+                    body: JSON.stringify(seguroData)
+                });
+            } catch {}
+        } else {
+            sessionStorage.setItem('selectedSeguroName', name.trim());
+        }
+    }
+});
+
+// Função para preencher revisão final (step6)
+function preencherRevisao() {
+    const reviewList = document.getElementById('reviewList');
+    if (!reviewList) return;
+
+    // Pegue os campos do DOM conforme o seu form
+    const destino = document.getElementById('tripDestination')?.value || '';
+    const adultosSelect = document.querySelectorAll('.form-step')[0]?.querySelectorAll('select')[0];
+    const adultos = adultosSelect ? adultosSelect.value : '';
+    const dataIdaInput = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[0];
+    const dataVoltaInput = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[1];
+    const dataIda = dataIdaInput ? dataIdaInput.value : '';
+    const dataVolta = dataVoltaInput ? dataVoltaInput.value : '';
+    const meioSelect = document.querySelectorAll('.form-step')[1]?.querySelector('select');
+    const meio = meioSelect ? meioSelect.value : '';
+    const orcamentoInput = document.querySelectorAll('.form-step')[1]?.querySelector('input[type="number"]');
+    const orcamento = orcamentoInput ? orcamentoInput.value : '';
+    const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
+    const idades = Array.from(idadeInputs).map(input => input.value).filter(value => value !== '');
+    const seguroSelect = document.getElementById('seguroViagem');
+    const seguro = seguroSelect ? seguroSelect.value : '';
+    let nomeSeguro = '';
+    if (seguro === 'Sim') {
+        nomeSeguro = sessionStorage.getItem('selectedSeguroName') || '';
+    }
+
+    // Recupera preferências do input hidden (atualizado no step3)
+    const preferencesInput = document.getElementById('preferences');
+    let preferences = [];
+    if (preferencesInput && preferencesInput.value) {
+        preferences = preferencesInput.value.split(',').map(p => p.trim()).filter(p => p.length > 0);
+    }
+
+    // Recupera nome completo do seguro selecionado da sessionStorage
+    reviewList.innerHTML = `
+        <li><b>Destino:</b> ${destino}</li>
+        <li><b>Adultos:</b> ${adultos}</li>
+        <li><b>Idades dos passageiros:</b> ${idades.length > 0 ? idades.join(', ') : 'Nenhuma'}</li>
+        <li><b>Data de ida:</b> ${formatarDataBR(dataIda)}</li>
+        <li><b>Data de volta:</b> ${formatarDataBR(dataVolta)}</li>
+        <li><b>Meio de locomoção:</b> ${meio}</li>
+        <li><b>Orçamento:</b> R$ ${orcamento}</li>
+        ${meio === 'Avião' ? `<li><b>Companhia aérea:</b> ${voo}</li>` : ''}
+        ${seguro === 'Sim' && nomeSeguro ? `<li><b style="color:#fff">Seguro de viagem:</b> ${nomeSeguro}</li>` : ''}
+        <li><b>Preferências:</b> ${preferences.length > 0 ? preferences.join(', ') : 'Nenhuma'}</li>
+    `;
+}
+
+// Certifique-se de chamar preencherRevisao() ao exibir o passo 6
+// Por exemplo, ao avançar para o passo 6:
+document.querySelector('.next-btn-step5')?.addEventListener('click', function() {
+    preencherRevisao();
+    // aqui vai o código para mostrar o passo 6, se necessário
+});
+// Por exemplo, ao avançar para o passo 6:
+document.querySelector('.next-btn-step5')?.addEventListener('click', function() {
+    preencherRevisao();
+    // ...código para mostrar o passo 6...
+});
+    // ...código para mostrar o passo 6...
+    reviewList.innerHTML = `
+        <li><b>Destino:</b> ${destino}</li>
+        <li><b>Adultos:</b> ${adultos}</li>
+        <li><b>Idades dos passageiros:</b> ${idades.length > 0 ? idades.join(', ') : 'Nenhuma'}</li>
+        <li><b>Data de ida:</b> ${formatarDataBR(dataIda)}</li>
+        <li><b>Data de volta:</b> ${formatarDataBR(dataVolta)}</li>
+        <li><b>Meio de locomoção:</b> ${meio}</li>
+        <li><b>Orçamento:</b> R$ ${orcamento}</li>
+        ${meio === 'Avião' ? `<li><b>Companhia aérea:</b> ${voo}</li>` : ''}
+        ${seguro === 'Sim' && nomeSeguro ? `<li><b style="color:#fff">Seguro de viagem:</b> ${nomeSeguro}</li>` : ''}
+        <li><b>Preferências:</b> ${preferences.length > 0 ? preferences.join(', ') : 'Nenhuma'}</li>
+    `;
+
+
+// Certifique-se de chamar preencherRevisao() ao exibir o passo 6
+// Por exemplo, ao avançar para o passo 6:
+document.querySelector('.next-btn-step5')?.addEventListener('click', function() {
+    preencherRevisao();
+    // aqui vai o código para mostrar o passo 6, se necessário
+});
+// Por exemplo, ao avançar para o passo 6:
+document.querySelector('.next-btn-step5')?.addEventListener('click', function() {
+    preencherRevisao();
+    // ...código para mostrar o passo 6...
+});
+    // ...código para mostrar o passo 6...

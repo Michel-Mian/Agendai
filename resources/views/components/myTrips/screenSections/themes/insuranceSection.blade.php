@@ -16,32 +16,40 @@
         </div>
     </div>
     <div class="p-6">
-        @if(isset($seguros) && count($seguros))
-            @php
+        @php
+            // Busca o seguro selecionado (session)
+            $seguroSelecionado = null;
+            if (isset($seguros) && count($seguros)) {
                 $seguroSelecionado = $seguros->where('is_selected', true)->last();
-            @endphp
-            @if($seguroSelecionado)
-                <div class="mb-6">
-                    <div class="bg-green-100 border border-green-300 rounded-lg p-4 flex items-center space-x-4">
-                        <i class="fas fa-shield-alt text-green-600 text-2xl"></i>
-                        <div>
-                            <div class="font-bold text-green-800">{{ $seguroSelecionado->site ?? 'Seguro' }}</div>
-                            <div class="text-sm text-gray-700">
-                                @php
-                                    $dados = $seguroSelecionado->dados;
-                                    if (is_string($dados)) {
-                                        try { $dados = json_decode($dados, true); } catch (\Exception $e) {}
-                                    }
-                                @endphp
-                                {!! is_array($dados) ? implode('<br>', $dados) : ($dados ?? '') !!}
-                            </div>
+            }
+        @endphp
+        @if($seguroSelecionado)
+            <div class="mb-6" id="selected-insurance-session">
+                <div class="bg-green-100 border border-green-300 rounded-lg p-4 flex items-center space-x-4">
+                    <i class="fas fa-shield-alt text-green-600 text-2xl"></i>
+                    <div>
+                        <div class="font-bold text-green-800">{{ $seguroSelecionado->site ?? 'Seguro' }}</div>
+                        <div class="text-sm text-gray-700">
+                            @php
+                                $dados = $seguroSelecionado->dados;
+                                if (is_string($dados)) {
+                                    try { $dados = json_decode($dados, true); } catch (\Exception $e) {}
+                                }
+                            @endphp
+                            {!! is_array($dados) ? implode('<br>', $dados) : ($dados ?? '') !!}
                         </div>
-                        <button type="button" class="ml-auto bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg" onclick="window.openInsuranceModal()">
-                            Trocar seguro
-                        </button>
+                        @if($seguroSelecionado->preco)
+                            <div class="text-green-700 font-bold text-sm mt-1">Preço: {{ $seguroSelecionado->preco }}</div>
+                        @endif
+                        @if($seguroSelecionado->link)
+                            <a href="{{ $seguroSelecionado->link }}" target="_blank" class="text-blue-500 underline text-xs">Ver detalhes</a>
+                        @endif
                     </div>
+                    <button type="button" class="ml-auto bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg" onclick="window.openInsuranceModal()">
+                        Trocar seguro
+                    </button>
                 </div>
-            @endif
+            </div>
         @else
             <div class="text-center py-12">
                 <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -64,5 +72,40 @@
                 document.getElementById('open-add-insurance-modal-btn').click();
             });
         }
+
+        // Atualiza o seguro selecionado na tela principal ao trocar no modal
+        window.addEventListener('insuranceChanged', function(e) {
+            // e.detail.seguro contem o seguro selecionado
+            const seguro = e.detail && e.detail.seguro;
+            if (!seguro) return;
+            let dados = seguro.dados;
+            if (typeof dados === 'string') {
+                try { dados = JSON.parse(dados); } catch (e) {}
+            }
+            const html = `
+                <div class="bg-green-100 border border-green-300 rounded-lg p-4 flex items-center space-x-4">
+                    <i class="fas fa-shield-alt text-green-600 text-2xl"></i>
+                    <div>
+                        <div class="font-bold text-green-800">${seguro.site ?? 'Seguro'}</div>
+                        <div class="text-sm text-gray-700">
+                            ${Array.isArray(dados) ? dados.join('<br>') : (dados ?? '')}
+                        </div>
+                        ${seguro.preco ? `<div class="text-green-700 font-bold text-sm mt-1">Preço: ${seguro.preco}</div>` : ''}
+                        ${seguro.link ? `<a href="${seguro.link}" target="_blank" class="text-blue-500 underline text-xs">Ver detalhes</a>` : ''}
+                    </div>
+                    <button type="button" class="ml-auto bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg" onclick="window.openInsuranceModal()">
+                        Trocar seguro
+                    </button>
+                </div>
+            `;
+            document.getElementById('selected-insurance-session').innerHTML = html;
+        });
     });
+    // Função global para abrir o modal
+    window.openInsuranceModal = function() {
+        document.getElementById('insurance-modal').classList.remove('hidden');
+        document.getElementById('insurance-modal').classList.add('flex');
+        // Dispara evento para carregar seguros instantaneamente no modal
+        window.dispatchEvent(new Event('openInsuranceModal'));
+    }
 </script>
