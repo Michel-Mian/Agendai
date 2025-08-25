@@ -27,7 +27,7 @@ def extrair_nome_site(url):
 def main():
     # Validação básica da quantidade de argumentos
     if len(sys.argv) < 7:
-        # print("Uso: python scrapingESV.py <motivo> <destino> <data_ida> <data_volta> <qtd_passageiros> <idade1> ... <idadeN>")
+        # print("Uso: python scrapingESV.py <motivo> <destino> <data_ida> <data_volta> <qtd_passageiros> <idade1> ... <idadeN>", file=sys.stderr)
         return
 
     motivo = sys.argv[1]
@@ -39,11 +39,11 @@ def main():
 
     # Validação de passageiros
     if qtd_passageiros < 1 or qtd_passageiros > 8:
-        # print("Número de passageiros deve ser entre 1 e 8.")
+        # print("Número de passageiros deve ser entre 1 e 8.", file=sys.stderr)
         return
 
     if len(idades) < qtd_passageiros:
-        # print(f"Você informou {len(idades)} idades, mas selecionou {qtd_passageiros} passageiros.")
+        # print(f"Você informou {len(idades)} idades, mas selecionou {qtd_passageiros} passageiros.", file=sys.stderr)
         return
 
     data_ida_obj = datetime.strptime(data_ida, "%Y-%m-%d")
@@ -68,7 +68,7 @@ def main():
         page.locator(xpath_ida).nth(0).click()
 
         xpath_volta = f"//td[contains(@class, 'available') and text()='{data_volta_obj.day}']"
-        page.locator(xpath_volta).nth(1).click()
+        page.locator(xpath_volta).nth(0).click()
 
         page.click(".applyBtn")
 

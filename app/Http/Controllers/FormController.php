@@ -38,6 +38,12 @@ class FormController extends Controller
         $viagem->data_final_viagem = $request->date_return;
         $viagem->orcamento_viagem = $request->orcamento;
         $viagem->fk_id_usuario = auth()->id();
+
+        // Associa o seguro selecionado, se enviado
+        if ($request->filled('seguroSelecionadoId')) {
+            $viagem->fk_id_seguro_selecionado = $request->seguroSelecionadoId;
+        }
+
         $viagem->save();
 
         // 2. Salve o voo (se houver)
@@ -59,7 +65,6 @@ class FormController extends Controller
                 : now();
             $voo->companhia_voo = $primeiroTrecho['airline'] ?? '';
             $voo->fk_id_viagem = $viagem->pk_id_viagem;
-            $voo->preco_voo = $flightData['price'] ?? 0;
             $voo->save();
         }
 

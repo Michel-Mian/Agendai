@@ -20,148 +20,142 @@ class TripController extends Controller
     // Roda os scripts de scraping em paralelo e retorna os seguros padronizados
     public function scrapingAjax(Request $request)
     {
-        try {
-            $cacheKey = 'seguros:' . md5(json_encode($request->all()));
-            $cached = null;
-            try {
-                if (class_exists('Redis')) {
-                    $cached = \Illuminate\Support\Facades\Redis::get($cacheKey);
-                }
-            } catch (\Throwable $e) {
-                // Redis não disponível, ignora cache
-                $cached = null;
-            }
-            if ($cached) {
-                return response()->json(['frases' => json_decode($cached, true)]);
-            }
+        $cacheKey = 'seguros:' . md5(json_encode($request->all()));
+        $cacheRow = \DB::table('seguros_cache')->where('cache_key', $cacheKey)->first();
 
-            $request->validate([
-                'motivo' => 'required|in:1,2,3,4',
-                'destino' => 'required|in:1,2,3,4,5,6,7,11',
-                'data_ida' => 'required|date',
-                'data_volta' => 'required|date|after_or_equal:data_ida',
-                'qtd_passageiros' => 'required|integer|min:1|max:8',
-                'idades' => 'required|array',
+        // Log para debug
+        \Log::info('scrapingAjax cacheRow', ['cacheKey' => $cacheKey, 'cacheRow' => $cacheRow]);
+
+        if ($cacheRow && $cacheRow->result_json) {
+            $frases = json_decode($cacheRow->result_json, true);
+            // Log para debug
+            \Log::info('scrapingAjax retornando frases do cache', ['frases' => $frases]);
+            return response()->json(['frases' => $frases]);
+        } else {
+            // Dispara o Job para rodar scraping em background
+            \App\Jobs\ScrapeInsuranceJob::dispatch([
+                'cache_key' => $cacheKey,
+                'params' => $request->all()
             ]);
+            // Log para debug
+            \Log::info('scrapingAjax disparou Job', ['cacheKey' => $cacheKey]);
+            return response()->json(['frases' => [], 'status' => 'carregando']);
+        }
 
-            $qtd = (int) $request->qtd_passageiros;
-            $idades = $request->idades;
+        $request->validate([
+            'motivo' => 'required|in:1,2,3,4',
+            'destino' => 'required|in:1,2,3,4,5,6,7,11',
+            'data_ida' => 'required|date',
+            'data_volta' => 'required|date|after_or_equal:data_ida',
+            'qtd_passageiros' => 'required|integer|min:1|max:8',
+            'idades' => 'required|array',
+        ]);
 
-            for ($i = count($idades); $i < 8; $i++) {
-                $idades[] = '0';
+        $qtd = (int) $request->qtd_passageiros;
+        $idades = $request->idades;
+
+        for ($i = count($idades); $i < 8; $i++) {
+            $idades[] = '0';
+        }
+
+        // Dados fixos para nome, email e celular
+        $nome = escapeshellarg("Matheus");
+        $email = escapeshellarg("matheus@email.com");
+        $celular = escapeshellarg("11999999999");
+
+        // Mapeamentos de destino
+        $mapDestinoTexto = [
+            1 => 'América do Norte', 2 => 'Europa', 3 => 'Caribe / México', 4 => 'América do Sul',
+            5 => 'África', 6 => 'Ásia', 7 => 'Oceania', 11 => 'Oriente Médio'
+        ];
+        $destinoTexto = $mapDestinoTexto[$request->destino] ?? 'Europa';
+        $categoriaFixa = 17;
+        $pax_0_64 = $pax_65_70 = $pax_71_80 = $pax_81_85 = 0;
+        foreach ($idades as $idade) {
+            if ($idade <= 64) $pax_0_64++;
+            elseif ($idade <= 70) $pax_65_70++;
+            elseif ($idade <= 80) $pax_71_80++;
+            elseif ($idade <= 85) $pax_81_85++;
+        }
+        $mapDestinoAV = [1 => 3, 2 => 4, 3 => 9, 4 => 1, 5 => 7, 6 => 7, 7 => 7, 11 => 9];
+        $destinoAV = $mapDestinoAV[$request->destino] ?? 4;
+        $python = 'python';
+        $mapDestinoASV = [1 => 1, 2 => 5, 3 => 1, 4 => 10, 5 => 4, 6 => 6, 7 => 7, 11 => 8];
+        $destinoASV = $mapDestinoASV[$request->destino] ?? 5;
+
+        $cmds = [
+            'ESV' => $python . ' "' . base_path('scripts/webscraping/scrapingESV.py') . '" '
+                . (int)$request->motivo . ' ' . (int)$request->destino . ' '
+                . escapeshellarg($request->data_ida) . ' ' . escapeshellarg($request->data_volta) . ' '
+                . $qtd . ' ' . implode(' ', $idades),
+            'SP' => $python . ' "' . base_path('scripts/webscraping/scrapingSP.py') . '" '
+                . escapeshellarg($destinoTexto) . ' ' . escapeshellarg($request->data_ida) . ' '
+                . escapeshellarg($request->data_volta) . ' ' . $nome . ' ' . $email . ' ' . $celular,
+            'ASV' => $python . ' "' . base_path('scripts/webscraping/scrapingASV.py') . '" '
+                . $categoriaFixa . ' ' . $destinoASV . ' '
+                . escapeshellarg($request->data_ida) . ' ' . escapeshellarg($request->data_volta) . ' '
+                . $nome . ' ' . $email . ' ' . $celular . ' '
+                . $pax_0_64 . ' ' . $pax_65_70 . ' ' . $pax_71_80 . ' ' . $pax_81_85,
+            'AV' => $python . ' "' . base_path('scripts/webscraping/scrapingAV.py') . '" '
+                . $destinoAV . ' ' . escapeshellarg($request->data_ida) . ' '
+                . escapeshellarg($request->data_volta) . ' ' . $nome . ' ' . $email . ' ' . $celular . ' '
+                . implode(',', $idades),
+        ];
+
+        $pipes = [];
+        $processes = [];
+        $outputs = [];
+        $startTime = microtime(true);
+        $timeoutSeconds = 4; // timeout agressivo
+
+        // Inicia todos os processos em paralelo
+        foreach ($cmds as $key => $cmd) {
+            $descriptorspec = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+            $process = proc_open($cmd, $descriptorspec, $pipes[$key]);
+            if (is_resource($process)) {
+                stream_set_blocking($pipes[$key][1], false);
+                $processes[$key] = $process;
             }
-
-            // Dados fixos para nome, email e celular
-            $nome = escapeshellarg("Matheus");
-            $email = escapeshellarg("matheus@email.com");
-            $celular = escapeshellarg("11999999999");
-
-            // Mapeamentos de destino
-            $mapDestinoTexto = [
-                1 => 'América do Norte', 2 => 'Europa', 3 => 'Caribe / México', 4 => 'América do Sul',
-                5 => 'África', 6 => 'Ásia', 7 => 'Oceania', 11 => 'Oriente Médio'
-            ];
-            $destinoTexto = $mapDestinoTexto[$request->destino] ?? 'Europa';
-            $categoriaFixa = 17;
-            $pax_0_64 = $pax_65_70 = $pax_71_80 = $pax_81_85 = 0;
-            foreach ($idades as $idade) {
-                if ($idade <= 64) $pax_0_64++;
-                elseif ($idade <= 70) $pax_65_70++;
-                elseif ($idade <= 80) $pax_71_80++;
-                elseif ($idade <= 85) $pax_81_85++;
-            }
-            $mapDestinoAV = [1 => 3, 2 => 4, 3 => 9, 4 => 1, 5 => 7, 6 => 7, 7 => 7, 11 => 9];
-            $destinoAV = $mapDestinoAV[$request->destino] ?? 4;
-            $python = 'python';
-            $mapDestinoASV = [1 => 1, 2 => 5, 3 => 1, 4 => 10, 5 => 4, 6 => 6, 7 => 7, 11 => 8];
-            $destinoASV = $mapDestinoASV[$request->destino] ?? 5;
-
-            $cmds = [
-                'ESV' => $python . ' "' . base_path('scripts/webscraping/scrapingESV.py') . '" '
-                    . (int)$request->motivo . ' ' . (int)$request->destino . ' '
-                    . escapeshellarg($request->data_ida) . ' ' . escapeshellarg($request->data_volta) . ' '
-                    . $qtd . ' ' . implode(' ', $idades),
-                'SP' => $python . ' "' . base_path('scripts/webscraping/scrapingSP.py') . '" '
-                    . escapeshellarg($destinoTexto) . ' ' . escapeshellarg($request->data_ida) . ' '
-                    . escapeshellarg($request->data_volta) . ' ' . $nome . ' ' . $email . ' ' . $celular,
-                'ASV' => $python . ' "' . base_path('scripts/webscraping/scrapingASV.py') . '" '
-                    . $categoriaFixa . ' ' . $destinoASV . ' '
-                    . escapeshellarg($request->data_ida) . ' ' . escapeshellarg($request->data_volta) . ' '
-                    . $nome . ' ' . $email . ' ' . $celular . ' '
-                    . $pax_0_64 . ' ' . $pax_65_70 . ' ' . $pax_71_80 . ' ' . $pax_81_85,
-                'AV' => $python . ' "' . base_path('scripts/webscraping/scrapingAV.py') . '" '
-                    . $destinoAV . ' ' . escapeshellarg($request->data_ida) . ' '
-                    . escapeshellarg($request->data_volta) . ' ' . $nome . ' ' . $email . ' ' . $celular . ' '
-                    . implode(',', $idades),
-            ];
-
-            $pipes = [];
-            $processes = [];
-            $outputs = [];
-            $startTime = microtime(true);
-            $timeoutSeconds = 4; // timeout agressivo
-
-            // Inicia todos os processos em paralelo
-            foreach ($cmds as $key => $cmd) {
-                $descriptorspec = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
-                $process = proc_open($cmd, $descriptorspec, $pipes[$key]);
-                if (is_resource($process)) {
-                    stream_set_blocking($pipes[$key][1], false);
-                    $processes[$key] = $process;
+        }
+        $finished = [];
+        while (count($finished) < count($cmds)) {
+            foreach ($pipes as $key => $pipe) {
+                if (isset($finished[$key])) continue;
+                $chunk = fread($pipe[1], 8192);
+                if ($chunk !== false && strlen($chunk) > 0) {
+                    if (!isset($outputs[$key])) $outputs[$key] = '';
+                    $outputs[$key] .= $chunk;
+                }
+                if (feof($pipe[1])) {
+                    fclose($pipe[1]);
+                    proc_close($processes[$key]);
+                    $finished[$key] = true;
                 }
             }
-            $finished = [];
-            while (count($finished) < count($cmds)) {
-                foreach ($pipes as $key => $pipe) {
-                    if (isset($finished[$key])) continue;
-                    $chunk = fread($pipe[1], 8192);
-                    if ($chunk !== false && strlen($chunk) > 0) {
-                        if (!isset($outputs[$key])) $outputs[$key] = '';
-                        $outputs[$key] .= $chunk;
-                    }
-                    if (feof($pipe[1])) {
-                        fclose($pipe[1]);
-                        proc_close($processes[$key]);
+            // Se passou do timeout, encerra todos os processos restantes
+            if ((microtime(true) - $startTime) > $timeoutSeconds) {
+                foreach ($processes as $key => $process) {
+                    if (!isset($finished[$key]) && is_resource($process)) {
+                        fclose($pipes[$key][1]);
+                        proc_terminate($process);
                         $finished[$key] = true;
                     }
                 }
-                // Se passou do timeout, encerra todos os processos restantes
-                if ((microtime(true) - $startTime) > $timeoutSeconds) {
-                    foreach ($processes as $key => $process) {
-                        if (!isset($finished[$key]) && is_resource($process)) {
-                            fclose($pipes[$key][1]);
-                            proc_terminate($process);
-                            $finished[$key] = true;
-                        }
-                    }
-                    break;
-                }
-                usleep(5000); // menor sleep para resposta mais rápida
+                break;
             }
-
-            // Padroniza a saída dos scripts
-            $frases = [];
-            foreach ($outputs as $out) {
-                $frases = array_merge($frases, $this->parseOutput($out));
-            }
-
-            // Salva no cache por 10 minutos (se Redis disponível)
-            try {
-                if (class_exists('Redis')) {
-                    \Illuminate\Support\Facades\Redis::setex($cacheKey, 600, json_encode($frases));
-                }
-            } catch (\Throwable $e) {
-                // Ignora erro de cache
-            }
-            return response()->json(['frases' => $frases]);
-        } catch (\Exception $e) {
-            \Log::error('Erro ao buscar seguros: ' . $e->getMessage());
-            // Retorna JSON mesmo em erro
-            return response()->json([
-                'error' => 'Erro ao buscar seguros: ' . $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], 500);
+            usleep(5000); // menor sleep para resposta mais rápida
         }
+
+        // Padroniza a saída dos scripts
+        $frases = [];
+        foreach ($outputs as $out) {
+            $frases = array_merge($frases, $this->parseOutput($out));
+        }
+
+        // Salva no cache por 10 minutos
+        Redis::setex($cacheKey, 600, json_encode($frases));
+
+        return response()->json(['frases' => $frases]);
     }
 
     // Salva o seguro selecionado no banco de dados
@@ -284,34 +278,35 @@ class TripController extends Controller
         $titulo_bruto = $data['dados'][0] ?? 'Título não informado';
         $titulo_limpo = trim($titulo_bruto);
         $titulo_limpo = str_replace(['\"', "\'", '"', "'"], '', $titulo_limpo);
-    $tripId = $request->input('trip_id') ?? session('trip_id');
-    // Desmarca todos os outros seguros antes de adicionar o novo
-    \App\Models\Seguros::where('fk_id_viagem', $tripId)->update(['is_selected' => false]);
-    $seguro = new Seguros();
-    $seguro->site = $data['site'];
-    $seguro->dados = json_encode($data['dados']); // Sempre salva como JSON
-    $seguro->link = !empty($data['link']) ? $data['link'] : null;
-    $seguro->preco = $preco;
-    $seguro->preco_pix = $preco_pix;
-    $seguro->preco_cartao = $preco_cartao;
-    $seguro->parcelas = $parcelas;
-    $seguro->cobertura_medica = $cobertura_medica;
-    $seguro->cobertura_bagagem = $cobertura_bagagem;
-    $seguro->cobertura_cancelamento = $cobertura_cancelamento;
-    $seguro->cobertura_odonto = $cobertura_odonto;
-    $seguro->cobertura_medicamentos = $cobertura_medicamentos;
-    $seguro->cobertura_eletronicos = $cobertura_eletronicos;
-    $seguro->cobertura_mochila_mao = $cobertura_mochila_mao;
-    $seguro->cobertura_atraso_embarque = $cobertura_atraso_embarque;
-    $seguro->cobertura_pet = $cobertura_pet;
-    $seguro->cobertura_sala_vip = $cobertura_sala_vip;
-    $seguro->cobertura_telemedicina = $cobertura_telemedicina;
-    // Adiciona o id da viagem atual (da sessão)
-    $tripId = session('trip_id');
-    $seguro->fk_id_viagem = $tripId;
-    $seguro->is_selected = true;
-    $seguro->save();
-        return response()->json(['mensagem' => 'Seguro salvo com sucesso!']);
+
+        $tripId = $request->input('trip_id') ?? session('trip_id');
+        // Desmarca todos os outros seguros antes de adicionar o novo
+        \App\Models\Seguros::where('fk_id_viagem', $tripId)->update(['is_selected' => false]);
+        $seguro = new \App\Models\Seguros();
+        $seguro->site = $data['site'];
+        $seguro->dados = json_encode($data['dados']); // Sempre salva como JSON
+        $seguro->link = !empty($data['link']) ? $data['link'] : null;
+        $seguro->preco = $preco;
+        $seguro->preco_pix = $preco_pix;
+        $seguro->preco_cartao = $preco_cartao;
+        $seguro->parcelas = $parcelas;
+        $seguro->cobertura_medica = $cobertura_medica;
+        $seguro->cobertura_bagagem = $cobertura_bagagem;
+        $seguro->cobertura_cancelamento = $cobertura_cancelamento;
+        $seguro->cobertura_odonto = $cobertura_odonto;
+        $seguro->cobertura_medicamentos = $cobertura_medicamentos;
+        $seguro->cobertura_eletronicos = $cobertura_eletronicos;
+        $seguro->cobertura_mochila_mao = $cobertura_mochila_mao;
+        $seguro->cobertura_atraso_embarque = $cobertura_atraso_embarque;
+        $seguro->cobertura_pet = $cobertura_pet;
+        $seguro->cobertura_sala_vip = $cobertura_sala_vip;
+        $seguro->cobertura_telemedicina = $cobertura_telemedicina;
+        $seguro->fk_id_viagem = $tripId;
+        $seguro->is_selected = true;
+        $seguro->save();
+
+        // Retorna o ID do seguro salvo
+        return response()->json(['mensagem' => 'Seguro salvo com sucesso!', 'seguro_id' => $seguro->pk_id_seguro]);
     }
 
     // AJAX: Retorna todos os seguros da viagem
@@ -349,7 +344,7 @@ class TripController extends Controller
     }
 
     // Funções auxiliares para parsear e formatar saída dos scripts
-    private function parseOutput($output)
+    public function parseOutput($output)
     {
         $linhas = explode("\n", trim($output));
         $frases = [];
@@ -370,7 +365,7 @@ class TripController extends Controller
         return $frases;
     }
 
-    private function formatSeguro(array $seguro)
+    public function formatSeguro(array $seguro)
     {
         $link = '';
         $lastLine = end($seguro);

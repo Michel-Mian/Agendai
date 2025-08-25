@@ -8,6 +8,8 @@ class Seguros extends Model
 {
     protected $table = 'seguros';
     protected $primaryKey = 'pk_id_seguro';
+    public $incrementing = true;
+    public $keyType = 'int';
 
     protected $fillable = [
         'site',
