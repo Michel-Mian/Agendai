@@ -39,7 +39,8 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/formTrip/card-flight', [FormController::class, 'cardFlightAjax'])->name('formTrip.cardFlight.ajax');    
 
     Route::get('/dashboard/historico', [DashBoardController::class, 'historicoAjax'])->name('dashboard.historico');
-    Route::get('/dashboard', [DashBoardController::class, 'dashboard'])->name('dashboard');
+    
+    Route::get('/dashboard', [\App\Http\Controllers\DashBoardController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/myTrips', [ViagensController::class, 'index'])->name('myTrips');
 
