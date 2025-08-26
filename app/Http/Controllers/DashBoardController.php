@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Viagens;
 
 /**
  * Controller responsible for rendering the user dashboard with currency rates and history.
@@ -19,6 +21,11 @@ class DashBoardController extends Controller
     public function dashboard()
     {
         $user = auth()->user();
+
+        //viagens
+        $viagens = Viagens::where('fk_id_usuario', $user->id)
+            ->orderBy('data_inicio_viagem', 'asc')
+            ->get();
 
         // Fetch available currencies from the API
         $response = Http::get('https://economia.awesomeapi.com.br/json/available/uniq');
@@ -81,6 +88,7 @@ class DashBoardController extends Controller
         // Render the dashboard view with all data
         return view('dashboard', [
             'user' => $user,
+            'viagens' => $viagens,
             'currencies' => $currencies,
             'cotacao' => $cotacao,
             'historico' => $historico,
@@ -133,4 +141,5 @@ class DashBoardController extends Controller
             'data' => $data,
         ]);
     }
+    
 }
