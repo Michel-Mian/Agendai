@@ -3,11 +3,11 @@
         <div class="flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <div class="bg-white/20 rounded-lg p-2">
-                    <i class="fas fa-bullseye text-purple-600 text-2xl"></i>
+                    <i class="fas fa-bullseye text-white text-xl"></i>
                 </div>
                 <div>
-                    <h2 class="text-xl font-bold text-purple-800">Objetivos</h2>
-                    <p class="text-purple-600 text-sm">{{ $objetivos->count() }} {{ $objetivos->count() == 1 ? 'objetivo' : 'objetivos' }}</p>
+                    <h2 class="text-xl font-bold text-white">Objetivos</h2>
+                    <p class="text-purple-200 text-sm">{{ $objetivos->count() }} {{ $objetivos->count() == 1 ? 'objetivo' : 'objetivos' }}</p>
                 </div>
             </div>
             <button type="button" id="open-add-objetivo-modal-btn" class="bg-white border-2 border-purple-400 hover:bg-purple-100 cursor-pointer text-purple-700 p-2 rounded-lg transition-colors" title="Adicionar objetivo">
@@ -16,13 +16,13 @@
         </div>
     </div>
 
-        <div class="p-6">
+    <div class="p-6">
         @if($objetivos->count())
             <div class="space-y-4">
                 @php
                     $objetivosExibidos = ($objetivos->count() > 3) ? $objetivos->take(3) : $objetivos;
                 @endphp
-                @include('components/myTrips/cardObjectives')
+                @include('components/myTrips/cardObjectives', ['showClickableHint' => true])
             </div>
             
             @if($objetivos->count() > 3)
@@ -49,7 +49,9 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        
+        // ID da viagem atual
+        const currentTripId = {{ $viagem->pk_id_viagem ?? 'null' }};
+        console.log('🆔 Trip ID atual:', currentTripId);
         
         const addObjetivoEmptyBtn = document.getElementById('open-add-objetivo-modal-btn-empty');
         if (addObjetivoEmptyBtn) {
@@ -57,5 +59,50 @@
                 document.getElementById('open-add-objetivo-modal-btn').click();
             });
         }
+
+        // Função para mapear objetivos para filtros do Google Places API
+        function getGooglePlacesFilters(objetivoNome) {
+            const objetivoFilters = {
+                'Cultura e história': ['museum', 'tourist_attraction', 'library', 'church', 'historical'],
+                'Gastronomia': ['restaurant', 'cafe', 'bar', 'food', 'meal_takeaway'],
+                'Aventura': ['amusement_park', 'park', 'zoo', 'aquarium', 'bowling_alley'],
+                'Negócios': ['business', 'conference_center', 'embassy'],
+                'Relaxamento': ['spa', 'park', 'beach', 'resort'],
+                'Compras': ['shopping_mall', 'store', 'clothing_store', 'electronics_store', 'jewelry_store'],
+                'Vida noturna': ['night_club', 'bar', 'casino'],
+                'Arte e museus': ['museum', 'art_gallery', 'library'],
+                'Esportes': ['gym', 'stadium', 'sports_complex'],
+                'Natureza': ['park', 'zoo', 'aquarium', 'natural_feature'],
+                'Educação': ['university', 'school', 'library'],
+                'Entretenimento': ['movie_theater', 'amusement_park', 'casino', 'bowling_alley'],
+                'Religião': ['church', 'mosque', 'synagogue', 'hindu_temple']
+            };
+            
+            return objetivoFilters[objetivoNome] || ['tourist_attraction'];
+        }
+
+        // Adicionar event listeners para os cards de objetivos
+        document.querySelectorAll('.objetivo-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const objetivoNome = this.dataset.objetivoNome;
+                const filters = getGooglePlacesFilters(objetivoNome);
+                
+                // Codificar os filtros para passar na URL
+                const encodedFilters = encodeURIComponent(JSON.stringify(filters));
+                
+                console.log('🎯 Clique no objetivo detectado:', {
+                    objetivo: objetivoNome,
+                    filters: filters,
+                    encodedFilters: encodedFilters,
+                    tripId: currentTripId
+                });
+                
+                // Redirecionar para a página explore com os filtros E definindo a viagem correta
+                const url = `/explore/set-trip/${currentTripId}?filters=${encodedFilters}&objective=${encodeURIComponent(objetivoNome)}`;
+                console.log('🚀 Redirecionando para:', url);
+                
+                window.location.href = url;
+            });
+        });
     });
 </script>
