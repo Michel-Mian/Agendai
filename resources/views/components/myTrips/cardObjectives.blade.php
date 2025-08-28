@@ -27,39 +27,17 @@
 
             <div class="p-4 flex flex-col items-center justify-center h-full text-center">
                 @php
-                    switch($objetivo->nome) {
-                        case 'Cultura e história':
-                            $imagePath = 'imgs/objectives/open-book.png';
-                            break;
-                        case 'Gastronomia':
-                            $imagePath = 'imgs/objectives/restaurant.png';
-                            break;
-                        case 'Aventura':
-                            $imagePath = 'imgs/objectives/adventure.png';
-                            break;
-                        case 'Negócios':
-                            $imagePath = 'imgs/objectives/business.png';
-                            break;
-                        case 'Relaxamento':
-                            $imagePath = 'imgs/objectives/relaxation.png';
-                            break;
-                        case 'Compras':
-                            $imagePath = 'imgs/objectives/shopping.png';
-                            break;
-                        case 'Vida noturna':
-                            $imagePath = 'imgs/objectives/nightlife.png';
-                            break;
-                        case 'Arte e museus':
-                            $imagePath = 'imgs/objectives/museum.png';
-                            break;
-                        default:
-                            $imagePath = 'imgs/objectives/default.png';
-                            break;
-                    }
+                    $imagePath = \App\Helpers\ObjectiveImageHelper::getImagePath($objetivo->nome);
+                    $imageExists = \App\Helpers\ObjectiveImageHelper::imageExists($imagePath);
                 @endphp
                 
-                @if($imagePath)
+                @if($imageExists)
                     <img src="{{ asset($imagePath) }}" alt="{{ $objetivo->nome }}" class="w-16 h-16 mb-2 group-hover:scale-110 transition-transform">
+                @else
+                    <!-- Fallback icon usando FontAwesome -->
+                    <div class="w-16 h-16 mb-2 bg-purple-200 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fas fa-bullseye text-purple-600 text-2xl"></i>
+                    </div>
                 @endif
                 
                 <span class="font-medium text-gray-800 text-center leading-relaxed group-hover:text-purple-700 transition-colors">{{ $objetivo->nome }}</span>
