@@ -96,13 +96,20 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
             if (fromItinerary && databaseId) {
                 let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
                 alterarHorarioForm = `
-                    <form method="POST" action="/explore/ponto-interesse/${databaseId}/horario" class="mt-4 flex items-center gap-2">
-                        <input type="hidden" name="_token" value="${csrfToken}">
-                        <label for="novo_horario" class="text-sm font-medium text-gray-700">Horário:</label>
-                        <input type="time" id="novo_horario" name="novo_horario" value="${horarioAtual}" class="border rounded px-2 py-1">
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded">Alterar para esse horário</button>
-                    </form>
-                    <button onclick="removePontoFromItinerary('${databaseId}')" class="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-pink-500 rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg w-full sm:w-auto">🗑️ Remover do Itinerário</button>
+                    <div class="flex flex-col gap-3">
+                        <form method="POST" action="/explore/ponto-interesse/${databaseId}/horario" class="flex items-center gap-2" onsubmit="handleHorarioSubmit(event, ${databaseId})">
+                            <input type="hidden" name="_token" value="${csrfToken}">
+                            <input type="hidden" name="_method" value="POST">
+                            <label for="novo_horario" class="text-sm font-medium text-gray-700">Horário:</label>
+                            <input type="time" id="novo_horario" name="novo_horario" value="${horarioAtual}" class="border rounded px-2 py-1" required>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded transition-colors">
+                                Alterar para esse horário
+                            </button>
+                        </form>
+                        <button onclick="removePontoFromItinerary('${databaseId}')" class="mt-2 px-6 py-3 text-sm font-medium text-white bg-red-500 hover:bg-red-600 active:bg-red-700 rounded-lg transition-all duration-200 shadow-lg w-full sm:w-auto border-0" style="background-color: #ef4444 !important; color: white !important;">
+                            🗑️ Remover do Itinerário
+                        </button>
+                    </div>
                 `;
             }
             // ...restante do modal
@@ -231,5 +238,246 @@ function getTypeLabel(type) {
         hotel: 'Hotel'
     };
     return labels[type] || type.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+}
+
+/**
+ * Handle form submission for changing time
+ */
+function handleHorarioSubmit(event, pontoId) {
+    event.preventDefault();
+    console.log('=== INICIANDO ALTERAÇÃO DE HORÁRIO ===');
+    console.log('Ponto ID:', pontoId);
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const novoHorario = formData.get('novo_horario');
+    
+    console.log('Novo horário:', novoHorario);
+    console.log('Action URL:', form.action);
+    
+    if (!novoHorario) {
+        console.log('Erro: Horário não fornecido');
+        if (typeof showNotification === 'function') {
+            showNotification('Por favor, selecione um horário válido', 'error');
+        } else {
+            alert('Por favor, selecione um horário válido');
+        }
+        return;
+    }
+    
+    // Disable submit button to prevent double submission
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '⏳ Alterando...';
+    
+    console.log('Enviando requisição...');
+    
+    // Preparar dados para envio
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                      document.querySelector('input[name="_token"]')?.value ||
+                      window.Laravel?.csrfToken;
+                      
+    console.log('CSRF Token:', csrfToken);
+    
+    if (!csrfToken) {
+        console.error('CSRF Token não encontrado!');
+        if (typeof showNotification === 'function') {
+            showNotification('Erro: Token de segurança não encontrado', 'error');
+        } else {
+            alert('Erro: Token de segurança não encontrado');
+        }
+        return;
+    }
+    
+    // Validar formato do horário
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(novoHorario)) {
+        console.error('Formato de horário inválido:', novoHorario);
+        if (typeof showNotification === 'function') {
+            showNotification('Formato de horário inválido. Use HH:MM', 'error');
+        } else {
+            alert('Formato de horário inválido. Use HH:MM');
+        }
+        return;
+    }
+    
+    // Criar dados do formulário manualmente para garantir formato correto
+    const bodyData = new URLSearchParams();
+    bodyData.append('novo_horario', novoHorario);
+    bodyData.append('_token', csrfToken);
+    
+    console.log('Dados a serem enviados:', Object.fromEntries(bodyData));
+    
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': csrfToken,
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: bodyData
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        // Verificar se a resposta é ok
+        if (!response.ok) {
+            // Para erros 422, vamos tentar ler a resposta JSON mesmo assim
+            if (response.status === 422) {
+                return response.json().then(errorData => {
+                    throw new Error(`Validation Error: ${JSON.stringify(errorData)}`);
+                });
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Verificar se a resposta é JSON
+        const contentType = response.headers.get('content-type');
+        console.log('Content-Type:', contentType);
+        
+        if (!contentType || !contentType.includes('application/json')) {
+            // Se não é JSON, vamos ler como texto para debug
+            return response.text().then(text => {
+                console.error('Resposta não é JSON:', text);
+                throw new Error('A resposta do servidor não é JSON válido: ' + text.substring(0, 100));
+            });
+        }
+        
+        return response.json();
+    })
+    .then(data => {
+        console.log('Resposta do servidor:', data);
+        
+        if (data.success) {
+            console.log('Horário alterado com sucesso!');
+            if (typeof showNotification === 'function') {
+                showNotification('Horário alterado com sucesso!', 'success');
+            } else {
+                alert('Horário alterado com sucesso!');
+            }
+            
+            // Atualizar o horário no DOM sem recarregar a página
+            updateHorarioInInterface(pontoId, novoHorario);
+            
+            // Fechar modal após sucesso
+            closeModal();
+        } else {
+            console.log('Erro retornado pelo servidor:', data.error);
+            if (typeof showNotification === 'function') {
+                showNotification(data.error || 'Erro ao alterar horário', 'error');
+            } else {
+                alert(data.error || 'Erro ao alterar horário');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Erro na requisição:', error);
+        if (typeof showNotification === 'function') {
+            showNotification('Erro ao alterar horário: ' + error.message, 'error');
+        } else {
+            alert('Erro ao alterar horário: ' + error.message);
+        }
+    })
+    .finally(() => {
+        // Re-enable submit button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        console.log('=== FIM DA ALTERAÇÃO DE HORÁRIO ===');
+    });
+}
+
+/**
+ * Atualiza o horário na interface após alteração
+ * @param {number} pontoId - ID do ponto de interesse
+ * @param {string} novoHorario - Novo horário no formato HH:MM
+ */
+function updateHorarioInInterface(pontoId, novoHorario) {
+    const formattedTime = formatHorario(novoHorario);
+    console.log(`Atualizando horário do ponto ${pontoId} para ${formattedTime}`);
+    
+    // Atualizar no painel lateral (aba Suas Rotas)
+    const pontosContainer = document.getElementById('pontos-container');
+    if (pontosContainer) {
+        const pontoElements = pontosContainer.querySelectorAll('.group');
+        pontoElements.forEach((element, index) => {
+            const onclickAttr = element.getAttribute('onclick');
+            // Verificar se o onclick contém o índice do ponto que corresponde ao ID
+            if (onclickAttr) {
+                // Extrair o primeiro parâmetro (index) do focusOnPoint
+                const match = onclickAttr.match(/focusOnPoint\((\d+)/);
+                if (match) {
+                    const pointIndex = parseInt(match[1]);
+                    // Verificar se esse índice corresponde ao ponto que estamos atualizando
+                    // Para isso, vamos usar uma abordagem diferente - buscar pelo texto/conteúdo
+                    const clockElement = element.querySelector('.fa-clock');
+                    if (clockElement) {
+                        const timeSpan = clockElement.parentElement.querySelector('span');
+                        if (timeSpan) {
+                            timeSpan.textContent = formattedTime;
+                            console.log(`Horário atualizado no elemento ${index}`);
+                        }
+                    } else {
+                        // Se não há elemento de horário, criar um
+                        const dateElement = element.querySelector('.fa-calendar').parentElement;
+                        if (dateElement && dateElement.parentElement) {
+                            const timeHtml = `
+                                <div class="flex items-center space-x-1">
+                                    <i class="fas fa-clock text-blue-900"></i>
+                                    <span>${formattedTime}</span>
+                                </div>
+                            `;
+                            dateElement.insertAdjacentHTML('afterend', timeHtml);
+                            console.log(`Elemento de horário criado para ponto ${index}`);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Atualizar marcadores do mapa se existirem
+    if (typeof pontosInteresseMarkers !== 'undefined') {
+        pontosInteresseMarkers.forEach((markerObj, index) => {
+            // Verificar se o marcador corresponde ao ponto atualizado
+            if (markerObj && markerObj.infoWindow) {
+                const infoContent = markerObj.infoWindow.getContent();
+                if (infoContent && typeof infoContent === 'string' && infoContent.includes('Horário:')) {
+                    const updatedContent = infoContent.replace(
+                        /Horário: \d{2}:\d{2}/,
+                        `Horário: ${formattedTime}`
+                    );
+                    markerObj.infoWindow.setContent(updatedContent);
+                    console.log(`InfoWindow atualizado para marcador ${index}`);
+                }
+            }
+        });
+    }
+
+    console.log(`Atualização do horário concluída para ponto ${pontoId}`);
+}
+
+/**
+ * Formata horário para exibição
+ * @param {string} horario - Horário no formato HH:MM
+ * @returns {string} Horário formatado
+ */
+function formatHorario(horario) {
+    if (!horario) return '';
+    
+    // Se já está no formato correto, retorna como está
+    if (horario.includes(':')) {
+        return horario;
+    }
+    
+    // Caso contrário, tenta formatar
+    const time = new Date(`2000-01-01 ${horario}`);
+    if (!isNaN(time.getTime())) {
+        return time.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    return horario;
 }
 </script>

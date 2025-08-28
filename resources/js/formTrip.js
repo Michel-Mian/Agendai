@@ -159,6 +159,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const dataVolta = dataVoltaInput ? dataVoltaInput.value : '';
         const meioSelect = document.querySelectorAll('.form-step')[1]?.querySelector('select');
         const meio = meioSelect ? meioSelect.value : '';
+        const vooSelect = document.querySelector('.select-flight-checkbox:checked');
+        const voo = vooSelect ? vooSelect.closest('.flight-card').querySelector('.companhia-aerea').textContent : '';
         const orcamentoInput = document.querySelectorAll('.form-step')[1]?.querySelector('input[type="number"]');
         const orcamento = orcamentoInput ? orcamentoInput.value : '';
         const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
@@ -169,9 +171,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (seguro === 'Sim') {
             nomeSeguro = sessionStorage.getItem('selectedSeguroName') || '';
         }
-
-        // --- DEBUG: Mostre no console o valor do seguro e nomeSeguro ---
-        // console.log('seguro:', seguro, 'nomeSeguro:', nomeSeguro);
+        const preferencesInput = document.getElementById('preferences');
+        const preferences = preferencesInput ? preferencesInput.value.split(',').filter(p => p.trim() !== '') : [];
 
         reviewList.innerHTML = `
             <li><b>Destino:</b> ${destino}</li>
@@ -624,81 +625,7 @@ document.addEventListener('click', function(e) {
 });
 
 // Função para preencher revisão final (step6)
-function preencherRevisao() {
-    const reviewList = document.getElementById('reviewList');
-    if (!reviewList) return;
-
-    // Pegue os campos do DOM conforme o seu form
-    const destino = document.getElementById('tripDestination')?.value || '';
-    const adultosSelect = document.querySelectorAll('.form-step')[0]?.querySelectorAll('select')[0];
-    const adultos = adultosSelect ? adultosSelect.value : '';
-    const dataIdaInput = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[0];
-    const dataVoltaInput = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[1];
-    const dataIda = dataIdaInput ? dataIdaInput.value : '';
-    const dataVolta = dataVoltaInput ? dataVoltaInput.value : '';
-    const meioSelect = document.querySelectorAll('.form-step')[1]?.querySelector('select');
-    const meio = meioSelect ? meioSelect.value : '';
-    const orcamentoInput = document.querySelectorAll('.form-step')[1]?.querySelector('input[type="number"]');
-    const orcamento = orcamentoInput ? orcamentoInput.value : '';
-    const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
-    const idades = Array.from(idadeInputs).map(input => input.value).filter(value => value !== '');
-    const seguroSelect = document.getElementById('seguroViagem');
-    const seguro = seguroSelect ? seguroSelect.value : '';
-    let nomeSeguro = '';
-    if (seguro === 'Sim') {
-        nomeSeguro = sessionStorage.getItem('selectedSeguroName') || '';
-    }
-
-    // Recupera nome completo do seguro selecionado da sessionStorage
-    reviewList.innerHTML = `
-        <li><b>Destino:</b> ${destino}</li>
-        <li><b>Adultos:</b> ${adultos}</li>
-        <li><b>Idades dos passageiros:</b> ${idades.length > 0 ? idades.join(', ') : 'Nenhuma'}</li>
-        <li><b>Data de ida:</b> ${formatarDataBR(dataIda)}</li>
-        <li><b>Data de volta:</b> ${formatarDataBR(dataVolta)}</li>
-        <li><b>Meio de locomoção:</b> ${meio}</li>
-        <li><b>Orçamento:</b> R$ ${orcamento}</li>
-        ${meio === 'Avião' ? `<li><b>Companhia aérea:</b> ${voo}</li>` : ''}
-        ${seguro === 'Sim' && nomeSeguro ? `<li><b style="color:#fff">Seguro de viagem:</b> ${nomeSeguro}</li>` : ''}
-        <li><b>Preferências:</b> ${preferences.length > 0 ? preferences.join(', ') : 'Nenhuma'}</li>
-    `;
-}
-
 // Certifique-se de chamar preencherRevisao() ao exibir o passo 6
-// Por exemplo, ao avançar para o passo 6:
 document.querySelector('.next-btn-step5')?.addEventListener('click', function() {
     preencherRevisao();
-    // aqui vai o código para mostrar o passo 6, se necessário
 });
-// Por exemplo, ao avançar para o passo 6:
-document.querySelector('.next-btn-step5')?.addEventListener('click', function() {
-    preencherRevisao();
-    // ...código para mostrar o passo 6...
-});
-    // ...código para mostrar o passo 6...
-    reviewList.innerHTML = `
-        <li><b>Destino:</b> ${destino}</li>
-        <li><b>Adultos:</b> ${adultos}</li>
-        <li><b>Idades dos passageiros:</b> ${idades.length > 0 ? idades.join(', ') : 'Nenhuma'}</li>
-        <li><b>Data de ida:</b> ${formatarDataBR(dataIda)}</li>
-        <li><b>Data de volta:</b> ${formatarDataBR(dataVolta)}</li>
-        <li><b>Meio de locomoção:</b> ${meio}</li>
-        <li><b>Orçamento:</b> R$ ${orcamento}</li>
-        ${meio === 'Avião' ? `<li><b>Companhia aérea:</b> ${voo}</li>` : ''}
-        ${seguro === 'Sim' && nomeSeguro ? `<li><b style="color:#fff">Seguro de viagem:</b> ${nomeSeguro}</li>` : ''}
-        <li><b>Preferências:</b> ${preferences.length > 0 ? preferences.join(', ') : 'Nenhuma'}</li>
-    `;
-
-
-// Certifique-se de chamar preencherRevisao() ao exibir o passo 6
-// Por exemplo, ao avançar para o passo 6:
-document.querySelector('.next-btn-step5')?.addEventListener('click', function() {
-    preencherRevisao();
-    // aqui vai o código para mostrar o passo 6, se necessário
-});
-// Por exemplo, ao avançar para o passo 6:
-document.querySelector('.next-btn-step5')?.addEventListener('click', function() {
-    preencherRevisao();
-    // ...código para mostrar o passo 6...
-});
-    // ...código para mostrar o passo 6...

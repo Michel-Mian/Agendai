@@ -3,6 +3,78 @@
     <script>
         // Definir ID da viagem atual globalmente
         window.currentTripId = {{ $viagem->pk_id_viagem }};
+        
+        // Definir função de remoção no escopo global desde o início
+        window.removePontoFromItinerary = function(pontoId) {
+            if (!confirm('Tem certeza que deseja remover este ponto do itinerário?')) {
+                return;
+            }
+
+            // Mostrar loading no botão
+            const removeBtn = document.querySelector(`button[onclick="removePontoFromItinerary('${pontoId}')"]`);
+            if (removeBtn) {
+                removeBtn.disabled = true;
+                removeBtn.innerHTML = '⏳ Removendo...';
+            }
+
+            fetch(`/explore/${pontoId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (typeof showNotification === 'function') {
+                        showNotification('Ponto removido do itinerário com sucesso!', 'success');
+                    } else {
+                        alert('Ponto removido do itinerário com sucesso!');
+                    }
+                    // Fechar o modal
+                    if (typeof closeModal === 'function') {
+                        closeModal();
+                    }
+                    // Atualizar o DOM removendo o ponto da interface sem recarregar
+                    if (typeof updateItineraryAfterRemoval === 'function') {
+                        updateItineraryAfterRemoval(pontoId);
+                    } else {
+                        // Fallback: recarregar a página se as funções não estiverem disponíveis
+                        location.reload();
+                    }
+                } else {
+                    if (typeof showNotification === 'function') {
+                        showNotification(data.error || 'Erro ao remover ponto', 'error');
+                    } else {
+                        alert(data.error || 'Erro ao remover ponto');
+                    }
+                    // Restaurar botão em caso de erro
+                    if (removeBtn) {
+                        removeBtn.disabled = false;
+                        removeBtn.innerHTML = '🗑️ Remover do Itinerário';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                if (typeof showNotification === 'function') {
+                    showNotification('Erro ao remover ponto do itinerário', 'error');
+                } else {
+                    alert('Erro ao remover ponto do itinerário');
+                }
+                // Restaurar botão em caso de erro
+                if (removeBtn) {
+                    removeBtn.disabled = false;
+                    removeBtn.innerHTML = '🗑️ Remover do Itinerário';
+                }
+            });
+        };
+        
+        // Criar alias para compatibilidade
+        function removePontoFromItinerary(pontoId) {
+            return window.removePontoFromItinerary(pontoId);
+        }
     </script>
     
     <div class="flex min-h-screen bg-gray-50">
@@ -306,6 +378,9 @@
                             {{-- Add insurance section below flights section --}}
                             @include('components/myTrips/screenSections/themes/insuranceSection', ['seguros' => $seguros])
                         </div>
+                        <div id="content-rotas-mapa" class="tab-panel hidden">
+                            @include('components/myTrips/screenSections/rotasMapa', ['viagem' => $viagem])
+                        </div>
                         <div id="content-informacoes-estatisticas" class="tab-panel hidden">
                             @include('components/myTrips/screenSections/informacoesEstatisticas', ['viagem' => $viagem, 'usuario' => $usuario])
                         </div>
@@ -336,10 +411,15 @@
     @include('components.myTrips.modals.addInsurance')
     @include('components.myTrips.modals.insuranceModal')
 
-    <script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places&libraries=geometry&callback=checkGoogleMapsLoaded" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places,geometry" async defer></script>
     
     <!-- Script para controle das tabs -->
     <script>
+        // Função callback do Google Maps
+        function checkGoogleMapsLoaded() {
+            console.log('Google Maps carregado com sucesso');
+        }
+        
         function switchTab(tabName) {
             // Remove active class from all tab buttons
             document.querySelectorAll('.tab-button').forEach(button => {
@@ -353,12 +433,17 @@
             });
             
             // Add active class to clicked tab button
-            document.getElementById('tab-' + tabName).classList.add('active');
+            const tabButton = document.getElementById('tab-' + tabName);
+            if (tabButton) {
+                tabButton.classList.add('active');
+            }
             
             // Show corresponding tab panel
             const panel = document.getElementById('content-' + tabName);
-            panel.classList.remove('hidden');
-            panel.classList.add('active');
+            if (panel) {
+                panel.classList.remove('hidden');
+                panel.classList.add('active');
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -475,6 +560,159 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('seguro-detalhe')?.innerText = seguro;
     }
 });
+</script>
+
+<!-- Funções JavaScript necessárias para o modal de detalhes -->
+<script>
+    /**
+     * Atualiza a interface após remoção de um ponto
+     * @param {number} pontoId - ID do ponto removido
+     */
+    function updateItineraryAfterRemoval(pontoId) {
+        // Remover do painel lateral (aba Suas Rotas)
+        const pontosContainer = document.getElementById('pontos-container');
+        if (pontosContainer) {
+            const pontoElements = pontosContainer.querySelectorAll('.group');
+            pontoElements.forEach(element => {
+                // Verificar se este elemento corresponde ao ponto removido
+                const onclickAttr = element.getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes(`focusOnPoint(${pontoId}`)) {
+                    element.remove();
+                }
+            });
+            
+            // Se não há mais pontos na data atual, mostrar mensagem
+            if (pontosContainer.children.length === 0) {
+                const noPointsMessage = document.getElementById('no-points-message');
+                if (noPointsMessage) {
+                    noPointsMessage.style.display = 'block';
+                }
+                pontosContainer.innerHTML = '';
+            }
+        }
+
+        // Atualizar contador de pontos
+        const totalPontosElement = document.querySelector('.text-blue-700');
+        if (totalPontosElement && totalPontosElement.textContent.includes('Ponto')) {
+            const currentText = totalPontosElement.textContent;
+            const currentCount = parseInt(currentText.match(/\d+/)?.[0]) || 0;
+            const newCount = Math.max(0, currentCount - 1);
+            const newText = newCount === 1 ? 
+                `${newCount} Ponto de interesse` : 
+                `${newCount} Pontos de interesse`;
+            totalPontosElement.textContent = newText;
+        }
+
+        // Remover marcador do mapa se existir
+        if (typeof pontosInteresseMarkers !== 'undefined') {
+            pontosInteresseMarkers.forEach((markerObj, index) => {
+                if (markerObj.pontoId == pontoId) {
+                    markerObj.marker.setMap(null);
+                    if (markerObj.infoWindow) {
+                        markerObj.infoWindow.close();
+                    }
+                    pontosInteresseMarkers.splice(index, 1);
+                }
+            });
+        }
+
+        // Atualizar numeração dos pontos restantes
+        refreshPontoNumbering();
+    }
+                `${newCount} Pontos de interesse`;
+            totalPontosElement.textContent = newText;
+        }
+
+        // Remover marcador do mapa se existir
+        if (typeof pontosInteresseMarkers !== 'undefined') {
+            pontosInteresseMarkers.forEach((markerObj, index) => {
+                if (markerObj.pontoId == pontoId) {
+                    markerObj.marker.setMap(null);
+                    if (markerObj.infoWindow) {
+                        markerObj.infoWindow.close();
+                    }
+                    pontosInteresseMarkers.splice(index, 1);
+                }
+            });
+        }
+
+        // Atualizar numeração dos pontos restantes
+        refreshPontoNumbering();
+    }
+
+    /**
+     * Atualiza a numeração dos pontos após remoção
+     */
+    function refreshPontoNumbering() {
+        const pontosContainer = document.getElementById('pontos-container');
+        if (pontosContainer) {
+            const pontoElements = pontosContainer.querySelectorAll('.group');
+            pontoElements.forEach((element, index) => {
+                const numberCircle = element.querySelector('.w-8.h-8');
+                if (numberCircle) {
+                    numberCircle.textContent = index + 1;
+                }
+            });
+        }
+    }
+
+    /**
+     * Mostra uma notificação para o usuário
+     * @param {string} message - Mensagem a ser exibida
+     * @param {string} type - Tipo da notificação ('success', 'error', 'info')
+     */
+    function showNotification(message, type = 'info') {
+        // Criar elemento de notificação
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 transform translate-x-full`;
+        
+        // Definir cores baseadas no tipo
+        let bgColor, textColor, icon;
+        switch(type) {
+            case 'success':
+                bgColor = 'bg-green-500';
+                textColor = 'text-white';
+                icon = '✅';
+                break;
+            case 'error':
+                bgColor = 'bg-red-500';
+                textColor = 'text-white';
+                icon = '❌';
+                break;
+            default:
+                bgColor = 'bg-blue-500';
+                textColor = 'text-white';
+                icon = 'ℹ️';
+        }
+        
+        notification.className += ` ${bgColor} ${textColor}`;
+        notification.innerHTML = `
+            <div class="flex items-center gap-2">
+                <span>${icon}</span>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        // Adicionar ao DOM
+        document.body.appendChild(notification);
+        
+        // Animar entrada
+        setTimeout(() => {
+            notification.classList.remove('translate-x-full');
+            notification.classList.add('translate-x-0');
+        }, 100);
+        
+        // Remover após 3 segundos
+        setTimeout(() => {
+            notification.classList.remove('translate-x-0');
+            notification.classList.add('translate-x-full');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 3000);
+    }
 </script>
 
 {{-- Exibe o seguro de viagem escolhido, se houver --}}
