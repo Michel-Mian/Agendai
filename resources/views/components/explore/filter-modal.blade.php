@@ -832,118 +832,61 @@
 
     // Global function to handle filter application
     window.applyMapFilters = function(filters) {
-        console.log('Applying map filters:', filters);
+        console.log('🔍 applyMapFilters chamada com:', filters);
+        
+        if (!map || !google || !google.maps || !google.maps.places) {
+            console.error('❌ Mapa ou Google Places API não disponível');
+            return;
+        }
 
         const service = new google.maps.places.PlacesService(map);
-        const radius = filters.radius ? parseInt(filters.radius) * 1000 : 10000;
+        const radius = filters.radius ? parseInt(filters.radius) : 10000;
 
-        if (filters.location && filters.location.trim()) {
-            const geocoder = new google.maps.Geocoder();
-            geocoder.geocode({
-                address: filters.location
-            }, (results, status) => {
-                if (status === 'OK' && results[0]) {
-                    const newLocation = results[0].geometry.location;
-                    map.setCenter(newLocation);
-                    map.setZoom(13); // Adjust zoom level as needed after setting new center
-
-                    let searchTypes = filters.places.length > 0 ? filters.places : ['point_of_interest']; // Default to generic POI if no types selected
-
-                    let allResults = [];
-                    let pendingSearches = searchTypes.length;
-
-                    if (pendingSearches === 0) { // Handle case where no types are selected initially
-                        showNotification('Nenhum tipo de lugar selecionado. Exibindo todos os pontos de interesse.', 'info');
-                        searchTypes = ['point_of_interest']; // Fallback to a broad type
-                        pendingSearches = 1;
-                    }
-
-                    searchTypes.forEach(type => {
-                        service.nearbySearch({
-                            location: newLocation,
-                            radius: radius,
-                            type: type
-                        }, (results, status) => {
-                            if (status === google.maps.places.PlacesServiceStatus.OK || status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-                                if (results) {
-                                    allResults = allResults.concat(results);
-                                }
-                            } else {
-                                console.error(`Falha na busca para o tipo ${type}:`, status);
-                                showNotification(`Erro ao buscar ${type}: ${status}`, 'error');
-                            }
-                            pendingSearches--;
-                            if (pendingSearches === 0) {
-                                // Remove duplicates by place_id
-                                const uniquePlaces = [];
-                                const ids = new Set();
-                                allResults.forEach(place => {
-                                    if (!ids.has(place.place_id)) {
-                                        ids.add(place.place_id);
-                                        uniquePlaces.push(place);
-                                    }
-                                });
-                                // Update global places array
-                                places = uniquePlaces.map(place => ({
-                                    id: place.place_id,
-                                    name: place.name,
-                                    lat: place.geometry.location.lat(),
-                                    lng: place.geometry.location.lng(),
-                                    type: getPlaceType(place.types), // Use existing helper
-                                    rating: place.rating || 4.0,
-                                    address: place.vicinity || place.formatted_address || '',
-                                    place_id: place.place_id,
-                                    description: place.vicinity || place.formatted_address || '',
-                                    opening_hours: place.opening_hours ? place.opening_hours.weekday_text : [],
-                                    photos: place.photos ? place.photos.map(p => p.getUrl({
-                                        'maxWidth': 400,
-                                        'maxHeight': 400
-                                    })) : []
-                                }));
-                                addMarkersToMap();
-                                updateSuggestions();
-                                showNotification(`🗺️ Encontrados ${places.length} lugares em ${filters.location}!`, 'success');
-                            }
-                        });
-                    });
-                } else {
-                    showNotification('Localização não encontrada. Tente novamente.', 'error');
-                    // If location not found, clear previous results and show default markers
-                    places = [];
-                    addMarkersToMap();
-                    updateSuggestions();
-                }
-            });
-        } else {
-            // If location is cleared or not provided, search around the initial map center
-            // or a default location with the selected types.
-            let searchTypes = filters.places.length > 0 ? filters.places : ['point_of_interest']; // Default to generic POI
+        // Função para aplicar busca com tipos específicos
+        function searchWithTypes(location, searchTypes) {
+            console.log('🎯 Buscando tipos:', searchTypes, 'em:', location);
+            
+            // Limpar marcadores existentes
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+            places = [];
 
             let allResults = [];
             let pendingSearches = searchTypes.length;
 
             if (pendingSearches === 0) {
-                showNotification('Nenhum tipo de lugar selecionado. Exibindo todos os pontos de interesse na área atual.', 'info');
-                searchTypes = ['point_of_interest'];
-                pendingSearches = 1;
+                console.warn('⚠️ Nenhum tipo de lugar para buscar');
+                return;
             }
 
             searchTypes.forEach(type => {
+                console.log(`🔍 Buscando tipo: ${type}`);
+                
                 service.nearbySearch({
-                    location: map.getCenter(), // Use current map center
+                    location: location,
                     radius: radius,
                     type: type
                 }, (results, status) => {
-                    if (status === google.maps.places.PlacesServiceStatus.OK || status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-                        if (results) {
+                    console.log(`📍 Resultado para ${type}:`, status, results?.length || 0, 'lugares');
+                    
+                    if (status === google.maps.places.PlacesServiceStatus.OK) {
+                        if (results && results.length > 0) {
                             allResults = allResults.concat(results);
+                            console.log(`✅ Adicionados ${results.length} lugares para ${type}`);
                         }
+                    } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+                        console.log(`ℹ️ Nenhum resultado para ${type}`);
                     } else {
-                        console.error(`Falha na busca para o tipo ${type}:`, status);
-                        showNotification(`Erro ao buscar ${type}: ${status}`, 'error');
+                        console.error(`❌ Erro na busca para ${type}:`, status);
                     }
+                    
                     pendingSearches--;
+                    console.log(`⏳ Buscas restantes: ${pendingSearches}`);
+                    
                     if (pendingSearches === 0) {
+                        console.log('🎉 Todas as buscas concluídas. Total de resultados:', allResults.length);
+                        
+                        // Remove duplicatas
                         const uniquePlaces = [];
                         const ids = new Set();
                         allResults.forEach(place => {
@@ -952,6 +895,10 @@
                                 uniquePlaces.push(place);
                             }
                         });
+
+                        console.log(`🔗 Após remoção de duplicatas: ${uniquePlaces.length} lugares únicos`);
+
+                        // Atualizar array global places
                         places = uniquePlaces.map(place => ({
                             id: place.place_id,
                             name: place.name,
@@ -968,12 +915,73 @@
                                 'maxHeight': 400
                             })) : []
                         }));
-                        addMarkersToMap();
-                        updateSuggestions();
-                        showNotification(`Filtros aplicados. Encontrados ${places.length} lugares na área atual.`, 'success');
+
+                        console.log('📊 Places array atualizado:', places.length, 'lugares');
+                        
+                        // Atualizar marcadores e sugestões
+                        if (typeof addMarkersToMap === 'function') {
+                            addMarkersToMap();
+                            console.log('🗺️ Marcadores adicionados ao mapa');
+                        }
+                        
+                        if (typeof updateSuggestions === 'function') {
+                            updateSuggestions();
+                            console.log('💡 Sugestões atualizadas');
+                        }
+
+                        // Mostrar notificação de sucesso
+                        const message = `🎯 Encontrados ${places.length} lugares para ${filters.objective || 'filtros aplicados'}!`;
+                        if (typeof showNotification === 'function') {
+                            showNotification(message, 'success');
+                        }
                     }
                 });
             });
+        }
+
+        // Se há localização especificada, geocodificar primeiro
+        if (filters.location && filters.location.trim()) {
+            console.log('📍 Geocodificando localização:', filters.location);
+            
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({
+                address: filters.location
+            }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                    const newLocation = results[0].geometry.location;
+                    console.log('✅ Localização encontrada:', newLocation.lat(), newLocation.lng());
+                    
+                    map.setCenter(newLocation);
+                    map.setZoom(13);
+                    
+                    const searchTypes = filters.places && filters.places.length > 0 
+                        ? filters.places 
+                        : ['tourist_attraction'];
+                    
+                    searchWithTypes(newLocation, searchTypes);
+                } else {
+                    console.error('❌ Falha na geocodificação:', status);
+                    if (typeof showNotification === 'function') {
+                        showNotification('Localização não encontrada. Usando centro atual do mapa.', 'warning');
+                    }
+                    
+                    // Usar centro atual do mapa como fallback
+                    const searchTypes = filters.places && filters.places.length > 0 
+                        ? filters.places 
+                        : ['tourist_attraction'];
+                    
+                    searchWithTypes(map.getCenter(), searchTypes);
+                }
+            });
+        } else {
+            // Usar centro atual do mapa
+            console.log('📍 Usando centro atual do mapa');
+            
+            const searchTypes = filters.places && filters.places.length > 0 
+                ? filters.places 
+                : ['tourist_attraction'];
+            
+            searchWithTypes(map.getCenter(), searchTypes);
         }
     };
 </script>
