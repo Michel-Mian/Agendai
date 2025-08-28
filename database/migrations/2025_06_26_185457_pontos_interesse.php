@@ -24,7 +24,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unsignedBigInteger('fk_id_viagem');
-            $table->foreign('fk_id_viagem')->references('pk_id_viagem')->on('viagens');
+            $table->foreign('fk_id_viagem')->references('pk_id_viagem')->on('viagens')->onDelete('cascade');
         });
     }
 

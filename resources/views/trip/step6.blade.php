@@ -6,7 +6,7 @@
             <!-- Os dados preenchidos aparecerão aqui via JS -->
         </ul>
     </div>
-    
+
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>

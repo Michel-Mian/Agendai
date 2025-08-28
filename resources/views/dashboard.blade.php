@@ -7,12 +7,12 @@
             @include('components/layout/header')
             <main class="flex-1 p-8">
                 <!-- Cards superiores -->
-                @include('components/dashboard/superiorCards')
+                @include('components/dashboard/superiorCards', ['viagens' => $viagens])
 
                 <!-- Ações rápidas -->
                 @include('components/dashboard/actionFast')
                 <!-- Suas viagens -->
-                @include('components/dashboard/yourTrips')
+                @include('components/dashboard/yourTrips', ['viagens' => $viagens])
                 <!-- Modal -->
                 @include('components/dashboard/modalCurrency')
             </main>
