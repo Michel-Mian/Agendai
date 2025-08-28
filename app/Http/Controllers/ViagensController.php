@@ -152,7 +152,8 @@ class ViagensController extends Controller
             'hotel' => $viagem->hotel,
             'noticias' => $noticias,
             'eventos' => $eventos,
-            'clima' => $clima
+            'clima' => $clima,
+            'seguros' => $viagem->seguros,
         ]);
     }
 

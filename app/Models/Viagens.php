@@ -44,4 +44,16 @@ class Viagens extends Model
     {
         return $this->hasMany(Hotel::class, 'fk_id_viagem', 'pk_id_viagem');
     }
+
+    // Relação com os seguros (Seguros)
+    public function seguros()
+    {
+        return $this->hasMany(Seguros::class, 'fk_id_viagem', 'pk_id_viagem');
+    }
+
+    // Relação com o seguro selecionado
+    public function seguroSelecionado()
+    {
+        return $this->belongsTo(Seguros::class, 'fk_id_seguro_selecionado', 'pk_id_seguro');
+    }
 }
