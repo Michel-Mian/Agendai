@@ -109,6 +109,9 @@
 <script>
     // --- Modal Objetivos ---
     document.addEventListener('DOMContentLoaded', function () {
+        // ID da viagem atual
+        const currentTripId = window.currentTripId || {{ $viagem->pk_id_viagem ?? 'null' }};
+        
         const openObjetivosModalBtn = document.getElementById('open-objetivos-modal-btn');
         const closeObjetivosModalBtn = document.getElementById('close-objetivos-modal-btn');
         const closeObjetivosModalFooterBtn = document.getElementById('close-objetivos-modal-footer-btn');
@@ -191,6 +194,53 @@
                 }
             });
         }
+
+        // Função para mapear objetivos para filtros do Google Places API
+        function getGooglePlacesFilters(objetivoNome) {
+            const objetivoFilters = {
+                'Cultura e história': ['museum', 'tourist_attraction', 'library', 'church', 'historical'],
+                'Gastronomia': ['restaurant', 'cafe', 'bar', 'food', 'meal_takeaway'],
+                'Aventura': ['amusement_park', 'park', 'zoo', 'aquarium', 'bowling_alley'],
+                'Negócios': ['business', 'conference_center', 'embassy'],
+                'Relaxamento': ['spa', 'park', 'beach', 'resort'],
+                'Compras': ['shopping_mall', 'store', 'clothing_store', 'electronics_store', 'jewelry_store'],
+                'Vida noturna': ['night_club', 'bar', 'casino'],
+                'Arte e museus': ['museum', 'art_gallery', 'library'],
+                'Esportes': ['gym', 'stadium', 'sports_complex'],
+                'Natureza': ['park', 'zoo', 'aquarium', 'natural_feature'],
+                'Educação': ['university', 'school', 'library'],
+                'Entretenimento': ['movie_theater', 'amusement_park', 'casino', 'bowling_alley'],
+                'Religião': ['church', 'mosque', 'synagogue', 'hindu_temple']
+            };
+            
+            return objetivoFilters[objetivoNome] || ['tourist_attraction'];
+        }
+
+        // Adicionar event listeners para os objetivos no modal
+        document.querySelectorAll('.objetivo-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                // Evitar que o clique no botão de remover dispare esta função
+                if (e.target.closest('form')) return;
+                
+                const objetivoNome = this.querySelector('h4').textContent.trim();
+                const filters = getGooglePlacesFilters(objetivoNome);
+                
+                // Codificar os filtros para passar na URL
+                const encodedFilters = encodeURIComponent(JSON.stringify(filters));
+                
+                console.log('Redirecionando do modal com filtros:', {
+                    objetivo: objetivoNome,
+                    filters: filters,
+                    tripId: currentTripId
+                });
+                
+                // Redirecionar para a página explore com os filtros E definindo a viagem correta
+                window.location.href = `/explore/set-trip/${currentTripId}?filters=${encodedFilters}&objective=${encodeURIComponent(objetivoNome)}`;
+            });
+            
+            // Adicionar cursor pointer para indicar que é clicável
+            item.style.cursor = 'pointer';
+        });
 
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape' && objetivosModal && !objetivosModal.classList.contains('hidden')) {

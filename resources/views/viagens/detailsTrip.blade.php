@@ -1,5 +1,10 @@
 @extends('index')
 @section('content')
+    <script>
+        // Definir ID da viagem atual globalmente
+        window.currentTripId = {{ $viagem->pk_id_viagem }};
+    </script>
+    
     <div class="flex min-h-screen bg-gray-50">
         @include('components/layout/sidebar')
         <div class="flex-1 flex flex-col">
