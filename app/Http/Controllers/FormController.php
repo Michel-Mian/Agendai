@@ -21,7 +21,8 @@ class FormController extends Controller
      */
     public function create()
     {
-        return view('formTrip', ['title' => 'Criar Viagem']);
+    $insurances = [];
+    return view('formTrip', ['title' => 'Criar Viagem', 'insurances' => $insurances]);
     }
 
     public function store(Request $request)
@@ -58,19 +59,41 @@ class FormController extends Controller
                 : now();
             $voo->companhia_voo = $primeiroTrecho['airline'] ?? '';
             $voo->fk_id_viagem = $viagem->pk_id_viagem;
-            $voo->preco_voo = $flightData['price'] ?? 0;
             $voo->save();
         }
 
         // 3. Salve o seguro (se houver)
+        $seguroId = null;
         if ($request->has('seguroSelecionado')) {
+            $seguroSelecionado = $request->seguroSelecionado;
+            if (is_string($seguroSelecionado)) {
+                $seguroSelecionado = json_decode($seguroSelecionado, true);
+            }
             $seguro = new \App\Models\Seguros();
-            $seguro->site = $request->seguroSelecionado['site'] ?? '';
-            $seguro->preco = $request->seguroSelecionado['preco'] ?? '';
-            $seguro->dados = json_encode($request->seguroSelecionado['dados'] ?? []);
-            $seguro->link = $request->seguroSelecionado['link'] ?? '';
+            $seguro->site = $seguroSelecionado['site'] ?? '';
+            $seguro->preco = $seguroSelecionado['preco'] ?? '';
+            $seguro->preco_pix = $seguroSelecionado['preco_pix'] ?? '';
+            $seguro->preco_cartao = $seguroSelecionado['preco_cartao'] ?? '';
+            $seguro->parcelas = $seguroSelecionado['parcelas'] ?? '';
+            $seguro->dados = isset($seguroSelecionado['dados'])
+                ? (is_array($seguroSelecionado['dados']) ? json_encode($seguroSelecionado['dados']) : json_encode([$seguroSelecionado['dados']]))
+                : json_encode([]);
+            $seguro->link = $seguroSelecionado['link'] ?? '';
+            $seguro->cobertura_medica = $seguroSelecionado['cobertura_medica'] ?? '';
+            $seguro->cobertura_bagagem = $seguroSelecionado['cobertura_bagagem'] ?? '';
+            $seguro->cobertura_cancelamento = $seguroSelecionado['cobertura_cancelamento'] ?? '';
+            $seguro->cobertura_odonto = $seguroSelecionado['cobertura_odonto'] ?? '';
+            $seguro->cobertura_medicamentos = $seguroSelecionado['cobertura_medicamentos'] ?? '';
+            $seguro->cobertura_eletronicos = $seguroSelecionado['cobertura_eletronicos'] ?? '';
+            $seguro->cobertura_mochila_mao = $seguroSelecionado['cobertura_mochila_mao'] ?? '';
+            $seguro->cobertura_atraso_embarque = $seguroSelecionado['cobertura_atraso_embarque'] ?? '';
+            $seguro->cobertura_pet = $seguroSelecionado['cobertura_pet'] ?? '';
+            $seguro->cobertura_sala_vip = $seguroSelecionado['cobertura_sala_vip'] ?? '';
+            $seguro->cobertura_telemedicina = $seguroSelecionado['cobertura_telemedicina'] ?? false;
             $seguro->fk_id_viagem = $viagem->pk_id_viagem;
+            $seguro->is_selected = true;
             $seguro->save();
+            $seguroId = $seguro->pk_id_seguro;
         }
 
         // 4. Salve as idades dos viajantes
@@ -99,7 +122,13 @@ class FormController extends Controller
         // 6. Salve o ID da viagem na sessão
         session(['trip_id' => $viagem->pk_id_viagem]);
 
-        // 7. Redirecione ou retorne sucesso
+        // 7. Atualize o seguro selecionado na viagem
+        if ($seguroId) {
+            $viagem->fk_id_seguro_selecionado = $seguroId;
+            $viagem->save();
+        }
+
+        // 8. Redirecione ou retorne sucesso
         return redirect()->route('explore')->with('success', 'Viagem salva com sucesso!');
     }
 

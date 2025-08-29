@@ -31,8 +31,8 @@ Route::post('/change-password', [UserController::class, 'changePassword'])->midd
 
 Route::middleware(['auth'])->group(function (){
     Route::get('/trip/form', [TripController::class, 'showForm'])->name('show.Form');
-    Route::post('/trip/insurance', [TripController::class, 'runScraping'])->name('run.Scraping');
     Route::post('/trip/insurance-ajax', [TripController::class, 'scrapingAjax'])->name('run.Scraping.ajax');
+    Route::post('/trip/salvar-seguro', [TripController::class, 'salvarSeguro']);
     Route::get('/formTrip', [FormController::class, 'create'])->name('createTrip');
     Route::post('/formTrip', [FormController::class, 'store'])->name('formTrip.store');
     Route::get('autocomplete-airports', [FlightsController::class, 'autocompleteAirports'])->name('autocomplete.airports');
@@ -40,7 +40,8 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/formTrip/card-flight', [FormController::class, 'cardFlightAjax'])->name('formTrip.cardFlight.ajax');    
 
     Route::get('/dashboard/historico', [DashBoardController::class, 'historicoAjax'])->name('dashboard.historico');
-    Route::get('/dashboard', [DashBoardController::class, 'dashboard'])->name('dashboard');
+    
+    Route::get('/dashboard', [\App\Http\Controllers\DashBoardController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/myTrips', [ViagensController::class, 'index'])->name('myTrips');
 
@@ -70,7 +71,9 @@ Route::middleware(['auth'])->group(function (){
  
     Route::put('/user/{id}/profile', [UserController::class, 'updateProfile'])->name('user.updateProfile');
     Route::put('/user/{id}/preferences', [UserController::class, 'updatePreferences'])->name('user.updatePreferences');
-    Route::get('/hotels', [HotelsController::class, 'index'])->name('hotels.search');
-    Route::post('/hotels/search', [HotelsController::class, 'search']);
+    Route::get('/hotels', [HotelsController::class, 'index']);
+    Route::post('/hotels/search', [HotelsController::class, 'search'])->name('hotels.search');
     Route::post('/hotels/{id}', [HotelsController::class, 'addToTrip'])->name('hotels.addToTrip');
+    Route::get('/trip/insurances', [TripController::class, 'getInsurancesAjax']);
+    Route::post('/trip/update-insurance', [TripController::class, 'updateInsuranceAjax']);
 });
