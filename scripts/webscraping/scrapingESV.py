@@ -1,21 +1,18 @@
-import sys
+import sys 
 import io
-import time
-import unicodedata
 from datetime import datetime
 from urllib.parse import urlparse
 from playwright.sync_api import sync_playwright
 
-# Garantir codificação UTF-8
+# Força saída em UTF-8 para evitar problemas com caracteres especiais
 if sys.stdout.encoding != 'utf-8':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-# Função para remover acentos
-def remover_acentos(txt):
-    return unicodedata.normalize("NFKD", txt).encode("ASCII", "ignore").decode("utf-8")
-
-# Função para extrair domínio limpo de uma URL
 def extrair_nome_site(url):
+    """
+    Extrai o nome do site a partir da URL removendo prefixos e sufixos comuns.
+    Exemplo: www.easyseguroviagem.com.br -> easyseguroviagem
+    """
     try:
         host = urlparse(url).netloc.lower()
         if host.startswith("www."):
@@ -23,14 +20,14 @@ def extrair_nome_site(url):
         for sufixo in [".com.br", ".com", ".net", ".org", ".br"]:
             if host.endswith(sufixo):
                 host = host[:-len(sufixo)]
-        return remover_acentos(host)
+        return host
     except:
         return "site"
 
-# Função principal
 def main():
-    if len(sys.argv) < 14:
-        print("Uso: python scrapingESV.py <motivo> <destino> <data_ida> <data_volta> <qtd_passageiros> <idade1> ... <idade8>")
+    # Validação básica da quantidade de argumentos
+    if len(sys.argv) < 7:
+        # print("Uso: python scrapingESV.py <motivo> <destino> <data_ida> <data_volta> <qtd_passageiros> <idade1> ... <idadeN>", file=sys.stderr)
         return
 
     motivo = sys.argv[1]
@@ -38,58 +35,79 @@ def main():
     data_ida = sys.argv[3]
     data_volta = sys.argv[4]
     qtd_passageiros = int(sys.argv[5])
-    idades = sys.argv[6:14]
+    idades = sys.argv[6:]
+
+    # Validação de passageiros
+    if qtd_passageiros < 1 or qtd_passageiros > 8:
+        # print("Número de passageiros deve ser entre 1 e 8.", file=sys.stderr)
+        return
+
+    if len(idades) < qtd_passageiros:
+        # print(f"Você informou {len(idades)} idades, mas selecionou {qtd_passageiros} passageiros.", file=sys.stderr)
+        return
 
     data_ida_obj = datetime.strptime(data_ida, "%Y-%m-%d")
     data_volta_obj = datetime.strptime(data_volta, "%Y-%m-%d")
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)  # headless=True se quiser sem abrir janela
-        page = browser.new_page()
-        page.goto("https://www.easyseguroviagem.com.br", timeout=60000)
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context()
+        # Bloqueia imagens e fontes para acelerar
+        context.route("**/*.{png,jpg,jpeg,svg,woff,woff2}", lambda route: route.abort())
+        page = context.new_page()
 
-        # Preenchendo o formulário
+        page.goto("https://www.easyseguroviagem.com.br", timeout=20000)
+
         page.select_option("#MainContent_Cotador_ddlMotivoDaViagem", motivo)
         page.select_option("#MainContent_Cotador_selContinente", destino)
 
         page.click("#MainContent_Cotador_daterange")
-        time.sleep(1)
+        page.wait_for_selector("//td[contains(@class, 'available')]", timeout=3000)
 
-        page.locator(f"//td[contains(@class, 'available') and text()='{data_ida_obj.day}']").nth(0).click()
-        time.sleep(0.5)
-        page.locator(f"//td[contains(@class, 'available') and text()='{data_volta_obj.day}']").nth(1).click()
-        time.sleep(0.5)
+        xpath_ida = f"//td[contains(@class, 'available') and text()='{data_ida_obj.day}']"
+        page.locator(xpath_ida).nth(0).click()
+
+        xpath_volta = f"//td[contains(@class, 'available') and text()='{data_volta_obj.day}']"
+        page.locator(xpath_volta).nth(0).click()
 
         page.click(".applyBtn")
 
         page.select_option("#MainContent_Cotador_selQtdCliente", str(qtd_passageiros))
+        page.wait_for_selector(f"#txtIdadePassageiro{qtd_passageiros}", timeout=2000)
+
         for i in range(1, qtd_passageiros + 1):
-            idade = idades[i - 1] if i - 1 < len(idades) else "0"
             campo_id = f"#txtIdadePassageiro{i}"
-            page.fill(campo_id, idade)
+            page.fill(campo_id, idades[i - 1])
+            page.dispatch_event(campo_id, "change")
+            page.dispatch_event(campo_id, "blur")
 
         page.locator("body").click()
+        page.wait_for_selector("#MainContent_Cotador_btnComprar:enabled", timeout=3000)
         page.click("#MainContent_Cotador_btnComprar")
 
-        if page.is_visible(".divMsgErro"):
-            print("[ERRO] Nenhum resultado encontrado.")
-        else:
-            page.wait_for_selector(".card-produto", timeout=10000)
-            cards = page.locator(".card-produto")
-            total = cards.count()
+        try:
+            page.wait_for_selector(".card-produto", timeout=5000)
+        except:
+            browser.close()
+            return
 
-            for i in range(total):
-                card = cards.nth(i)
-                texto = card.text_content().replace("Veja os detalhes da cobertura", "").strip()
+        url_resultado = page.url
+        cards = page.locator(".card-produto")
+        total = cards.count()
 
-                # Simula o link da cobertura (site é sempre o mesmo nesse caso)
-                link = "https://www.easyseguroviagem.com.br"
-                site = extrair_nome_site(link)
+        for i in range(total):
+            card = cards.nth(i)
+            texto = card.text_content().replace("Veja os detalhes da cobertura", "").strip()
+            site = extrair_nome_site(url_resultado)
 
-                print(site)
-                print(texto)
-                print(link)
-                print("=====")
+            print(site)
+            for linha in texto.split("\n"):
+                linha = linha.strip()
+                if linha:
+                    print(linha)
+            print(url_resultado)
+            print("=====")
+            sys.stdout.flush()
 
         browser.close()
 
