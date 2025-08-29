@@ -123,6 +123,46 @@ document.addEventListener('DOMContentLoaded', function() {
                             if (this.checked) {
                                 document.getElementById('selected_flight_data').value = JSON.stringify(voosCarregados[idx]);
                                 document.getElementById('selected_flight_index').value = idx;
+
+                                // Verificação do preço do voo em relação ao orçamento
+                                const flight = voosCarregados[idx];
+                                let precoVoo = 0;
+                                if (flight && flight.price) {
+                                    precoVoo = parseFloat(flight.price);
+                                }
+                                // Busca o orçamento preenchido no formulário
+                                const orcamentoInput = document.querySelectorAll('.form-step')[1]?.querySelector('input[type="number"]');
+                                const orcamento = orcamentoInput ? parseFloat(orcamentoInput.value) : 0;
+                                if (orcamento > 0 && precoVoo > 0.6 * orcamento) {
+                                    // Notificação estilizada igual explore
+                                    if (typeof showNotification !== 'function') {
+                                        window.showNotification = function(message, type = 'warning') {
+                                            const notification = document.createElement('div');
+                                            notification.style.cssText = `
+                                                position: fixed;
+                                                top: 20px;
+                                                right: 20px;
+                                                padding: 12px 20px;
+                                                border-radius: 8px;
+                                                color: white;
+                                                font-weight: 500;
+                                                z-index: 10000;
+                                                max-width: 300px;
+                                                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                                                transition: all 0.3s ease;
+                                            `;
+                                            notification.style.backgroundColor = '#F59E0B';
+                                            notification.textContent = message;
+                                            document.body.appendChild(notification);
+                                            setTimeout(() => {
+                                                notification.style.opacity = '0';
+                                                notification.style.transform = 'translateX(100%)';
+                                                setTimeout(() => notification.remove(), 300);
+                                            }, 4000);
+                                        }
+                                    }
+                                    showNotification('Atenção: o preço do voo selecionado é maior que 60% do orçamento da viagem!', 'warning');
+                                }
                             }
                         });
                     });
