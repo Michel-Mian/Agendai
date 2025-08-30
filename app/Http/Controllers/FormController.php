@@ -44,7 +44,6 @@ class FormController extends Controller
         if ($request->filled('selected_flight_index')) {
             // Busque os voos novamente ou recupere os dados do voo selecionado
             $flightData = json_decode($request->input('selected_flight_data', '{}'), true);
-            //dd($flightData);
             $voo = new \App\Models\Voos();
             $primeiroTrecho = $flightData['flights'][0] ?? [];
 
@@ -59,7 +58,15 @@ class FormController extends Controller
                 : now();
             $voo->companhia_voo = $primeiroTrecho['airline'] ?? '';
             $voo->fk_id_viagem = $viagem->pk_id_viagem;
+            $voo->preco_voo = $flightData['price'] ?? '';
             $voo->save();
+
+            // Verificação do preço do voo em relação ao orçamento
+            $orcamento = floatval($viagem->orcamento_viagem);
+            $precoVoo = floatval($voo->preco_voo);
+            if ($orcamento > 0 && $precoVoo > 0 && $precoVoo > 0.6 * $orcamento) {
+                session()->flash('warning', 'Atenção: o preço do voo selecionado é maior que 60% do orçamento da viagem!');
+            }
         }
 
         // 3. Salve o seguro (se houver)

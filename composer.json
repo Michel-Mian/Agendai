@@ -32,7 +32,8 @@
             "Database\\Seeders\\": "database/seeders/"
         }, 
         "files": [
-            "app/Helpers/ConvertHelper.php"
+            "app/Helpers/ConvertHelper.php",
+            "app/Helpers/ObjectiveImageHelper.php"
         ]
     },
     "autoload-dev": {
