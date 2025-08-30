@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Viagens;
 
 /**
  * Controller responsible for rendering the user dashboard with currency rates and history.
  */
 class DashBoardController extends Controller
 {
+    
     /**
      * Displays the dashboard view with user data, currency info, and historical exchange rates.
      *
@@ -18,6 +21,11 @@ class DashBoardController extends Controller
     public function dashboard()
     {
         $user = auth()->user();
+
+        //viagens
+        $viagens = Viagens::where('fk_id_usuario', $user->id)
+            ->orderBy('data_inicio_viagem', 'asc')
+            ->get();
 
         // Fetch available currencies from the API
         $response = Http::get('https://economia.awesomeapi.com.br/json/available/uniq');
@@ -77,16 +85,23 @@ class DashBoardController extends Controller
             $labels[] = date('d/m/Y', $item['timestamp']);
             $data[] = (float) $item['bid'];
         }
-        // Render the dashboard view with all data
-        return view('dashboard', [
+        $viagensFlutter = $viagens->toArray();
+        // Resposta condicional: JSON ou view
+        $dados = [
             'user' => $user,
+            'viagens' => $viagens,
+            'viagensFlutter' => $viagensFlutter,
             'currencies' => $currencies,
             'cotacao' => $cotacao,
             'historico' => $historico,
             'labels' => $labels,
             'data' => $data,
             'title' => 'Dashboard',
-        ]);
+        ];
+        if (request()->wantsJson()) {
+            return response()->json($dados);
+        }
+        return view('dashboard', $dados);
     }
 
     /**
@@ -132,4 +147,5 @@ class DashBoardController extends Controller
             'data' => $data,
         ]);
     }
+    
 }

@@ -23,7 +23,7 @@
             </div>
         @else
             <button id="new-trip" class="bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold px-4 py-2 rounded-lg flex items-center space-x-2 cursor-pointer mx-5 mt-4 hover:from-blue-700 hover:to-blue-600 transition">
-                <a href="#">
+                <a href="formTrip">
                     <span class="text-xl">+</span>
                     <span>Nova Viagem</span>
                 </a>

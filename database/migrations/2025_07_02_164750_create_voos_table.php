@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('origem_voo', 100)->nullable(false);
             $table->string('destino_voo', 100)->nullable(false);
             $table->string('companhia_voo', 100)->nullable(false);
+            $table->float('preco_voo')->nullable(false);
             $table->unsignedBigInteger('fk_id_viagem')->nullable(false);
             $table->timestamps();
             $table->foreign('fk_id_viagem')->references('pk_id_viagem')->on('viagens')->onDelete('cascade');

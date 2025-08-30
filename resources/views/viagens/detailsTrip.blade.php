@@ -1,5 +1,10 @@
 @extends('index')
 @section('content')
+    <script>
+        // Definir ID da viagem atual globalmente
+        window.currentTripId = {{ $viagem->pk_id_viagem }};
+    </script>
+    
     <div class="flex min-h-screen bg-gray-50">
         @include('components/layout/sidebar')
         <div class="flex-1 flex flex-col">
@@ -26,7 +31,7 @@
                         <!-- Header com gradiente -->
                         <div class="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 px-8 py-6 relative overflow-hidden">
                             <!-- Padrão decorativo de fundo -->
-                            <div class="absolute inset-0 opacity-10">
+                            <div class="absolute inset-0 opacity-10" style="pointer-events: none;">
                                 <div class="absolute top-0 left-0 w-40 h-40 bg-blue-700 rounded-full -translate-x-20 -translate-y-20"></div>
                                 <div class="absolute bottom-0 right-0 w-32 h-32 bg-purple-700 rounded-full translate-x-16 translate-y-16"></div>
                                 <div class="absolute top-1/2 right-1/4 w-24 h-24 bg-green-700 rounded-full"></div>
@@ -103,7 +108,7 @@
                                 <!-- Origem -->
                                 <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
                                     <div class="flex items-center space-x-3 mb-3">
-                                        <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+                                        <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center p-6">
                                             <i class="fas fa-plane-departure text-white text-lg"></i>
                                         </div>
                                         <div>
@@ -117,7 +122,7 @@
                                 <!-- Período -->
                                 <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
                                     <div class="flex items-center space-x-3 mb-3">
-                                        <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                                        <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center p-6">
                                             <i class="fas fa-calendar-alt text-white text-lg"></i>
                                         </div>
                                         <div>
@@ -137,13 +142,18 @@
                                 
                                 <!-- Orçamento -->
                                 <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
-                                    <div class="flex items-center space-x-3 mb-3">
-                                        <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+                                    <div class="flex space-x-3 mb-3">
+                                        <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center p-6">
                                             <i class="fas fa-wallet text-white text-lg"></i>
                                         </div>
                                         <div>
                                             <div class="text-purple-800 font-semibold text-lg">Orçamento</div>
                                             <div class="text-purple-600 text-sm">Valor planejado</div>
+                                        </div>
+                                        <div class="w-full flex items-center justify-end">
+                                            <button class="m-0 bg-transparent cursor-pointer" id="modal_orc" type="button" title="Orçamento da Viagem">
+                                                <i class="fa-solid fa-circle-info text-lg text-purple-600"></i>
+                                            </button>
                                         </div>
                                     </div>
                                     <div class="text-gray-800 font-bold text-xl">R$ {{ number_format($viagem->orcamento_viagem, 2, ',', '.') }}</div>
@@ -151,12 +161,43 @@
                                         <i class="fas fa-info-circle mr-1"></i>
                                         Orçamento total
                                     </div>
+                                    <div class="text-gray-800 font-bold text-xl">R$ 
+                                        @php
+                                            $orcamento_liquido = $viagem->orcamento_viagem;
+                                        @endphp
+                                        @foreach ($viagem->hotel as $hotel)
+                                            @if($hotel->preco && $hotel->data_check_in && $hotel->data_check_out)
+                                                @php
+                                                    $checkin = \Carbon\Carbon::parse($hotel->data_check_in);
+                                                    $checkout = \Carbon\Carbon::parse($hotel->data_check_out);
+                                                    $noites = $checkin->diffInDays($checkout);
+                                                    // Remove "R$", espaços e troca vírgula por ponto
+                                                    $precoFloat = convertToFloat($hotel->preco);
+                                                    $total = $precoFloat * $noites;
+                                                    $orcamento_liquido -= $total;
+                                                @endphp
+                                            @endif
+                                        @endforeach
+                                        @foreach ($voos as $voo)
+                                            @if($voo->preco_voo)
+                                                @php
+                                                    $precoFloat = $voo->preco_voo;
+                                                    $orcamento_liquido -= $precoFloat;
+                                                @endphp
+                                            @endif
+                                        @endforeach
+                                        {{ number_format($orcamento_liquido, 2, ',', '.') }}
+                                    </div>
+                                    <div class="text-purple-600 text-sm mt-1">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Orçamento líquido
+                                    </div>
                                 </div>
                                 
                                 <!-- Estatísticas rápidas -->
                                 <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200">
                                     <div class="flex items-center space-x-3 mb-3">
-                                        <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
+                                        <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center p-6">
                                             <i class="fas fa-chart-line text-white text-lg"></i>
                                         </div>
                                         <div>
@@ -239,6 +280,14 @@
                                 <span>Visão Geral</span>
                             </button>
                             <button 
+                                id="tab-rotas-mapa" 
+                                class="tab-button flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-b-lg font-medium text-sm transition-all duration-200"
+                                onclick="switchTab('rotas-mapa')"
+                            >
+                                <i class="fa-solid fa-map"></i>
+                                <span>Suas Rotas</span>
+                            </button>
+                            <button 
                                 id="tab-informacoes-estatisticas" 
                                 class="tab-button flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-b-lg font-medium text-sm transition-all duration-200"
                                 onclick="switchTab('informacoes-estatisticas')"
@@ -253,6 +302,9 @@
                     <div class="tab-content">
                         <div id="content-visao-geral" class="tab-panel active">
                             @include('components/myTrips/screenSections/visaoGeral', ['viagem' => $viagem, 'usuario' => $usuario])
+                            {{-- Add flights section here if not already included --}}
+                            {{-- Add insurance section below flights section --}}
+                            @include('components/myTrips/screenSections/themes/insuranceSection', ['seguros' => $seguros])
                         </div>
                         <div id="content-informacoes-estatisticas" class="tab-panel hidden">
                             @include('components/myTrips/screenSections/informacoesEstatisticas', ['viagem' => $viagem, 'usuario' => $usuario])
@@ -262,6 +314,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal de orçamento -->
+    @include('components.myTrips.modals.orcamentoModal')
 
     <!-- Modal de Viajantes -->
     @include('components.myTrips.modals.viajantesModal')
@@ -276,7 +331,12 @@
     @include('components.myTrips.modals.addViajantesModal')
 
     @include('components/explore/detailsModal')
-    <script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places" async defer></script>
+
+    <!-- Insurance modals (add and details) -->
+    @include('components.myTrips.modals.addInsurance')
+    @include('components.myTrips.modals.insuranceModal')
+
+    <script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places&libraries=geometry&callback=checkGoogleMapsLoaded" async defer></script>
     
     <!-- Script para controle das tabs -->
     <script>
@@ -300,6 +360,55 @@
             panel.classList.remove('hidden');
             panel.classList.add('active');
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const openOrcamentoModalBtn = document.getElementById('modal_orc');
+            const closeOrcamentoModalBtn = document.getElementById('close-orcamento-modal-btn');
+            const closeOrcamentoModalFooterBtn = document.getElementById('close-objetivos-modal-footer-btn');
+            const orcamentoModal = document.getElementById('orcamento-modal');
+            const orcamentoModalPanel = document.getElementById('orcamento-modal-panel');
+            const orcamentoModalOverlay = document.getElementById('orcamento-modal-overlay');
+
+            // Função para abrir o modal
+            const openOrcamentoModal = () => {
+                orcamentoModal.classList.remove('hidden');
+                orcamentoModal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+                setTimeout(() => {
+                    orcamentoModalPanel.classList.remove('scale-95', 'opacity-0');
+                    orcamentoModalPanel.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            };
+
+            // Função para fechar o modal
+            const closeOrcamentoModal = () => {
+                if (!orcamentoModalPanel) return;
+                orcamentoModalPanel.classList.remove('scale-100', 'opacity-100');
+                orcamentoModalPanel.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    orcamentoModal.classList.add('hidden');
+                    orcamentoModal.classList.remove('flex');
+                    document.body.style.overflow = '';
+                }, 300);
+            };
+
+            // Eventos de abrir
+            if (openOrcamentoModalBtn) openOrcamentoModalBtn.addEventListener('click', openOrcamentoModal);
+
+            // Eventos de fechar
+            if (closeOrcamentoModalBtn) closeOrcamentoModalBtn.addEventListener('click', closeOrcamentoModal);
+            if (closeOrcamentoModalFooterBtn) closeOrcamentoModalFooterBtn.addEventListener('click', closeOrcamentoModal);
+            if (orcamentoModalOverlay) orcamentoModalOverlay.addEventListener('click', closeOrcamentoModal);
+
+            // Escape fecha o modal
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    if (orcamentoModal && !orcamentoModal.classList.contains('hidden')) {
+                        closeOrcamentoModal();
+                    }
+                }
+            });
+        });
     </script>
 
     <!-- Estilos CSS aprimorados para as tabs -->
@@ -344,24 +453,39 @@
         }
     </style>
 
-    <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Substitua pelo ID real da viagem
-    const viagemId = {{ $viagem->pk_id_viagem }};
-    fetch(`/viagens/${viagemId}/noticias`)
-        .then(response => response.json())
-        .then(noticias => {
-            // Exemplo: onde exibir as notícias
-            if (noticias.Cultura) {
-                document.getElementById('noticia-cultura');
-            }
-            if (noticias.Saúde) {
-                document.getElementById('noticia-saude');
-            }
-            if (noticias.Local) {
-                document.getElementById('noticia-local');
-            }
-        });
+<script>
+    
+</script>
+{{-- Mostra o seguro apenas se houver valor --}}
+@php
+    $seguroSelecionado = $seguroSelecionado ?? '';
+@endphp
+@if(!empty($seguroSelecionado))
+<li>
+    <b>Seguro de viagem:</b>
+    <span id="seguro-detalhe">
+        {{ $seguroSelecionado }}
+    </span>
+</li>
+@endif
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    let seguro = sessionStorage.getItem('selectedSeguroName');
+    if (seguro) {
+        document.getElementById('seguro-detalhe')?.innerText = seguro;
+    }
 });
 </script>
+
+{{-- Exibe o seguro de viagem escolhido, se houver --}}
+@isset($viagem->seguro_nome)
+    @if(!empty($viagem->seguro_nome))
+        <li>
+            <b>Seguro de viagem:</b>
+            <span id="seguro-detalhe">
+                {{ $viagem->seguro_nome }}
+            </span>
+        </li>
+    @endif
+@endisset
 @endsection

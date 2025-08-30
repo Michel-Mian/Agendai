@@ -17,7 +17,11 @@
                 @if(isset($flights) && count($flights))
                     @foreach($flights as $index => $flight)
                         @include('components.flights.cardFlights', ['flight' => $flight, 'index' => $index, 'user' => $user])
-                         <pre>{{ print_r($flight, true) }}</pre> 
+                        <!-- <pre>{{ print_r($flight, true) }}</pre> -->
+                        <!-- Modal de Seleção de Viagem -->
+                        @include('components/flights/modalSelectTrip', ['flight' => $flight, 'index' => $index, 'user' => $user])
+                        <!-- Modal de Confirmação -->
+                        @include('components/flights/modalConfirmation', ['flight' => $flight, 'index' => $index, 'user' => $user])
                     @endforeach
 
                     <div class="mt-6">

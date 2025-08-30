@@ -19,7 +19,9 @@ return new class extends Migration
             $table->string('origem_viagem', 100) -> nullable();
             $table->decimal('orcamento_viagem', 10, 2)->nullable();
             $table->unsignedBigInteger('fk_id_usuario');
-            $table->foreign('fk_id_usuario')->references('id')->on('users');
+            $table->foreign('fk_id_usuario')->references('id')->on('users')->onDelete('cascade');
+            $table->unsignedBigInteger('fk_id_seguro_selecionado')->nullable();
+            //$table->foreign('fk_id_seguro_selecionado')->references('pk_id_seguro')->on('seguros')->nullOnDelete();
             $table->timestamps();
         });
     }
@@ -32,3 +34,10 @@ return new class extends Migration
         Schema::dropIfExists('viagens');
     }
 };
+
+// Todos os campos necessários estão presentes:
+// - pk_id_viagem
+// - destino_viagem, data_inicio_viagem, data_final_viagem, origem_viagem, orcamento_viagem
+// - fk_id_usuario (relacionamento com users)
+// - fk_id_seguro_selecionado (relacionamento com seguros, nullable)
+// - fk_id_seguro_selecionado (relacionamento com seguros, nullable)

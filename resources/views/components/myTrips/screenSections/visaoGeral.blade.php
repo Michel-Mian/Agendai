@@ -11,8 +11,8 @@
     <!-- Seção de Voos -->
     @include('components/myTrips/screenSections/themes/flightSection')
 
-    <!-- Seção de Pontos de Interesse -->
-    @include('components/myTrips/screenSections/themes/pointSection')
+    <!-- Seção de Hotéis -->
+    @include('components/myTrips/screenSections/themes/hotelSection')
 </div>
 
 <style>

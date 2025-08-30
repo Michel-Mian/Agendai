@@ -17,6 +17,11 @@ class ExploreController extends Controller
         
         $dataInicio = null;
         $dataFim = null;
+        $filtrosObjetivo = null;
+        $nomeObjetivo = null;
+        $destino = null;
+        $origem = null;
+        
         if (session()->has('trip_id')) {
             $tripId = session('trip_id');
             $viagem = Viagens::findOrFail($tripId);
@@ -26,12 +31,30 @@ class ExploreController extends Controller
             $origem = $viagem?->origem_viagem;
         }
         
+        // Verificar se há filtros de objetivo na URL
+        if ($request->has('filters')) {
+            try {
+                $filtrosObjetivo = json_decode(urldecode($request->get('filters')), true);
+                $nomeObjetivo = $request->get('objective', 'Filtros por Objetivo');
+                
+                Log::info('Filtros de objetivo recebidos:', [
+                    'filtros_raw' => $request->get('filters'),
+                    'filtros_decoded' => $filtrosObjetivo,
+                    'nome_objetivo' => $nomeObjetivo
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Erro ao decodificar filtros de objetivo:', ['error' => $e->getMessage()]);
+            }
+        }
+        
         Log::info('Página explore carregada', [
             'trip_id' => session('trip_id'),
             'data_inicio' => $dataInicio,
             'data_fim' => $dataFim,
-            'destino' => $destino ?? null,
-            'origem' => $origem ?? null
+            'destino' => $destino,
+            'origem' => $origem,
+            'filtros_objetivo' => $filtrosObjetivo,
+            'nome_objetivo' => $nomeObjetivo
         ]);
         
         return view('explore', [
@@ -39,8 +62,10 @@ class ExploreController extends Controller
             'dataInicio' => $dataInicio,
             'dataFim' => $dataFim,
             'hasTrip' => session()->has('trip_id'),
-            'destino' => $destino ?? null,
-            'origem' => $origem ?? null,
+            'destino' => $destino,
+            'origem' => $origem,
+            'filtrosObjetivo' => $filtrosObjetivo,
+            'nomeObjetivo' => $nomeObjetivo,
         ]);
     }
 
@@ -172,9 +197,29 @@ class ExploreController extends Controller
     }
 
     
-    public function setTripIdAndRedirect($id)
+    public function setTripIdAndRedirect($id, Request $request)
     {
         session(['trip_id' => $id]);
-        return redirect()->route('explore.index');
+        
+        // Verificar se há parâmetros de filtro para preservar
+        $queryParams = [];
+        if ($request->has('filters')) {
+            $queryParams['filters'] = $request->get('filters');
+        }
+        if ($request->has('objective')) {
+            $queryParams['objective'] = $request->get('objective');
+        }
+        
+        Log::info('Redirecionando para explore com trip_id definido:', [
+            'trip_id' => $id,
+            'query_params' => $queryParams
+        ]);
+        
+        // Redirecionar preservando os parâmetros de filtro
+        if (!empty($queryParams)) {
+            return redirect()->route('explore', $queryParams);
+        }
+        
+        return redirect()->route('explore');
     }
 }
