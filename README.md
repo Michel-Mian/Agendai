@@ -1,6 +1,7 @@
 <!-- Logo do projeto -->
 <p align="center">
-  <img src="public/imgs/logoagendaibranco.png" alt="Logo do AgendAí" width="200"/>
+  <a href="https://www.youtube.com/watch?si=Yh4zWISCRkQa7F6-&v=r4HKf4ICAFA&feature=youtu.be"> <img src="public/imgs/logoagendaibranco.png" alt="Logo do AgendAí" width="300"/> </a>
+    <h5 align="center">Clique na imagem!</h5>
 </p>
 
 <h1 align="center">🌍 AgendAí – Planeje Sua Viagem dos Sonhos</h1>
@@ -67,6 +68,9 @@ Desenvolver um **sistema web completo e intuitivo**, capaz de auxiliar no **plan
 - Laravel / Blade
 - MySQL  
 - APIs
+- Figma
+- Node.Js
+- Tailwind
 
 ---
 
@@ -84,6 +88,6 @@ Este projeto foi desenvolvido como parte do Trabalho de Conclusão de Curso (TCC
 
 ## 📷 Capturas de Tela
 
-> * ainda em desenvolvimento
+<img src="public/imgs/Flights.PNG" alt="Flights" width="500"/> <img src="public/imgs/dashBoard.PNG" alt="Dashboard" width="500"/> <img src="public/imgs/MyTrips.PNG" alt="MyTrips" width="500"/> <img src="public/imgs/explore.jpeg" alt="Explore" width="500"/>
 
 ---

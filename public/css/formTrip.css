@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+body { font-family: 'Inter', sans-serif; }
+.animate-fade-in { animation: fadeIn 0.7s; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(30px);} to { opacity: 1; transform: none; } }
+
+.form-step { display: none; }
+.form-step.active { display: block; animation: fadeIn 0.5s; }
+.step-indicator {
+    width: 38px; height: 38px; border-radius: 50%; background: #fff;
+    border: 3px solid #22c55e; color: #22c55e;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.2rem; box-shadow: 0 2px 8px #22c55e22;
+    transition: all 0.3s;
+    z-index: 1;
+}
+.step-indicator:not(.active) {
+    border-color: #d1d5db; color: #d1d5db; background: #f3f4f6;
+    box-shadow: none;
+}
+.step-indicator.active {
+    background: linear-gradient(135deg, #22c55e 60%, #0ea5e9 100%);
+    color: #fff;
+    border-color: #0ea5e9;
+    box-shadow: 0 4px 16px #0ea5e955;
+}
+.step-label {
+    margin-left: 10px; margin-right: 10px;
+    font-weight: 600; color: #22c55e;
+    font-size: 1rem;
+}
+.step-line {
+    flex: 1; height: 3px; background: linear-gradient(90deg, #22c55e, #0ea5e9);
+    margin-left: 10px; margin-right: 10px; border-radius: 2px;
+}
+.input {
+    border: 1.5px solid #d1d5db; border-radius: 8px; padding: 10px 14px; width: 100%;
+    font-size: 1rem; background: #f9fafb; transition: border 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+.input:focus {
+    border-color: #0ea5e9;
+    box-shadow: 0 0 0 2px #0ea5e955;
+    background: #fff;
+}
+.btn-primary {
+    background: linear-gradient(90deg, #2563eb, #2563eb, #3b82f6, #2563eb);
+    background-image: linear-gradient(to right, #2563eb, #3b82f6);
+    color: #fff; padding: 10px 32px; border-radius: 8px;
+    font-weight: 700; font-size: 1rem; border: none;
+    box-shadow: 0 2px 8px #2563eb33;
+    transition: background 0.2s, transform 0.2s;
+    cursor: pointer;
+}
+.btn-primary:hover {
+    background-image: linear-gradient(to right, #3b82f6, #2563eb);
+    transform: translateY(-2px) scale(1.03);
+}
+.btn-secondary {
+    background: #fff; border: 1.5px solid #d1d5db; color: #222;
+    padding: 10px 32px; border-radius: 8px; font-weight: 600;
+    transition: border 0.2s, background 0.2s, color 0.2s;
+    cursor: pointer;
+}
+.btn-secondary:hover {
+    border-color: #0ea5e9; color: #0ea5e9; background: #f0f9ff;
+}
+.pref-btn, .insurance-btn {
+    border: 2px solid #e5e7eb; border-radius: 16px; padding: 22px 0;
+    background: #f9fafb; cursor: pointer; font-size: 1rem;
+    font-weight: 500; box-shadow: 0 2px 8px #0001;
+    transition: border 0.2s, background 0.2s, box-shadow 0.2s, transform 0.2s;
+    outline: none;
+    min-width: 120px;
+}
+.pref-btn.selected, .insurance-btn.selected {
+    border-color: #22c55e; background: #e6f9f0;
+    box-shadow: 0 4px 16px #22c55e33;
+    transform: scale(1.04);
+}
+.pref-btn:hover, .insurance-btn:hover {
+    border-color: #0ea5e9; background: #e0f2fe;
+    box-shadow: 0 4px 16px #0ea5e933;
+    transform: scale(1.03);
+}
+
