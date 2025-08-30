@@ -1,5 +1,4 @@
-<div id="sidebar" class="bg-white shadow-lg min-h-screen relative flex flex-col sidebar-expanded">
-    <!-- Header com Logo e Toggle -->
+<div id="sidebar" class="bg-white shadow-lg min-h-screen relative flex flex-col sidebar-expanded">    <!-- Header com Logo e Toggle -->
     <div id="sidebar-header" class="flex items-center justify-between p-2 border-b border-gray-200 transition-all duration-300" style="background-color: #f7faf8;">
         <div id="logo-container" class="flex items-center justify-center w-full space-x-3">
             <div class="w-24 h-24 rounded-lg flex items-center justify-center p-0" id="logo">
@@ -36,13 +35,19 @@
                 </a>
             </li>
             <li>
-                <a href="#" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
+                <a href="/hotels" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
+                    <i class="fa-solid fa-hotel"></i>
+                    <span class="nav-text">Hotels</span>
+                </a>
+            </li>
+            <li>
+                <a href="/formTrip" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
                     <i class="fa-solid fa-plus"></i>
                     <span class="nav-text">Criar Viagem</span>
                 </a>
             </li>
             <li>
-                <a href="#" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
+                <a href="/explore" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
                     <i class="fa-solid fa-earth-americas"></i>
                     <span class="nav-text">Explorar</span>
                 </a>
@@ -50,19 +55,14 @@
         </ul>
     </nav>
 
-    <!-- User Profile Section -->
+    <!-- User Profile Section  -->
     <div class="border-t border-gray-200 p-4">
         <div class="relative">
             <button id="profile-button" class="flex items-center space-x-3 w-full rounded-lg hover:bg-gray-50 transition-colors profile-toggle">
-                @if(Auth::check())
-                    <img src="{{ Auth::user()->profile_photo_url ? asset(Auth::user()->profile_photo_url) : asset('imgs/default-profile.png') }}"
-                         alt="Foto do perfil" 
-                         class="w-8 h-8 rounded-full object-cover">
-                @else
-                    <img src="{{ asset('imgs/default-profile.png') }}"
-                         alt="Foto do perfil" 
-                         class="w-8 h-8 rounded-full object-cover">
-                @endif
+                <img src="{{ Auth::user()->profile_photo_url ? asset(Auth::user()->profile_photo_url) : asset('imgs/default-profile.png') }}"
+                     alt="Foto do perfil" 
+                     class="w-8 h-8 rounded-full object-cover">
+                
                 <div class="flex-1 text-left profile-info">
                     @if(Auth::check())
                         <p class="text-sm font-medium text-gray-900">{{ Auth::user()->name }}</p>
@@ -110,3 +110,4 @@
         </div>
     </div>
 </div>
+
