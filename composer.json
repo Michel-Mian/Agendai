@@ -11,6 +11,9 @@
     "require": {
         "php": "^8.2",
         "laravel/framework": "^12.0",
+        "predis/predis": "2.0",
+        "symfony/finder": "^7.3",
+        "laravel/sanctum": "^4.2",
         "laravel/tinker": "^2.10.1"
     },
     "require-dev": {
@@ -27,7 +30,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        }, 
+        "files": [
+            "app/Helpers/ConvertHelper.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
@@ -76,3 +82,4 @@
     "minimum-stability": "stable",
     "prefer-stable": true
 }
+

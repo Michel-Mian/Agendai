@@ -1,0 +1,4 @@
+.detalhes-viagem {
+    transition: max-height 0.3s ease;
+    overflow: hidden;
+}
