@@ -91,7 +91,7 @@
                 <div class="flex items-center gap-3">
                     <i class="fa-solid fa-plane text-blue-500"></i>
                     <span class="font-semibold text-gray-700">Companhia:</span>
-                    <span>{{ is_array($flight['flights'][0]['airline']) ? implode(', ', $flight['flights'][0]['airline']) : ($flight['flights'][0]['airline'] ?? 'Desconhecida') }}</span>
+                    <span class="companhia-aerea">{{ is_array($flight['flights'][0]['airline']) ? implode(', ', $flight['flights'][0]['airline']) : ($flight['flights'][0]['airline'] ?? 'Desconhecida') }}</span>
                 </div>
                 <div class="flex items-center gap-3">
                     <i class="fa-solid fa-hashtag text-blue-500"></i>

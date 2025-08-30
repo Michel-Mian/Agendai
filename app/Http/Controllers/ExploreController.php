@@ -185,15 +185,82 @@ class ExploreController extends Controller
 
     public function updateHorario(Request $request, $id)
     {
-        $request->validate([
-            'novo_horario' => 'required|date_format:H:i',
-        ]);
+        // Log para debug - primeiro log para ver se chega aqui
+        \Log::info('=== UPDATE HORARIO CONTROLLER EXECUTADO ===');
+        \Log::info('ID recebido:', [$id]);
+        
+        try {
+            // Validação sem regex primeiro para testar
+            $validated = $request->validate([
+                'novo_horario' => 'required|string|size:5',
+            ], [
+                'novo_horario.required' => 'O horário é obrigatório',
+                'novo_horario.size' => 'O horário deve ter 5 caracteres (HH:MM)'
+            ]);
+            
+            // Validação manual do formato
+            $horario = $validated['novo_horario'];
+            if (!preg_match('/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/', $horario)) {
+                \Log::error('Formato de horário inválido:', [$horario]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Formato de horário inválido. Use HH:MM'
+                ], 422);
+            }
 
-        $ponto = \App\Models\PontoInteresse::findOrFail($id);
-        $ponto->hora_ponto_interesse = $request->input('novo_horario');
-        $ponto->save();
+            \Log::info('Validação passou:', $validated);
 
-        return redirect()->back()->with('success', 'Horário do ponto de interesse alterado com sucesso!');
+            $ponto = \App\Models\PontoInteresse::findOrFail($id);
+            \Log::info('Ponto encontrado:', ['id' => $ponto->id, 'nome' => $ponto->nome_ponto_interesse]);
+            
+            $ponto->hora_ponto_interesse = $validated['novo_horario'];
+            $ponto->save();
+
+            \Log::info('Horário atualizado com sucesso para:', [$validated['novo_horario']]);
+
+            // Retornar JSON para requisições AJAX
+            if ($request->expectsJson() || $request->ajax() || $request->header('Accept') === 'application/json') {
+                \Log::info('Retornando resposta JSON');
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Horário do ponto de interesse alterado com sucesso!',
+                    'novo_horario' => $validated['novo_horario']
+                ]);
+            }
+
+            \Log::info('Retornando redirect');
+            return redirect()->back()->with('success', 'Horário do ponto de interesse alterado com sucesso!');
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation error details:', [
+                'errors' => $e->errors(),
+                'input' => $request->all()
+            ]);
+            
+            if ($request->expectsJson() || $request->ajax() || $request->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Dados de validação inválidos',
+                    'validation_errors' => $e->errors(),
+                    'input_received' => $request->all()
+                ], 422);
+            }
+            return redirect()->back()->withErrors($e->errors());
+            
+        } catch (\Exception $e) {
+            \Log::error('General error in updateHorario:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            if ($request->expectsJson() || $request->ajax() || $request->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Erro interno: ' . $e->getMessage()
+                ], 500);
+            }
+            return redirect()->back()->with('error', 'Erro ao alterar horário.');
+        }
     }
 
     

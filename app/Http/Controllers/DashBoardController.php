@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Viagens;
+use App\Models\Viajantes;
+use Carbon\Carbon;
 
 /**
  * Controller responsible for rendering the user dashboard with currency rates and history.
@@ -16,7 +18,7 @@ class DashBoardController extends Controller
     /**
      * Displays the dashboard view with user data, currency info, and historical exchange rates.
      *
-     * @return \Illuminate\View\View
+     * @return \Illuminate\View\View|\Illuminate\Http\JsonResponse
      */
     public function dashboard()
     {
@@ -26,6 +28,8 @@ class DashBoardController extends Controller
         $viagens = Viagens::where('fk_id_usuario', $user->id)
             ->orderBy('data_inicio_viagem', 'asc')
             ->get();
+        
+        $viajantes = Viajantes::where('fk_id_viagem', $user->id)->get();
 
         // Fetch available currencies from the API
         $response = Http::get('https://economia.awesomeapi.com.br/json/available/uniq');
@@ -86,7 +90,41 @@ class DashBoardController extends Controller
             $data[] = (float) $item['bid'];
         }
         $viagensFlutter = $viagens->toArray();
-        // Resposta condicional: JSON ou view
+        // Se a requisição for JSON (ex: chamada do app Flutter), retorna os dados em JSON
+        if (request()->wantsJson()) {
+            // Formata as viagens para o Flutter
+            $viagensFlutter = $viagens->map(function($viagem) {
+                $qtdDias = null;
+                if ($viagem->data_inicio_viagem && $viagem->data_final_viagem) {
+                    $qtdDias = \Carbon\Carbon::parse($viagem->data_inicio_viagem)
+                        ->diffInDays(\Carbon\Carbon::parse($viagem->data_final_viagem));
+                }
+                $pessoas = $viagem->viajantes()->count();
+                return [
+                    'id' => $viagem->id,
+                    'destino' => $viagem->destino ?? ($viagem->destino_viagem ?? null),
+                    'dataInicio' => $viagem->data_inicio_viagem,
+                    'dataFim' => $viagem->data_final_viagem ?? null,
+                    'dias' => $qtdDias,
+                    'pessoas' => $pessoas,
+                ];
+            });
+            return response()->json([
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'currency' => $user->currency ?? 'BRL',
+                ],
+                'viagensFlutter' => $viagensFlutter,
+                'cotacao' => $cotacao,
+                'currencies' => $currencies,
+                'historico' => $historico,
+                'labels' => $labels,
+                'data' => $data,
+            ]);
+        }
+        // Render the dashboard view with all data
         $dados = [
             'user' => $user,
             'viagens' => $viagens,

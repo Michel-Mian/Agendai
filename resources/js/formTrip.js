@@ -123,6 +123,46 @@ document.addEventListener('DOMContentLoaded', function() {
                             if (this.checked) {
                                 document.getElementById('selected_flight_data').value = JSON.stringify(voosCarregados[idx]);
                                 document.getElementById('selected_flight_index').value = idx;
+
+                                // Verificação do preço do voo em relação ao orçamento
+                                const flight = voosCarregados[idx];
+                                let precoVoo = 0;
+                                if (flight && flight.price) {
+                                    precoVoo = parseFloat(flight.price);
+                                }
+                                // Busca o orçamento preenchido no formulário
+                                const orcamentoInput = document.querySelectorAll('.form-step')[1]?.querySelector('input[type="number"]');
+                                const orcamento = orcamentoInput ? parseFloat(orcamentoInput.value) : 0;
+                                if (orcamento > 0 && precoVoo > 0.6 * orcamento) {
+                                    // Notificação estilizada igual explore
+                                    if (typeof showNotification !== 'function') {
+                                        window.showNotification = function(message, type = 'warning') {
+                                            const notification = document.createElement('div');
+                                            notification.style.cssText = `
+                                                position: fixed;
+                                                top: 20px;
+                                                right: 20px;
+                                                padding: 12px 20px;
+                                                border-radius: 8px;
+                                                color: white;
+                                                font-weight: 500;
+                                                z-index: 10000;
+                                                max-width: 300px;
+                                                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                                                transition: all 0.3s ease;
+                                            `;
+                                            notification.style.backgroundColor = '#F59E0B';
+                                            notification.textContent = message;
+                                            document.body.appendChild(notification);
+                                            setTimeout(() => {
+                                                notification.style.opacity = '0';
+                                                notification.style.transform = 'translateX(100%)';
+                                                setTimeout(() => notification.remove(), 300);
+                                            }, 4000);
+                                        }
+                                    }
+                                    showNotification('Atenção: o preço do voo selecionado é maior que 60% do orçamento da viagem!', 'warning');
+                                }
                             }
                         });
                     });
@@ -159,6 +199,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const dataVolta = dataVoltaInput ? dataVoltaInput.value : '';
         const meioSelect = document.querySelectorAll('.form-step')[1]?.querySelector('select');
         const meio = meioSelect ? meioSelect.value : '';
+        const vooSelect = document.querySelector('.select-flight-checkbox:checked');
+        const voo = vooSelect ? vooSelect.closest('.flight-card').querySelector('.companhia-aerea').textContent : '';
         const orcamentoInput = document.querySelectorAll('.form-step')[1]?.querySelector('input[type="number"]');
         const orcamento = orcamentoInput ? orcamentoInput.value : '';
         const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
@@ -169,9 +211,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (seguro === 'Sim') {
             nomeSeguro = sessionStorage.getItem('selectedSeguroName') || '';
         }
-
-        // --- DEBUG: Mostre no console o valor do seguro e nomeSeguro ---
-        // console.log('seguro:', seguro, 'nomeSeguro:', nomeSeguro);
+        const preferencesInput = document.getElementById('preferences');
+        const preferences = preferencesInput ? preferencesInput.value.split(',').filter(p => p.trim() !== '') : [];
 
         reviewList.innerHTML = `
             <li><b>Destino:</b> ${destino}</li>
@@ -624,81 +665,7 @@ document.addEventListener('click', function(e) {
 });
 
 // Função para preencher revisão final (step6)
-function preencherRevisao() {
-    const reviewList = document.getElementById('reviewList');
-    if (!reviewList) return;
-
-    // Pegue os campos do DOM conforme o seu form
-    const destino = document.getElementById('tripDestination')?.value || '';
-    const adultosSelect = document.querySelectorAll('.form-step')[0]?.querySelectorAll('select')[0];
-    const adultos = adultosSelect ? adultosSelect.value : '';
-    const dataIdaInput = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[0];
-    const dataVoltaInput = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[1];
-    const dataIda = dataIdaInput ? dataIdaInput.value : '';
-    const dataVolta = dataVoltaInput ? dataVoltaInput.value : '';
-    const meioSelect = document.querySelectorAll('.form-step')[1]?.querySelector('select');
-    const meio = meioSelect ? meioSelect.value : '';
-    const orcamentoInput = document.querySelectorAll('.form-step')[1]?.querySelector('input[type="number"]');
-    const orcamento = orcamentoInput ? orcamentoInput.value : '';
-    const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
-    const idades = Array.from(idadeInputs).map(input => input.value).filter(value => value !== '');
-    const seguroSelect = document.getElementById('seguroViagem');
-    const seguro = seguroSelect ? seguroSelect.value : '';
-    let nomeSeguro = '';
-    if (seguro === 'Sim') {
-        nomeSeguro = sessionStorage.getItem('selectedSeguroName') || '';
-    }
-
-    // Recupera nome completo do seguro selecionado da sessionStorage
-    reviewList.innerHTML = `
-        <li><b>Destino:</b> ${destino}</li>
-        <li><b>Adultos:</b> ${adultos}</li>
-        <li><b>Idades dos passageiros:</b> ${idades.length > 0 ? idades.join(', ') : 'Nenhuma'}</li>
-        <li><b>Data de ida:</b> ${formatarDataBR(dataIda)}</li>
-        <li><b>Data de volta:</b> ${formatarDataBR(dataVolta)}</li>
-        <li><b>Meio de locomoção:</b> ${meio}</li>
-        <li><b>Orçamento:</b> R$ ${orcamento}</li>
-        ${meio === 'Avião' ? `<li><b>Companhia aérea:</b> ${voo}</li>` : ''}
-        ${seguro === 'Sim' && nomeSeguro ? `<li><b style="color:#fff">Seguro de viagem:</b> ${nomeSeguro}</li>` : ''}
-        <li><b>Preferências:</b> ${preferences.length > 0 ? preferences.join(', ') : 'Nenhuma'}</li>
-    `;
-}
-
 // Certifique-se de chamar preencherRevisao() ao exibir o passo 6
-// Por exemplo, ao avançar para o passo 6:
 document.querySelector('.next-btn-step5')?.addEventListener('click', function() {
     preencherRevisao();
-    // aqui vai o código para mostrar o passo 6, se necessário
 });
-// Por exemplo, ao avançar para o passo 6:
-document.querySelector('.next-btn-step5')?.addEventListener('click', function() {
-    preencherRevisao();
-    // ...código para mostrar o passo 6...
-});
-    // ...código para mostrar o passo 6...
-    reviewList.innerHTML = `
-        <li><b>Destino:</b> ${destino}</li>
-        <li><b>Adultos:</b> ${adultos}</li>
-        <li><b>Idades dos passageiros:</b> ${idades.length > 0 ? idades.join(', ') : 'Nenhuma'}</li>
-        <li><b>Data de ida:</b> ${formatarDataBR(dataIda)}</li>
-        <li><b>Data de volta:</b> ${formatarDataBR(dataVolta)}</li>
-        <li><b>Meio de locomoção:</b> ${meio}</li>
-        <li><b>Orçamento:</b> R$ ${orcamento}</li>
-        ${meio === 'Avião' ? `<li><b>Companhia aérea:</b> ${voo}</li>` : ''}
-        ${seguro === 'Sim' && nomeSeguro ? `<li><b style="color:#fff">Seguro de viagem:</b> ${nomeSeguro}</li>` : ''}
-        <li><b>Preferências:</b> ${preferences.length > 0 ? preferences.join(', ') : 'Nenhuma'}</li>
-    `;
-
-
-// Certifique-se de chamar preencherRevisao() ao exibir o passo 6
-// Por exemplo, ao avançar para o passo 6:
-document.querySelector('.next-btn-step5')?.addEventListener('click', function() {
-    preencherRevisao();
-    // aqui vai o código para mostrar o passo 6, se necessário
-});
-// Por exemplo, ao avançar para o passo 6:
-document.querySelector('.next-btn-step5')?.addEventListener('click', function() {
-    preencherRevisao();
-    // ...código para mostrar o passo 6...
-});
-    // ...código para mostrar o passo 6...
