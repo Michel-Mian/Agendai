@@ -8,16 +8,20 @@
 
             <!-- Filtro de Pesquisa -->
             @include('components/flights/searchFilter')
-
+            
             <!-- Modal de Filtro -->
             @include('components/flights/modalFlights')
 
             <!-- Lista de Voos -->
-            <div class="max-w-4xl mx-auto mb-0 w-full py-8">
+            <div class="max-w-4xl mx-auto mb-0 w-full py-8" id="flights-container">
                 @if(isset($flights) && count($flights))
                     @foreach($flights as $index => $flight)
                         @include('components.flights.cardFlights', ['flight' => $flight, 'index' => $index, 'user' => $user])
-                         <!-- <pre>{{ print_r($flight, true) }}</pre>  -->
+                        <!-- <pre>{{ print_r($flight, true) }}</pre> -->
+                        <!-- Modal de Seleção de Viagem -->
+                        @include('components/flights/modalSelectTrip', ['flight' => $flight, 'index' => $index, 'user' => $user])
+                        <!-- Modal de Confirmação -->
+                        @include('components/flights/modalConfirmation', ['flight' => $flight, 'index' => $index, 'user' => $user])
                     @endforeach
 
                     <div class="mt-6">

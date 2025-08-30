@@ -9,7 +9,6 @@
 
     <!-- Stats -->
     @include('components.home.stats')
-    </section>
 
     <!-- Main Features Section -->
     @include('components.home.main-features')
