@@ -1,61 +1,93 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
+<!-- Logo do projeto -->
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <a href="https://www.youtube.com/watch?si=Yh4zWISCRkQa7F6-&v=r4HKf4ICAFA&feature=youtu.be"> <img src="public/imgs/logoagendaibranco.png" alt="Logo do AgendAí" width="300"/> </a>
+    <h5 align="center">Clique na imagem!</h5>
 </p>
 
-## About Laravel
+<h1 align="center">🌍 AgendAí – Planeje Sua Viagem dos Sonhos</h1>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+<p align="center">
+  <strong>Projeto de TCC – Etec João Belarmino de Amparo</strong><br/>
+  <em>Curso Técnico em Informática • 2025</em>
+</p>
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+<p align="center">
+  <strong>Integrantes:</strong> Matheus Porcaro • Michel Mian • Nara Stachetti • Rafael Fante • Samy Maiorini
+</p>
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 📌 Sobre o Projeto
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+**AgendAí** é um sistema web voltado para o planejamento de viagens, oferecendo uma experiência completa para usuários que desejam montar seus roteiros de forma prática, organizada e personalizada. O sistema centraliza informações essenciais como hospedagem, passagens, câmbio, clima, atrações e cronograma, evitando a dispersão de dados e o estresse durante o planejamento.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 💡 Problematização
 
-## Laravel Sponsors
+Atualmente, planejar uma viagem exige buscar dados em múltiplas fontes: hotéis, restaurantes, pontos turísticos, transporte, moeda, clima, entre outros. Isso torna o processo **demorado, confuso e desgastante**, podendo frustrar as expectativas do viajante.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## 🎯 Objetivo
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 🎯 Objetivo Geral
 
-## Contributing
+Desenvolver um **sistema web completo e intuitivo**, capaz de auxiliar no **planejamento e organização de viagens**, servindo como uma central de recursos turísticos.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 📌 Objetivos Específicos
 
-## Code of Conduct
+- 🗺️ **R1 – Mapa com Pontos de Relevância**  
+  Visualização interativa de hotéis, restaurantes, atrações e casas de câmbio.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- 🏨 **R2 – Comparativo de Hotéis**  
+  Informações detalhadas e comparação entre hospedagens da região.
 
-## Security Vulnerabilities
+- ✈️ **R3 – Listagem de Voos e Preços**  
+  Exibição de voos com preços, horários, companhias e detalhes do trajeto.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- 📆 **R4 – Cronograma da Viagem (Day-by-Day)**  
+  Ferramenta para criar um roteiro diário com horários, destinos e orçamento.
 
-## License
+- 💱 **R5 – Câmbio da Moeda Turística**  
+  Cotação atualizada de moedas internacionais com gráficos e conversão.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- 📚 **R6 – Informações do Destino**  
+  Curiosidades, cultura local, eventos e notícias sobre o local visitado.
+
+- 🌤️ **R7 – Previsão do Clima**  
+  Dados meteorológicos detalhados por dia e período da viagem.
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+- HTML5 / CSS3  
+- JavaScript  
+- PHP
+- Laravel / Blade
+- MySQL  
+- APIs
+- Figma
+- Node.Js
+- Tailwind
+
+---
+
+## 📈 Status do Projeto
+
+📌 **Em desenvolvimento**  
+
+---
+
+## 📝 Licença
+
+Este projeto foi desenvolvido como parte do Trabalho de Conclusão de Curso (TCC) na Etec João Belarmino de Amparo. Uso acadêmico, sem fins lucrativos.
+
+---
+
+## 📷 Capturas de Tela
+
+<img src="public/imgs/Flights.PNG" alt="Flights" width="500"/> <img src="public/imgs/dashBoard.PNG" alt="Dashboard" width="500"/> <img src="public/imgs/MyTrips.PNG" alt="MyTrips" width="500"/> <img src="public/imgs/explore.jpeg" alt="Explore" width="500"/>
+
+---
