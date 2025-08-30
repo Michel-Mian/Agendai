@@ -10,7 +10,7 @@ class Viagens extends Model
     public $incrementing = true; 
     public $keyType = 'int';
     
-    // Relação com o usuário (User)
+    // Relação com  usuário (User)
     public function user()
     {
         return $this->belongsTo(User::class, 'fk_id_usuario', 'id');
@@ -38,5 +38,22 @@ class Viagens extends Model
     public function voos()
     {
         return $this->hasMany(Voos::class, 'fk_id_viagem', 'pk_id_viagem');
+    }
+
+    public function hotel()
+    {
+        return $this->hasMany(Hotel::class, 'fk_id_viagem', 'pk_id_viagem');
+    }
+
+    // Relação com os seguros (Seguros)
+    public function seguros()
+    {
+        return $this->hasMany(Seguros::class, 'fk_id_viagem', 'pk_id_viagem');
+    }
+
+    // Relação com o seguro selecionado
+    public function seguroSelecionado()
+    {
+        return $this->belongsTo(Seguros::class, 'fk_id_seguro_selecionado', 'pk_id_seguro');
     }
 }
