@@ -85,17 +85,23 @@ class DashBoardController extends Controller
             $labels[] = date('d/m/Y', $item['timestamp']);
             $data[] = (float) $item['bid'];
         }
-        // Render the dashboard view with all data
-        return view('dashboard', [
+        $viagensFlutter = $viagens->toArray();
+        // Resposta condicional: JSON ou view
+        $dados = [
             'user' => $user,
             'viagens' => $viagens,
+            'viagensFlutter' => $viagensFlutter,
             'currencies' => $currencies,
             'cotacao' => $cotacao,
             'historico' => $historico,
             'labels' => $labels,
             'data' => $data,
             'title' => 'Dashboard',
-        ]);
+        ];
+        if (request()->wantsJson()) {
+            return response()->json($dados);
+        }
+        return view('dashboard', $dados);
     }
 
     /**
