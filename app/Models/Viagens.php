@@ -10,6 +10,17 @@ class Viagens extends Model
     public $incrementing = true; 
     public $keyType = 'int';
     
+    // Campos que podem ser preenchidos via mass assignment
+    protected $fillable = [
+        'destino_viagem',
+        'origem_viagem', 
+        'data_inicio_viagem',
+        'data_final_viagem',
+        'orcamento_viagem',
+        'fk_id_usuario',
+        'fk_id_seguro_selecionado'
+    ];
+    
     // Relação com  usuário (User)
     public function user()
     {

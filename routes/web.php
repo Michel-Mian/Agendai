@@ -47,6 +47,8 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/myTrips', [ViagensController::class, 'index'])->name('myTrips');
 
     Route::get('/viagens/{id}', [ViagensController::class, 'show'])->name('viagens');
+    Route::patch('/viagens/{id}/update', [ViagensController::class, 'updateViagem'])->name('viagens.update');
+    Route::delete('/viagens/{id}', [ViagensController::class, 'destroyViagem'])->name('viagens.destroy');
 
     // Exportar PDF da viagem
     Route::get('/viagens/{id}/exportar-pdf', [ViagemPdfController::class, 'export'])->name('viagens.exportar_pdf');

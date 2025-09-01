@@ -11,6 +11,9 @@ use App\Models\PontoInteresse;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 Carbon::setLocale('pt_BR');
 
 
@@ -266,5 +269,179 @@ class ViagensController extends Controller
             ];
         }
         return null;
+    }
+
+    /**
+     * Atualiza campos específicos de uma viagem
+     */
+    public function updateViagem(Request $request, $id)
+    {
+        try {
+            $viagem = Viagens::findOrFail($id);
+            
+            // Verificar se o usuário tem permissão para editar
+            if ($viagem->fk_id_usuario !== auth()->id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Você não tem permissão para editar esta viagem.'
+                ], 403);
+            }
+
+            // Regras de validação
+            $rules = [];
+            $messages = [];
+
+            if ($request->has('destino_viagem')) {
+                $rules['destino_viagem'] = 'required|string|max:255';
+                $messages['destino_viagem.required'] = 'O destino é obrigatório.';
+            }
+
+            if ($request->has('origem_viagem')) {
+                $rules['origem_viagem'] = 'required|string|max:255';
+                $messages['origem_viagem.required'] = 'A origem é obrigatória.';
+            }
+
+            if ($request->has('data_inicio_viagem')) {
+                $rules['data_inicio_viagem'] = 'required|date';
+                $messages['data_inicio_viagem.required'] = 'A data de início é obrigatória.';
+            }
+
+            if ($request->has('data_final_viagem')) {
+                $rules['data_final_viagem'] = 'required|date|after_or_equal:data_inicio_viagem';
+                $messages['data_final_viagem.required'] = 'A data final é obrigatória.';
+                $messages['data_final_viagem.after_or_equal'] = 'A data final deve ser posterior ou igual à data de início.';
+            }
+
+            if ($request->has('orcamento_viagem')) {
+                $rules['orcamento_viagem'] = 'required|numeric|min:0';
+                $messages['orcamento_viagem.required'] = 'O orçamento é obrigatório.';
+                $messages['orcamento_viagem.min'] = 'O orçamento deve ser maior que zero.';
+            }
+
+            // Validar dados
+            $validator = \Validator::make($request->all(), $rules, $messages);
+            
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ], 422);
+            }
+
+            // Atualizar apenas os campos enviados
+            $updateData = $request->only([
+                'destino_viagem', 
+                'origem_viagem', 
+                'data_inicio_viagem', 
+                'data_final_viagem', 
+                'orcamento_viagem'
+            ]);
+
+            $viagem->update($updateData);
+
+            Log::info('Viagem atualizada com sucesso', [
+                'viagem_id' => $id,
+                'user_id' => auth()->id(),
+                'updated_fields' => array_keys($updateData)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Viagem atualizada com sucesso!',
+                'data' => $updateData
+            ]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Viagem não encontrada.'
+            ], 404);
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao atualizar viagem', [
+                'viagem_id' => $id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor. Tente novamente.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove uma viagem e todos os dados relacionados
+     */
+    public function destroyViagem($id)
+    {
+        try {
+            $viagem = Viagens::findOrFail($id);
+            
+            // Verificar se o usuário tem permissão para excluir
+            if ($viagem->fk_id_usuario !== auth()->id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Você não tem permissão para excluir esta viagem.'
+                ], 403);
+            }
+
+            // Iniciar transação para garantir integridade dos dados
+            \DB::beginTransaction();
+
+            try {
+                // Excluir registros relacionados
+                PontoInteresse::where('fk_id_viagem', $id)->delete();
+                Hotel::where('fk_id_viagem', $id)->delete();
+                $viagem->voos()->delete();
+                $viagem->viajantes()->delete();
+                $viagem->objetivos()->delete();
+                
+                // Excluir seguros relacionados se existir relacionamento
+                if (method_exists($viagem, 'seguros')) {
+                    $viagem->seguros()->delete();
+                }
+                
+                // Excluir a viagem
+                $viagem->delete();
+
+                \DB::commit();
+
+                \Log::info('Viagem excluída com sucesso', [
+                    'viagem_id' => $id,
+                    'user_id' => auth()->id()
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Viagem excluída com sucesso!'
+                ]);
+
+            } catch (\Exception $e) {
+                \DB::rollback();
+                throw $e;
+            }
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Viagem não encontrada.'
+            ], 404);
+
+        } catch (\Exception $e) {
+            \Log::error('Erro ao excluir viagem', [
+                'viagem_id' => $id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor. Tente novamente.'
+            ], 500);
+        }
     }
 }
