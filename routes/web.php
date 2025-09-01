@@ -11,6 +11,7 @@ use App\http\controllers\HotelsController;
 use App\http\controllers\MobileController;
 use Illuminate\Http\Request;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
+use App\Http\Controllers\ViagemPdfController;
 use App\Http\Controllers\TripController;
 
 Route::get('/', function () {
@@ -47,6 +48,9 @@ Route::middleware(['auth'])->group(function (){
 
     Route::get('/viagens/{id}', [ViagensController::class, 'show'])->name('viagens');
 
+    // Exportar PDF da viagem
+    Route::get('/viagens/{id}/exportar-pdf', [ViagemPdfController::class, 'export'])->name('viagens.exportar_pdf');
+
     Route::delete('/viajantes/{id}', [ViagensController::class, 'destroy'])->name('viajantes.destroy');
     Route::post('/viajantes', [ViagensController::class, 'addViajante'])->name('viajantes.store');
 
@@ -76,4 +80,5 @@ Route::middleware(['auth'])->group(function (){
     Route::post('/hotels/{id}', [HotelsController::class, 'addToTrip'])->name('hotels.addToTrip');
     Route::get('/trip/insurances', [TripController::class, 'getInsurancesAjax']);
     Route::post('/trip/update-insurance', [TripController::class, 'updateInsuranceAjax']);
+
 });

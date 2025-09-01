@@ -17,9 +17,17 @@ return new class extends Migration
             $table->dateTime('data_hora_partida')->nullable(false);
             $table->dateTime('data_hora_chegada')->nullable(false);
             $table->string('origem_voo', 100)->nullable(false);
+            $table->string('origem_nome_voo', 100)->nullable(false);
             $table->string('destino_voo', 100)->nullable(false);
+            $table->string('destino_nome_voo', 100)->nullable(false);
+            $table->string('conexao_voo', 100)->nullable(true);
+            $table->string('conexao_nome_voo', 100)->nullable(true);
+            $table->string('conexao_destino_voo', 100)->nullable(true);
+            $table->string('conexao_nome_destino_voo', 100)->nullable(true);
+            $table->string('classe_voo', 100)->nullable(false);
             $table->string('companhia_voo', 100)->nullable(false);
             $table->float('preco_voo')->nullable(false);
+            $table->string('numero_voo', 50)->nullable(true);
             $table->unsignedBigInteger('fk_id_viagem')->nullable(false);
             $table->timestamps();
             $table->foreign('fk_id_viagem')->references('pk_id_viagem')->on('viagens')->onDelete('cascade');

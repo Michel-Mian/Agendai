@@ -47,6 +47,7 @@
                                         <div class="text-center">
                                             <div class="text-sm text-gray-500">Origem</div>
                                             <div class="font-semibold text-gray-800">{{ $voo->origem_voo }}</div>
+                                            <div class="text-xs text-gray-500">{{ $voo->origem_nome_voo }}</div>
                                         </div>
                                         <div class="flex items-center space-x-2 text-blue-500">
                                             <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -58,8 +59,25 @@
                                         <div class="text-center">
                                             <div class="text-sm text-gray-500">Destino</div>
                                             <div class="font-semibold text-gray-800">{{ $voo->destino_voo }}</div>
+                                            <div class="text-xs text-gray-500">{{ $voo->destino_nome_voo }}</div>
                                         </div>
                                     </div>
+                                </div>
+                                <div class="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-gray-700">
+                                    <div>
+                                        <span class="font-semibold">Classe:</span> {{ $voo->classe_voo ?? '-' }}
+                                    </div>
+                                    <div>
+                                        <span class="font-semibold">Nº Voo:</span> {{ $voo->numero_voo ?? '-' }}
+                                    </div>
+                                    <div>
+                                        <span class="font-semibold">Preço:</span> R$ {{ number_format($voo->preco_voo, 2, ',', '.') ?? '-' }}
+                                    </div>
+                                    @if($voo->conexao_voo)
+                                    <div class="col-span-2">
+                                        <span class="font-semibold">Conexão:</span> {{ $voo->conexao_voo }} - {{ $voo->conexao_nome_voo }}
+                                    </div>
+                                    @endif
                                 </div>
                             </div>
                     @endforeach
