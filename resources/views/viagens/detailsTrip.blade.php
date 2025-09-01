@@ -116,9 +116,14 @@
                                             <div class="bg-gray-700 rounded-xl p-3">
                                                 <i class="fas fa-map-marked-alt text-white text-2xl"></i>
                                             </div>
-                                            <div>
-                                                <h1 class="text-4xl font-bold text-gray-800 mb-1">{{ $viagem->destino_viagem }}</h1>
-                                                <p class="text-blue-600 text-lg">Sua próxima aventura te espera</p>
+                                            <div class="flex flex-col md:flex-row md:items-center md:space-x-4">
+                                                <div>
+                                                    <h1 class="text-4xl font-bold text-gray-800 mb-1">{{ $viagem->destino_viagem }}</h1>
+                                                    <p class="text-blue-600 text-lg">Sua próxima aventura te espera</p>
+                                                </div>
+                                                <a href="{{ route('viagens.exportar_pdf', $viagem->pk_id_viagem) }}" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-black font-semibold rounded-lg shadow hover:from-green-600 hover:to-blue-600 transition ml-0 md:ml-4 mt-3 md:mt-0" target="_blank">
+                                                    <i class="fas fa-file-pdf mr-2"></i> Exportar PDF
+                                                </a>
                                             </div>
                                         </div>
 
