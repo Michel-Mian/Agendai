@@ -117,13 +117,35 @@
                                                 <i class="fas fa-map-marked-alt text-white text-2xl"></i>
                                             </div>
                                             <div class="flex flex-col md:flex-row md:items-center md:space-x-4">
-                                                <div>
-                                                    <h1 class="text-4xl font-bold text-gray-800 mb-1">{{ $viagem->destino_viagem }}</h1>
-                                                    <p class="text-blue-600 text-lg">Sua próxima aventura te espera</p>
+                                                <div class="relative group">
+                                                    <div class="destino-display">
+                                                        <h1 class="text-4xl font-bold text-gray-800 mb-1">{{ $viagem->destino_viagem }}</h1>
+                                                        <p class="text-blue-600 text-lg">Sua próxima aventura te espera</p>
+                                                    </div>
+                                                    <div class="destino-edit hidden">
+                                                        <input type="text" id="edit-destino-input" class="destino-input places-autocomplete text-4xl font-bold text-gray-800 mb-1 bg-white border-2 border-blue-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="{{ $viagem->destino_viagem }}" autocomplete="off">
+                                                        <p class="text-blue-600 text-lg">Sua próxima aventura te espera</p>
+                                                        <div class="flex space-x-2 mt-2">
+                                                            <button class="save-destino-btn px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition">
+                                                                <i class="fas fa-check mr-1"></i>Salvar
+                                                            </button>
+                                                            <button class="cancel-destino-btn px-3 py-1 bg-gray-400 text-white text-sm rounded hover:bg-gray-500 transition">
+                                                                <i class="fas fa-times mr-1"></i>Cancelar
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <button class="edit-destino-btn absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-white hover:bg-blue-50 rounded-full shadow-lg border border-blue-200" title="Editar destino">
+                                                        <i class="fas fa-edit text-blue-700 text-sm"></i>
+                                                    </button>
                                                 </div>
-                                                <a href="{{ route('viagens.exportar_pdf', $viagem->pk_id_viagem) }}" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-black font-semibold rounded-lg shadow hover:from-green-600 hover:to-blue-600 transition ml-0 md:ml-4 mt-3 md:mt-0" target="_blank">
-                                                    <i class="fas fa-file-pdf mr-2"></i> Exportar PDF
-                                                </a>
+                                                <div class="flex items-center space-x-3 ml-0 md:ml-4 mt-3 md:mt-0">
+                                                    <a href="{{ route('viagens.exportar_pdf', $viagem->pk_id_viagem) }}" class="inline-flex items-center px-4 py-2 bg-green-400 hover:bg-white hover:text-green-400 text-black hover:border-2 hover:border-green-400 font-semibold rounded-lg shadow transition" target="_blank">
+                                                        <i class="fas fa-file-pdf mr-2"></i> Exportar PDF
+                                                    </a>
+                                                    <button id="delete-trip-btn" data-trip-id="{{ $viagem->pk_id_viagem }}" class="inline-flex items-center px-4 py-2 text-slate-900 hover:text-white hover:bg-red-500 font-semibold rounded-lg shadow transition">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -183,91 +205,151 @@
                         <div class="p-8">
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                 <!-- Origem -->
-                                <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+                                <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200 relative group">
                                     <div class="flex items-center space-x-3 mb-3">
                                         <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center p-6">
                                             <i class="fas fa-plane-departure text-white text-lg"></i>
                                         </div>
-                                        <div>
+                                        <div class="flex-1">
                                             <div class="text-green-800 font-semibold text-lg">Origem</div>
                                             <div class="text-green-600 text-sm">Ponto de partida</div>
                                         </div>
+                                        <button class="edit-origem-btn opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 hover:bg-green-200 rounded-lg" title="Editar origem">
+                                            <i class="fas fa-edit text-green-700 text-sm"></i>
+                                        </button>
                                     </div>
-                                    <div class="text-gray-800 font-bold text-xl">{{ $viagem->origem_viagem }}</div>
+                                    <div class="origem-display">
+                                        <div class="text-gray-800 font-bold text-xl">{{ $viagem->origem_viagem }}</div>
+                                    </div>
+                                    <div class="origem-edit hidden">
+                                        <input type="text" id="edit-origem-input" class="origem-input places-autocomplete w-full px-3 py-2 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-800 font-bold text-xl bg-white" value="{{ $viagem->origem_viagem }}" autocomplete="off">
+                                        <div class="flex space-x-2 mt-2">
+                                            <button class="save-origem-btn px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition">
+                                                <i class="fas fa-check mr-1"></i>Salvar
+                                            </button>
+                                            <button class="cancel-origem-btn px-3 py-1 bg-gray-400 text-white text-sm rounded hover:bg-gray-500 transition">
+                                                <i class="fas fa-times mr-1"></i>Cancelar
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <!-- Período -->
-                                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+                                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200 relative group">
                                     <div class="flex items-center space-x-3 mb-3">
                                         <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center p-6">
                                             <i class="fas fa-calendar-alt text-white text-lg"></i>
                                         </div>
-                                        <div>
+                                        <div class="flex-1">
                                             <div class="text-blue-800 font-semibold text-lg">Período</div>
                                             <div class="text-blue-600 text-sm">Datas da viagem</div>
                                         </div>
+                                        <button class="edit-datas-btn opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 hover:bg-blue-200 rounded-lg" title="Editar datas">
+                                            <i class="fas fa-edit text-blue-700 text-sm"></i>
+                                        </button>
                                     </div>
-                                    <div class="space-y-1">
-                                        <div class="text-gray-800 font-bold">{{ \Carbon\Carbon::parse($viagem->data_inicio_viagem)->format('d/m/Y') }}</div>
-                                        <div class="text-gray-500 text-sm flex items-center">
-                                            <i class="fas fa-arrow-down mr-1"></i>
-                                            até
+                                    <div class="datas-display">
+                                        <div class="space-y-1">
+                                            <div class="text-gray-800 font-bold">{{ \Carbon\Carbon::parse($viagem->data_inicio_viagem)->format('d/m/Y') }}</div>
+                                            <div class="text-gray-500 text-sm flex items-center">
+                                                <i class="fas fa-arrow-down mr-1"></i>
+                                                até
+                                            </div>
+                                            <div class="text-gray-800 font-bold">{{ \Carbon\Carbon::parse($viagem->data_final_viagem)->format('d/m/Y') }}</div>
                                         </div>
-                                        <div class="text-gray-800 font-bold">{{ \Carbon\Carbon::parse($viagem->data_final_viagem)->format('d/m/Y') }}</div>
+                                    </div>
+                                    <div class="datas-edit hidden">
+                                        <div class="space-y-3">
+                                            <div>
+                                                <label class="block text-xs text-blue-700 mb-1">Data Início:</label>
+                                                <input type="date" class="data-inicio-input w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 font-bold bg-white" value="{{ $viagem->data_inicio_viagem }}">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-blue-700 mb-1">Data Fim:</label>
+                                                <input type="date" class="data-fim-input w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 font-bold bg-white" value="{{ $viagem->data_final_viagem }}">
+                                            </div>
+                                            <div class="flex space-x-2">
+                                                <button class="save-datas-btn px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition">
+                                                    <i class="fas fa-check mr-1"></i>Salvar
+                                                </button>
+                                                <button class="cancel-datas-btn px-3 py-1 bg-gray-400 text-white text-sm rounded hover:bg-gray-500 transition">
+                                                    <i class="fas fa-times mr-1"></i>Cancelar
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 
                                 <!-- Orçamento -->
-                                <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+                                <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200 relative group">
                                     <div class="flex space-x-3 mb-3">
                                         <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center p-6">
                                             <i class="fas fa-wallet text-white text-lg"></i>
                                         </div>
-                                        <div>
+                                        <div class="flex-1">
                                             <div class="text-purple-800 font-semibold text-lg">Orçamento</div>
                                             <div class="text-purple-600 text-sm">Valor planejado</div>
                                         </div>
-                                        <div class="w-full flex items-center justify-end">
+                                        <div class="flex items-center space-x-2">
+                                            <button class="edit-orcamento-btn opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 hover:bg-purple-200 rounded-lg" title="Editar orçamento">
+                                                <i class="fas fa-edit text-purple-700 text-sm"></i>
+                                            </button>
                                             <button class="m-0 bg-transparent cursor-pointer" id="modal_orc" type="button" title="Orçamento da Viagem">
                                                 <i class="fa-solid fa-circle-info text-lg text-purple-600"></i>
                                             </button>
                                         </div>
                                     </div>
-                                    <div class="text-gray-800 font-bold text-xl">R$ {{ number_format($viagem->orcamento_viagem, 2, ',', '.') }}</div>
-                                    <div class="text-purple-600 text-sm mt-1">
-                                        <i class="fas fa-info-circle mr-1"></i>
-                                        Orçamento total
+                                    <div class="orcamento-display">
+                                        <div class="text-gray-800 font-bold text-xl">R$ {{ number_format($viagem->orcamento_viagem, 2, ',', '.') }}</div>
+                                        <div class="text-purple-600 text-sm mt-1">
+                                            <i class="fas fa-info-circle mr-1"></i>
+                                            Orçamento total
+                                        </div>
+                                        <div class="text-gray-800 font-bold text-xl">R$ 
+                                            @php
+                                                $orcamento_liquido = $viagem->orcamento_viagem;
+                                            @endphp
+                                            @foreach ($viagem->hotel as $hotel)
+                                                @if($hotel->preco && $hotel->data_check_in && $hotel->data_check_out)
+                                                    @php
+                                                        $checkin = \Carbon\Carbon::parse($hotel->data_check_in);
+                                                        $checkout = \Carbon\Carbon::parse($hotel->data_check_out);
+                                                        $noites = $checkin->diffInDays($checkout);
+                                                        // Remove "R$", espaços e troca vírgula por ponto
+                                                        $precoFloat = convertToFloat($hotel->preco);
+                                                        $total = $precoFloat * $noites;
+                                                        $orcamento_liquido -= $total;
+                                                    @endphp
+                                                @endif
+                                            @endforeach
+                                            @foreach ($voos as $voo)
+                                                @if($voo->preco_voo)
+                                                    @php
+                                                        $precoFloat = $voo->preco_voo;
+                                                        $orcamento_liquido -= $precoFloat;
+                                                    @endphp
+                                                @endif
+                                            @endforeach
+                                            {{ number_format($orcamento_liquido, 2, ',', '.') }}
+                                        </div>
+                                        <div class="text-purple-600 text-sm mt-1">
+                                            <i class="fas fa-info-circle mr-1"></i>
+                                            Orçamento líquido
+                                        </div>
                                     </div>
-                                    <div class="text-gray-800 font-bold text-xl">R$ 
-                                        @php
-                                            $orcamento_liquido = $viagem->orcamento_viagem;
-                                        @endphp
-                                        @foreach ($viagem->hotel as $hotel)
-                                            @if($hotel->preco && $hotel->data_check_in && $hotel->data_check_out)
-                                                @php
-                                                    $checkin = \Carbon\Carbon::parse($hotel->data_check_in);
-                                                    $checkout = \Carbon\Carbon::parse($hotel->data_check_out);
-                                                    $noites = $checkin->diffInDays($checkout);
-                                                    // Remove "R$", espaços e troca vírgula por ponto
-                                                    $precoFloat = convertToFloat($hotel->preco);
-                                                    $total = $precoFloat * $noites;
-                                                    $orcamento_liquido -= $total;
-                                                @endphp
-                                            @endif
-                                        @endforeach
-                                        @foreach ($voos as $voo)
-                                            @if($voo->preco_voo)
-                                                @php
-                                                    $precoFloat = $voo->preco_voo;
-                                                    $orcamento_liquido -= $precoFloat;
-                                                @endphp
-                                            @endif
-                                        @endforeach
-                                        {{ number_format($orcamento_liquido, 2, ',', '.') }}
-                                    </div>
-                                    <div class="text-purple-600 text-sm mt-1">
-                                        <i class="fas fa-info-circle mr-1"></i>
-                                        Orçamento líquido
+                                    <div class="orcamento-edit hidden">
+                                        <div>
+                                            <label class="block text-xs text-purple-700 mb-1">Orçamento Total (R$):</label>
+                                            <input type="number" step="0.01" class="orcamento-input w-full px-3 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-800 font-bold text-xl bg-white" value="{{ $viagem->orcamento_viagem }}">
+                                            <div class="flex space-x-2 mt-2">
+                                                <button class="save-orcamento-btn px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 transition">
+                                                    <i class="fas fa-check mr-1"></i>Salvar
+                                                </button>
+                                                <button class="cancel-orcamento-btn px-3 py-1 bg-gray-400 text-white text-sm rounded hover:bg-gray-500 transition">
+                                                    <i class="fas fa-times mr-1"></i>Cancelar
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -398,6 +480,68 @@
     <!-- Modal de orçamento -->
     @include('components.myTrips.modals.orcamentoModal')
 
+    <!-- Modal de confirmação de exclusão -->
+    <div id="delete-trip-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div id="delete-trip-modal-panel" class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform scale-95 opacity-0 transition-all duration-300">
+            <!-- Header do modal -->
+            <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-exclamation-triangle text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-red-800">Confirmar Exclusão</h3>
+                            <p class="text-red-600 text-sm">Esta ação não pode ser desfeita</p>
+                        </div>
+                    </div>
+                    <button id="close-delete-modal-btn" class="bg-white/20 hover:bg-white/30 text-white p-2 rounded-lg transition-colors">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Corpo do modal -->
+            <div class="p-6">
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-trash-alt text-red-600 text-2xl"></i>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Excluir viagem para {{ $viagem->destino_viagem }}?</h4>
+                    <p class="text-gray-600 text-sm">
+                        Todos os dados relacionados à viagem serão permanentemente removidos, incluindo:
+                    </p>
+                    <ul class="text-gray-500 text-sm mt-3 space-y-1">
+                        <li>• Pontos de interesse e roteiros</li>
+                        <li>• Informações de voos e hotéis</li>
+                        <li>• Viajantes e objetivos</li>
+                        <li>• Histórico e preferências</li>
+                    </ul>
+                </div>
+
+                <!-- Campo de confirmação -->
+                <div class="mb-6">
+                    <label for="delete-confirmation" class="block text-sm font-medium text-gray-700 mb-2">
+                        Digite "EXCLUIR" para confirmar:
+                    </label>
+                    <input type="text" id="delete-confirmation" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors" placeholder="Digite EXCLUIR">
+                </div>
+
+                <!-- Botões de ação -->
+                <div class="flex space-x-3">
+                    <button id="cancel-delete-btn" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2">
+                        <i class="fas fa-times"></i>
+                        <span>Cancelar</span>
+                    </button>
+                    <button id="confirm-delete-btn" disabled class="flex-1 bg-gray-300 text-gray-500 font-semibold py-3 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 cursor-not-allowed">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Confirmar Exclusão</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de Viajantes -->
     @include('components.myTrips.modals.viajantesModal')
 
@@ -416,7 +560,9 @@
     @include('components.myTrips.modals.addInsurance')
     @include('components.myTrips.modals.insuranceModal')
 
-    <script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places,geometry" async defer></script>
+    <!-- Scripts externos -->
+    <script src="{{ asset('js/inlineEditManager.js') }}"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places,geometry&callback=initInlineEditMap" async defer></script>
     
     <!-- Script para controle das tabs -->
     <script>
@@ -452,52 +598,241 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const openOrcamentoModalBtn = document.getElementById('modal_orc');
-            const closeOrcamentoModalBtn = document.getElementById('close-orcamento-modal-btn');
-            const closeOrcamentoModalFooterBtn = document.getElementById('close-objetivos-modal-footer-btn');
-            const orcamentoModal = document.getElementById('orcamento-modal');
-            const orcamentoModalPanel = document.getElementById('orcamento-modal-panel');
-            const orcamentoModalOverlay = document.getElementById('orcamento-modal-overlay');
+            // Classe para gerenciar modais de forma organizada
+            class TripModalManager {
+                constructor() {
+                    this.initializeDeleteModal();
+                    this.initializeOrcamentoModal();
+                }
 
-            // Função para abrir o modal
-            const openOrcamentoModal = () => {
-                orcamentoModal.classList.remove('hidden');
-                orcamentoModal.classList.add('flex');
-                document.body.style.overflow = 'hidden';
-                setTimeout(() => {
-                    orcamentoModalPanel.classList.remove('scale-95', 'opacity-0');
-                    orcamentoModalPanel.classList.add('scale-100', 'opacity-100');
-                }, 10);
-            };
+                // Gerenciamento do modal de exclusão
+                initializeDeleteModal() {
+                    this.deleteTripBtn = document.getElementById('delete-trip-btn');
+                    this.deleteTripModal = document.getElementById('delete-trip-modal');
+                    this.deleteTripModalPanel = document.getElementById('delete-trip-modal-panel');
+                    this.closeDeleteModalBtn = document.getElementById('close-delete-modal-btn');
+                    this.cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+                    this.confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+                    this.deleteConfirmationInput = document.getElementById('delete-confirmation');
 
-            // Função para fechar o modal
-            const closeOrcamentoModal = () => {
-                if (!orcamentoModalPanel) return;
-                orcamentoModalPanel.classList.remove('scale-100', 'opacity-100');
-                orcamentoModalPanel.classList.add('scale-95', 'opacity-0');
-                setTimeout(() => {
-                    orcamentoModal.classList.add('hidden');
-                    orcamentoModal.classList.remove('flex');
-                    document.body.style.overflow = '';
-                }, 300);
-            };
+                    this.bindDeleteModalEvents();
+                }
 
-            // Eventos de abrir
-            if (openOrcamentoModalBtn) openOrcamentoModalBtn.addEventListener('click', openOrcamentoModal);
+                bindDeleteModalEvents() {
+                    if (this.deleteTripBtn) {
+                        this.deleteTripBtn.addEventListener('click', () => this.openDeleteModal());
+                    }
 
-            // Eventos de fechar
-            if (closeOrcamentoModalBtn) closeOrcamentoModalBtn.addEventListener('click', closeOrcamentoModal);
-            if (closeOrcamentoModalFooterBtn) closeOrcamentoModalFooterBtn.addEventListener('click', closeOrcamentoModal);
-            if (orcamentoModalOverlay) orcamentoModalOverlay.addEventListener('click', closeOrcamentoModal);
+                    if (this.closeDeleteModalBtn) {
+                        this.closeDeleteModalBtn.addEventListener('click', () => this.closeDeleteModal());
+                    }
 
-            // Escape fecha o modal
-            document.addEventListener('keydown', (event) => {
-                if (event.key === 'Escape') {
-                    if (orcamentoModal && !orcamentoModal.classList.contains('hidden')) {
-                        closeOrcamentoModal();
+                    if (this.cancelDeleteBtn) {
+                        this.cancelDeleteBtn.addEventListener('click', () => this.closeDeleteModal());
+                    }
+
+                    if (this.confirmDeleteBtn) {
+                        this.confirmDeleteBtn.addEventListener('click', () => this.deleteTrip());
+                    }
+
+                    if (this.deleteConfirmationInput) {
+                        this.deleteConfirmationInput.addEventListener('input', () => this.updateDeleteButton());
+                        this.deleteConfirmationInput.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter' && !this.confirmDeleteBtn.disabled) {
+                                this.deleteTrip();
+                            }
+                        });
+                    }
+
+                    // Eventos globais
+                    document.addEventListener('keydown', (e) => {
+                        if (e.key === 'Escape' && this.isDeleteModalOpen()) {
+                            this.closeDeleteModal();
+                        }
+                    });
+
+                    if (this.deleteTripModal) {
+                        this.deleteTripModal.addEventListener('click', (e) => {
+                            if (e.target === this.deleteTripModal) {
+                                this.closeDeleteModal();
+                            }
+                        });
                     }
                 }
-            });
+
+                openDeleteModal() {
+                    if (!this.deleteTripModal) return;
+                    
+                    this.deleteTripModal.classList.remove('hidden');
+                    this.deleteTripModal.classList.add('flex');
+                    document.body.style.overflow = 'hidden';
+                    
+                    setTimeout(() => {
+                        this.deleteTripModalPanel.classList.remove('scale-95', 'opacity-0');
+                        this.deleteTripModalPanel.classList.add('scale-100', 'opacity-100');
+                    }, 10);
+                }
+
+                closeDeleteModal() {
+                    if (!this.deleteTripModalPanel) return;
+                    
+                    this.deleteTripModalPanel.classList.remove('scale-100', 'opacity-100');
+                    this.deleteTripModalPanel.classList.add('scale-95', 'opacity-0');
+                    
+                    setTimeout(() => {
+                        this.deleteTripModal.classList.add('hidden');
+                        this.deleteTripModal.classList.remove('flex');
+                        document.body.style.overflow = '';
+                        this.resetDeleteModal();
+                    }, 300);
+                }
+
+                resetDeleteModal() {
+                    if (this.deleteConfirmationInput) {
+                        this.deleteConfirmationInput.value = '';
+                    }
+                    this.updateDeleteButton();
+                }
+
+                updateDeleteButton() {
+                    if (!this.confirmDeleteBtn || !this.deleteConfirmationInput) return;
+                    
+                    const inputValue = this.deleteConfirmationInput.value.trim().toUpperCase();
+                    const isValid = inputValue === 'EXCLUIR';
+
+                    this.confirmDeleteBtn.disabled = !isValid;
+                    
+                    if (isValid) {
+                        this.confirmDeleteBtn.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                        this.confirmDeleteBtn.classList.add('bg-red-600', 'hover:bg-red-700', 'text-white', 'cursor-pointer');
+                    } else {
+                        this.confirmDeleteBtn.classList.remove('bg-red-600', 'hover:bg-red-700', 'text-white', 'cursor-pointer');
+                        this.confirmDeleteBtn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+                    }
+                }
+
+                async deleteTrip() {
+                    const tripId = this.deleteTripBtn.dataset.tripId;
+                    
+                    this.setDeleteButtonLoading(true);
+
+                    try {
+                        const response = await fetch(`/viagens/${tripId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            setTimeout(() => {
+                                window.location.href = '/myTrips';
+                            }, 1500);
+                        } else {
+                            this.showNotification(data.message || 'Erro ao excluir viagem', 'error');
+                            this.closeDeleteModal();
+                        }
+                    } catch (error) {
+                        console.error('Erro:', error);
+                        this.showNotification('Erro ao excluir viagem. Tente novamente.', 'error');
+                        this.closeDeleteModal();
+                    } finally {
+                        this.setDeleteButtonLoading(false);
+                    }
+                }
+
+                setDeleteButtonLoading(isLoading) {
+                    if (!this.confirmDeleteBtn) return;
+                    
+                    this.confirmDeleteBtn.disabled = true;
+                    
+                    if (isLoading) {
+                        this.confirmDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Excluindo...';
+                    } else {
+                        this.confirmDeleteBtn.innerHTML = '<i class="fas fa-trash-alt mr-2"></i><span>Confirmar Exclusão</span>';
+                    }
+                }
+
+                isDeleteModalOpen() {
+                    return this.deleteTripModal && !this.deleteTripModal.classList.contains('hidden');
+                }
+
+                showNotification(message, type = 'info') {
+                    if (typeof showNotification === 'function') {
+                        showNotification(message, type);
+                    } else {
+                        alert(message);
+                    }
+                }
+
+                // Gerenciamento do modal de orçamento (código existente)
+                initializeOrcamentoModal() {
+                    const openOrcamentoModalBtn = document.getElementById('modal_orc');
+                    const closeOrcamentoModalBtn = document.getElementById('close-orcamento-modal-btn');
+                    const closeOrcamentoModalFooterBtn = document.getElementById('close-objetivos-modal-footer-btn');
+                    const orcamentoModal = document.getElementById('orcamento-modal');
+                    const orcamentoModalPanel = document.getElementById('orcamento-modal-panel');
+                    const orcamentoModalOverlay = document.getElementById('orcamento-modal-overlay');
+
+                    const openOrcamentoModal = () => {
+                        orcamentoModal.classList.remove('hidden');
+                        orcamentoModal.classList.add('flex');
+                        document.body.style.overflow = 'hidden';
+                        setTimeout(() => {
+                            orcamentoModalPanel.classList.remove('scale-95', 'opacity-0');
+                            orcamentoModalPanel.classList.add('scale-100', 'opacity-100');
+                        }, 10);
+                    };
+
+                    const closeOrcamentoModal = () => {
+                        if (!orcamentoModalPanel) return;
+                        orcamentoModalPanel.classList.remove('scale-100', 'opacity-100');
+                        orcamentoModalPanel.classList.add('scale-95', 'opacity-0');
+                        setTimeout(() => {
+                            orcamentoModal.classList.add('hidden');
+                            orcamentoModal.classList.remove('flex');
+                            document.body.style.overflow = '';
+                        }, 300);
+                    };
+
+                    if (openOrcamentoModalBtn) openOrcamentoModalBtn.addEventListener('click', openOrcamentoModal);
+                    if (closeOrcamentoModalBtn) closeOrcamentoModalBtn.addEventListener('click', closeOrcamentoModal);
+                    if (closeOrcamentoModalFooterBtn) closeOrcamentoModalFooterBtn.addEventListener('click', closeOrcamentoModal);
+                    if (orcamentoModalOverlay) orcamentoModalOverlay.addEventListener('click', closeOrcamentoModal);
+
+                    document.addEventListener('keydown', (event) => {
+                        if (event.key === 'Escape') {
+                            if (orcamentoModal && !orcamentoModal.classList.contains('hidden')) {
+                                closeOrcamentoModal();
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Inicializar os gerenciadores
+            window.inlineEditManager = new InlineEditManager(window.currentTripId);
+            new TripModalManager();
+
+            // Fallback caso a API já esteja carregada
+            if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+                console.log('Google Maps já carregado - inicializando autocomplete imediatamente');
+                window.inlineEditManager.initPlacesAutocomplete();
+            } else {
+                // Tentar novamente após um delay
+                setTimeout(() => {
+                    if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+                        console.log('Google Maps carregado após delay - inicializando autocomplete');
+                        window.inlineEditManager.initPlacesAutocomplete();
+                    } else {
+                        console.log('Google Maps ainda não disponível após delay');
+                    }
+                }, 2000);
+            }
         });
     </script>
 
