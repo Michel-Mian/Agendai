@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\PontoInteresse;
+use App\Models\Hotel;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -71,6 +73,8 @@ class ExploreController extends Controller
 
     public function store(Request $request)
     {
+        $user = auth()->user();
+
         Log::info('=== ADICIONANDO PONTO DE INTERESSE ===');
         Log::info('Dados recebidos:', $request->all());
         
@@ -90,6 +94,8 @@ class ExploreController extends Controller
             'categoria' => 'nullable|string|max:100',
             'hora_ponto_interesse' => 'nullable|string',
             'data_ponto_interesse' => 'nullable|date',
+            'data_check_in' => 'nullable|date',
+            'data_check_out' => 'nullable|date',
         ]);
 
         if ($validator->fails()) {
@@ -100,26 +106,171 @@ class ExploreController extends Controller
         try {
             $validated = $validator->validated();
             
-            $ponto = PontoInteresse::create([
-                'nome_ponto_interesse' => $validated['nome_ponto_interesse'],
-                'placeid_ponto_interesse' => $validated['placeid_ponto_interesse'],
-                'desc_ponto_interesse' => $validated['desc_ponto_interesse'] ?? null,
-                'latitude' => $validated['latitude'],
-                'longitude' => $validated['longitude'],
-                'categoria' => $validated['categoria'] ?? null,
-                'hora_ponto_interesse' => $validated['hora_ponto_interesse'] ?? null,
-                'data_ponto_interesse' => $validated['data_ponto_interesse'] ?? now()->toDateString(),
-                'fk_id_viagem' => $tripId,
-            ]);
-            
-            Log::info('Ponto salvo com sucesso:', ['id' => $ponto->id]);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Ponto adicionado com sucesso!',
-                'ponto' => $ponto
-            ]);
-            
+            // Se a categoria for 'lodging', buscar dados na SerpAPI (Google Places) e salvar em hotels
+            if (isset($validated['categoria']) && strtolower($validated['categoria']) === 'lodging') {
+                $apiKey = env('SERPAPI_KEY');
+                $latitude = $validated['latitude'];
+                $longitude = $validated['longitude'];
+                $nomeHotel = $validated['nome_ponto_interesse'];
+                $dataCheckIn = $validated['data_check_in'] ?? null;
+                $dataCheckOut = $validated['data_check_out'] ?? null;
+
+                // Buscar detalhes do hotel na SerpAPI (Google Hotels)
+                $params = [
+                    'engine' => 'google_hotels',
+                    'q' => $nomeHotel,
+                    'check_in_date' => $dataCheckIn,
+                    'check_out_date' => $dataCheckOut,
+                    'api_key' => $apiKey,
+                    'hl' => 'pt-br',
+                    'gl' => 'br',
+                    'currency' => $user->currency,
+                ];
+                $response = Http::get('https://serpapi.com/search', $params);
+                $json = $response->json();
+                $hotelData = null;
+                // 1. Se vier como array de hotéis (busca)
+                if ($response->successful() && isset($json['properties']) && is_array($json['properties']) && count($json['properties']) > 0) {
+                    // Busca o hotel mais próximo pelo nome (pode melhorar usando latitude/longitude)
+                    $hotelData = collect($json['properties'])->first(function($h) use ($nomeHotel) {
+                        return isset($h['name']) && stripos($h['name'], $nomeHotel) !== false;
+                    }) ?? $json['properties'][0];
+                }
+                // 2. Se vier como objeto único (detalhe do hotel)
+                elseif ($response->successful() && (isset($json['type']) && $json['type'] === 'hotel')) {
+                    $hotelData = $json;
+                }
+                // 3. Fallback para hotels_results (antigo)
+                elseif ($response->successful() && isset($json['hotels_results'][0])) {
+                    $hotelData = $json['hotels_results'][0];
+                }
+                else {
+                    Log::error('Erro ao buscar dados do hotel na SerpAPI', [
+                        'params' => $params,
+                        'response_status' => $response->status(),
+                        'response_body' => $json
+                    ]);
+                    return response()->json([
+                        'error' => 'Não foi possível obter dados do hotel na SerpAPI.',
+                        'serpapi_response' => $json
+                    ], 500);
+                }
+
+
+                // Extrair preço do hotel de diferentes formatos possíveis e converter para float
+                $preco = null;
+                // 1. Tenta extracted_price (preferencial, já é numérico)
+                if (isset($hotelData['extracted_price']) && is_numeric($hotelData['extracted_price'])) {
+                    $preco = floatval($hotelData['extracted_price']);
+                }
+                // 2. Tenta rate_per_night/extracted_lowest
+                elseif (isset($hotelData['rate_per_night']['extracted_lowest']) && is_numeric($hotelData['rate_per_night']['extracted_lowest'])) {
+                    $preco = floatval($hotelData['rate_per_night']['extracted_lowest']);
+                }
+                // 3. Tenta price (string com símbolo)
+                elseif (isset($hotelData['price'])) {
+                    $precoStr = $hotelData['price'];
+                    $precoStr = preg_replace('/[^\d,\.]/', '', $precoStr);
+                    $precoStr = str_replace(',', '.', $precoStr);
+                    if (is_numeric($precoStr)) {
+                        $preco = floatval($precoStr);
+                    }
+                }
+                // 4. Tenta outros campos possíveis (lowest, etc)
+                elseif (isset($hotelData['rate_per_night']['lowest']) && is_numeric($hotelData['rate_per_night']['lowest'])) {
+                    $preco = floatval($hotelData['rate_per_night']['lowest']);
+                } elseif (isset($hotelData['total_rate']['lowest']) && is_numeric($hotelData['total_rate']['lowest'])) {
+                    $preco = floatval($hotelData['total_rate']['lowest']);
+                }
+                // 5. Tenta featured_prices/prices/ads arrays
+                elseif (isset($hotelData['featured_prices']) && is_array($hotelData['featured_prices'])) {
+                    foreach ($hotelData['featured_prices'] as $fp) {
+                        if (isset($fp['rate_per_night']['extracted_lowest']) && is_numeric($fp['rate_per_night']['extracted_lowest'])) {
+                            $preco = floatval($fp['rate_per_night']['extracted_lowest']);
+                            break;
+                        } elseif (isset($fp['rate_per_night']['lowest']) && is_numeric($fp['rate_per_night']['lowest'])) {
+                            $preco = floatval($fp['rate_per_night']['lowest']);
+                            break;
+                        } elseif (isset($fp['extracted_price']) && is_numeric($fp['extracted_price'])) {
+                            $preco = floatval($fp['extracted_price']);
+                            break;
+                        } elseif (isset($fp['price'])) {
+                            $precoStr = preg_replace('/[^\d,\.]/', '', $fp['price']);
+                            $precoStr = str_replace(',', '.', $precoStr);
+                            if (is_numeric($precoStr)) {
+                                $preco = floatval($precoStr);
+                                break;
+                            }
+                        }
+                    }
+                }
+                elseif (isset($hotelData['prices']) && is_array($hotelData['prices'])) {
+                    foreach ($hotelData['prices'] as $fp) {
+                        if (isset($fp['rate_per_night']['extracted_lowest']) && is_numeric($fp['rate_per_night']['extracted_lowest'])) {
+                            $preco = floatval($fp['rate_per_night']['extracted_lowest']);
+                            break;
+                        } elseif (isset($fp['rate_per_night']['lowest']) && is_numeric($fp['rate_per_night']['lowest'])) {
+                            $preco = floatval($fp['rate_per_night']['lowest']);
+                            break;
+                        } elseif (isset($fp['extracted_price']) && is_numeric($fp['extracted_price'])) {
+                            $preco = floatval($fp['extracted_price']);
+                            break;
+                        } elseif (isset($fp['price'])) {
+                            $precoStr = preg_replace('/[^\d,\.]/', '', $fp['price']);
+                            $precoStr = str_replace(',', '.', $precoStr);
+                            if (is_numeric($precoStr)) {
+                                $preco = floatval($precoStr);
+                                break;
+                            }
+                        }
+                    }
+                }
+                elseif (isset($hotelData['ads']) && is_array($hotelData['ads'])) {
+                    foreach ($hotelData['ads'] as $ad) {
+                        if (isset($ad['extracted_price']) && is_numeric($ad['extracted_price'])) {
+                            $preco = floatval($ad['extracted_price']);
+                            break;
+                        } elseif (isset($ad['price'])) {
+                            $precoStr = preg_replace('/[^\d,\.]/', '', $ad['price']);
+                            $precoStr = str_replace(',', '.', $precoStr);
+                            if (is_numeric($precoStr)) {
+                                $preco = floatval($precoStr);
+                                break;
+                            }
+                        }
+                    }
+                }
+                // Se não encontrar, define como null e loga o JSON para análise
+                if ($preco === null) {
+                    Log::warning('Preço do hotel não encontrado em nenhum campo esperado', [
+                        'hotelData' => $hotelData,
+                        'json' => $json
+                    ]);
+                }
+
+                Log::info('Dados do hotel extraídos da SerpAPI:', $hotelData);
+                $hotel = Hotel::create([
+                    'nome_hotel' => $hotelData['name'] ?? $nomeHotel,
+                    'latitude' => $latitude,
+                    'longitude' => $longitude,
+                    'avaliacao' => $hotelData['overall_rating'] ?? $hotelData['rating'] ?? null,
+                    'data_check_in' => $dataCheckIn,
+                    'data_check_out' => $dataCheckOut,
+                    'preco' => $preco,
+                    'image_url' => $hotelData['thumbnail'] ?? ($hotelData['images'][0]['thumbnail'] ?? null),
+                    'fk_id_viagem' => $tripId,
+                ]);
+                Log::info('Hotel salvo com sucesso:', ['id' => $hotel->pk_id_hotel]);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Hotel adicionado com sucesso!',
+                    'hotel' => $hotel
+                ]);
+            } else {
+                return response()->json([
+                    'error' => 'Categoria não suportada para este endpoint.'
+                ], 400);
+            }
         } catch (\Exception $e) {
             Log::error('Erro ao salvar ponto:', [
                 'message' => $e->getMessage(),

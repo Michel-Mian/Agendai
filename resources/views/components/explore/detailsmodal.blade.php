@@ -112,7 +112,27 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
                     </div>
                 `;
             }
-            // ...restante do modal
+            // --- CAMPOS DE CHECKIN/CHECKOUT PARA HOSPEDAGEM ---
+            let isHotel = placeDetails.types && (placeDetails.types.includes('lodging') || placeDetails.types.includes('hotel'));
+            let hospedagemFields = '';
+            if (isHotel && window.hasTrip) {
+                hospedagemFields = `
+                <div class=\"flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto\">
+                    <div class=\"flex items-center gap-2\">
+                        <label for=\"checkinDate\" class=\"text-gray-700 font-medium whitespace-nowrap\">Check-in:</label>
+                        <input type=\"date\" id=\"checkinDate\" class=\"form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 p-2\">
+                    </div>
+                    <div class=\"flex items-center gap-2\">
+                        <label for=\"checkoutDate\" class=\"text-gray-700 font-medium whitespace-nowrap\">Check-out:</label>
+                        <input type=\"date\" id=\"checkoutDate\" class=\"form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 p-2\">
+                    </div>
+                </div>
+                <button onclick=\"addHotelToItinerary(currentDetailedPlace && currentDetailedPlace.place_id, document.getElementById('checkinDate').value, document.getElementById('checkoutDate').value); closeModal();\" class=\"px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg w-full sm:w-auto\">
+                    🏨 Adicionar Hospedagem
+                </button>
+                `;
+            }
+
             modalContent.innerHTML = `
                 <div class="bg-white rounded-lg">
                     ${photosHtml}
@@ -148,7 +168,7 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
                 <div class="p-8 border-t border-gray-200 flex flex-col sm:flex-row justify-end items-center gap-4">
                     ${fromItinerary && databaseId
                         ? alterarHorarioForm
-                        : (window.hasTrip ? `
+                        : (window.hasTrip ? (isHotel ? hospedagemFields : `
                         <div class=\"flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto\">
                             <div class=\"flex items-center gap-2\">
                                 <label for=\"itineraryDate\" class=\"text-gray-700 font-medium whitespace-nowrap\">Data da visita:</label>
@@ -161,10 +181,43 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
                         </div>
                         <button onclick=\"addToItinerary(currentDetailedPlace && currentDetailedPlace.place_id, document.getElementById('itineraryTime').value, document.getElementById('itineraryDate').value); closeModal();\" class=\"px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg w-full sm:w-auto\">
                             ➕ Adicionar ao Itinerário
-                        </button>` : `<div class=\"w-full text-center text-gray-400 text-base\">Crie uma viagem para adicionar este local ao itinerário.</div>`)
+                        </button>`) : `<div class=\"w-full text-center text-gray-400 text-base\">Crie uma viagem para adicionar este local ao itinerário.</div>`)
                     }
                 </div>
             `;
+            // Função para adicionar hospedagem (hotel) ao itinerário
+            window.addHotelToItinerary = function(placeId, checkin, checkout) {
+                if (!placeId || !checkin || !checkout) {
+                    showNotification('Preencha as datas de check-in e check-out!', 'error');
+                    return;
+                }
+                fetch('/explore', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        placeid_ponto_interesse: placeId,
+                        categoria: 'lodging',
+                        latitude: currentDetailedPlace.geometry.location.lat(),
+                        longitude: currentDetailedPlace.geometry.location.lng(),
+                        nome_ponto_interesse: currentDetailedPlace.name,
+                        data_check_in: checkin,
+                        data_check_out: checkout
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Hospedagem adicionada com sucesso!', 'success');
+                    } else {
+                        showNotification(data.error || 'Erro ao adicionar hospedagem', 'error');
+                    }
+                })
+                .catch(() => showNotification('Erro ao adicionar hospedagem', 'error'));
+            }
 
             // Step 4: Set modal datepicker value to selected itinerary date or trip start date
             setTimeout(() => {
@@ -189,6 +242,33 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
             console.error('Erro ao carregar detalhes do lugar:', status);
         }
     });
+    
+    setTimeout(() => {
+        const checkin = document.getElementById('checkinDate');
+        const checkout = document.getElementById('checkoutDate');
+        if (checkin && checkout && window.dataInicioViagem && window.dataFimViagem) {
+            checkin.setAttribute('min', window.dataInicioViagem);
+            checkin.setAttribute('max', window.dataFimViagem);
+            checkout.setAttribute('min', window.dataInicioViagem);
+            checkout.setAttribute('max', window.dataFimViagem);
+
+            checkin.addEventListener('change', function() {
+                if (checkin.value) {
+                const minCheckout = new Date(checkin.value);
+                minCheckout.setDate(minCheckout.getDate() + 1);
+                const minCheckoutStr = minCheckout.toISOString().split('T')[0];
+                checkout.setAttribute('min', minCheckoutStr);
+
+                // Se o checkout atual for menor que o novo mínimo, limpa o valor
+                if (checkout.value < minCheckoutStr) {
+                    checkout.value = '';
+                }
+            } else {
+                checkout.setAttribute('min', window.dataInicioViagem);
+            }
+            });
+        }
+    }, 400);
 
     // Step 4: Set modal datepicker value to selected itinerary date or trip start date
     setTimeout(() => {
