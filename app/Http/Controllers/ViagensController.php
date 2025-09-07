@@ -31,135 +31,118 @@ class ViagensController extends Controller
     }
     public function show($id, Request $request)
     {
-        $pontos = PontoInteresse::where('fk_id_viagem', $id)
-            ->orderBy('data_ponto_interesse')
-            ->orderBy('hora_ponto_interesse')
-            ->get();
-        $viagem = Viagens::with([
-            'viajantes',
-            'voos',
-            'objetivos',
-            'user',
-            'hotel'
-        ])->findOrFail($id);
-
-        // Busca notícias da SerpAPI
-        $destino = $viagem->destino_viagem;
-        $apiKey = env('SERPAPI_KEY');
-        $categorias = [
-            'Cultura' => "Cultura em $destino",
-            'Saúde' => "Saúde em $destino",
-            'Entretenimento' => "Entretenimento em $destino",
-            'Esportes' => "Jogos de esporte em $destino",
-            'Local' => "Notícias locais na região de $destino"
-        ];
-        $noticias = [];
-        foreach ($categorias as $tipo => $query) {
-            $params = [
-                'engine' => 'google_news',
-                'q' => $query,
-                'hl' => 'pt-br',
-                'api_key' => $apiKey,
-            ];
-            $url = 'https://serpapi.com/search.json?' . http_build_query($params);
-            $response = @file_get_contents($url);
-            $data = json_decode($response, true);
-
-            $noticia = $data['news_results'][0] ?? null;
-            if ($noticia) {
-                // Formata a data, se existir
-                if (isset($noticia['date'])) {
-                    $dataLimpa = preg_replace('/, \+\d{4} UTC$/', '', $noticia['date']);
-                    $carbonDate = Carbon::createFromFormat('m/d/Y, h:i A', trim($dataLimpa));
-                    $noticia['date'] = $carbonDate->format('d/m/Y H:i');
+        try {
+            Log::info('Acessando detalhes da viagem', ['id' => $id, 'user_id' => auth()->id()]);
+            
+            // Buscar viagem com relacionamentos básicos
+            $viagem = Viagens::with([
+                'viajantes',
+                'voos',
+                'objetivos', 
+                'user',
+                'hotel',
+                'seguros',
+                'pontosInteresse' => function($query) {
+                    $query->orderBy('data_ponto_interesse', 'asc')
+                          ->orderBy('hora_ponto_interesse', 'asc');
                 }
-                $noticia['source_name'] = $noticia['source']['name'] ?? 'Fonte desconhecida';
-                $noticia['source_icon'] = $noticia['source']['icon'] ?? '';
-                $noticia['q'] = $query;
-                unset($noticia['source']);
-                $noticias[$tipo] = $noticia;
-            }
-        }
-
-        // Busca eventos na SerpAPI
-        $eventos = [];
-
-        $params = [
-            'engine' => 'google_events',
-            'q' => 'Events in ' . $destino,
-            'start' => 0,
-            'api_key' => $apiKey
-        ];
-
-        $url = 'https://serpapi.com/search.json?' . http_build_query($params);
-        $response = @file_get_contents($url);
-
-        if ($response !== false) {
-            $dados = json_decode($response, true);
-            $eventosBrutos = $dados['events_results'] ?? [];
-
-            // Formata a data dos eventos
-            foreach ($eventosBrutos as $evento) {
-                if (isset($evento['date']['start_date'])) {
-                    try {
-                        $dataFormatada = Carbon::parse($evento['date']['start_date'])->format('d/m/Y');
-                        $evento['data_formatada'] = $dataFormatada;
-                    } catch (\Exception $e) {
-                        $evento['data_formatada'] = 'Data inválida';
-                    }
-                } else {
-                    $evento['data_formatada'] = 'Data não informada';
-                }
-
-                $eventos[] = $evento;
+            ])->findOrFail($id);
+            
+            // Verificar permissões
+            if ($viagem->fk_id_usuario !== auth()->id()) {
+                Log::warning('Tentativa de acesso negada', ['viagem_id' => $id, 'user_id' => auth()->id()]);
+                abort(403, 'Acesso negado');
             }
 
-        }
-
-        //Busca o clima na Open-Meteo
-        $destino = $viagem->destino_viagem;
-        $coordenadas = $this->getLatLngFromAddress($destino);
-        $data_inicio = Carbon::parse($viagem->data_inicio_viagem)->format('Y-m-d');
-        $data_fim = Carbon::parse($viagem->data_final_viagem)->format('Y-m-d');
-        $hoje = Carbon::today();
-        $diasDiferenca = $hoje->diffInDays($data_inicio, false);
-
-        $climas = [];
-        if ($diasDiferenca < 7) {
-            if ($coordenadas) {
-                $latitude = $coordenadas['lat'];
-                $longitude = $coordenadas['lng'];
-                $weatherUrl = "https://api.open-meteo.com/v1/forecast?latitude={$latitude}&longitude={$longitude}&daily=temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_sum,rain_sum,precipitation_probability_max&start_date={$data_inicio}&end_date={$data_fim}";
-                $weatherResponse = file_get_contents($weatherUrl);
-                $clima = json_decode($weatherResponse, true);
-
-                $climas[] = $clima;
-            } else {
-                $clima = null;
-            }
-        } else {
-            $clima = null;
-        }
-
-
-        return view('viagens/detailsTrip', [
-            'title' => 'Detalhes da Viagem',
-            'viagem' => $viagem,
-            'viajantes' => $viagem->viajantes,
-            'pontosInteresse' => $viagem->pontosInteresse,
-            'voos' => $viagem->voos->filter(function($voo) {
+            // Buscar usuário
+            $usuario = $viagem->user;
+            
+            // Dados básicos para a view
+            $pontosOrdenados = $viagem->pontosInteresse;
+            $viajantes = $viagem->viajantes;
+            $objetivos = $viagem->objetivos;
+            $voos = $viagem->voos->filter(function($voo) {
                 return is_object($voo) && $voo !== false;
-            }),
-            'objetivos' => $viagem->objetivos,
-            'usuario' => $viagem->user,
-            'hotel' => $viagem->hotel,
-            'noticias' => $noticias,
-            'eventos' => $eventos,
-            'clima' => $clima,
-            'seguros' => $viagem->seguros,
-        ]);
+            });
+
+            // Corrigir: Garantir que $hotel seja passado corretamente
+            $hotel = $viagem->hotel;
+
+            // Adicionar seguros
+            $seguros = $viagem->seguros;
+
+            // Inicializar eventos/notícias vazios (serão carregados via AJAX)
+            $eventos = collect();
+
+            // Estatísticas básicas 
+            $estatisticas = [
+                'total_viajantes' => $viajantes->count(),
+                'total_pontos' => $pontosOrdenados->count(), 
+                'total_objetivos' => $objetivos->count(),
+                'orcamento_liquido' => $viagem->orcamento_viagem - $voos->sum('preco_voo'),
+                'dias_viagem' => Carbon::parse($viagem->data_inicio_viagem)->diffInDays(Carbon::parse($viagem->data_final_viagem)) + 1
+            ];
+
+            Log::info('Dados carregados com sucesso', [
+                'viagem_id' => $id,
+                'pontos_count' => $pontosOrdenados->count(),
+                'viajantes_count' => $viajantes->count(),
+                'seguros_count' => $seguros->count(),
+                'hotel_count' => $hotel ? $hotel->count() : 0
+            ]);
+
+            return view('viagens.detailsTrip', compact(
+                'viagem', 
+                'usuario', 
+                'pontosOrdenados',
+                'viajantes',
+                'objetivos', 
+                'voos',
+                'hotel',
+                'seguros',
+                'eventos',
+                'estatisticas'
+            ));
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao carregar detalhes da viagem', [
+                'viagem_id' => $id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->route('myTrips')->with('error', 'Erro ao carregar detalhes da viagem: ' . $e->getMessage());
+        }
     }
 
+    /**
+     * Calcula estatísticas básicas da viagem
+     */
+    private function calculateBasicStats($viagem)
+    {
+        $totalViajantes = $viagem->viajantes->count();
+        $totalPontos = $viagem->pontosInteresse->count();
+        $totalObjetivos = $viagem->objetivos->count();
+        
+        // Calcular orçamento líquido
+        $gastoVoos = $viagem->voos->sum('preco_voo');
+        $gastoHotel = $viagem->hotel ? $viagem->hotel->preco : 0;
+        $orcamentoLiquido = $viagem->orcamento_viagem - $gastoVoos - $gastoHotel;
+        
+        // Calcular dias até a viagem
+        $dataInicio = Carbon::parse($viagem->data_inicio_viagem);
+        $diasRestantes = now()->diffInDays($dataInicio, false);
+        
+        return [
+            'total_viajantes' => $totalViajantes,
+            'total_pontos' => $totalPontos,
+            'total_objetivos' => $totalObjetivos,
+            'orcamento_liquido' => $orcamentoLiquido,
+            'dias_restantes' => $diasRestantes,
+            'dias_viagem' => $dataInicio->diffInDays(Carbon::parse($viagem->data_final_viagem)) + 1
+        ];
+    }
 
     public function destroyObjetivo($id)
     {
@@ -442,6 +425,170 @@ class ViagensController extends Controller
                 'success' => false,
                 'message' => 'Erro interno do servidor. Tente novamente.'
             ], 500);
+        }
+    }
+
+    /**
+     * Carrega dados de clima via AJAX
+     */
+    public function getWeatherData($id)
+    {
+        try {
+            $viagem = Viagens::select('destino_viagem', 'fk_id_usuario')->findOrFail($id);
+            
+            // Verificar permissões
+            if ($viagem->fk_id_usuario !== auth()->id()) {
+                return response()->json(['success' => false, 'message' => 'Acesso negado'], 403);
+            }
+            
+            // Cache por 3 horas
+            $cacheKey = "weather_data_{$id}";
+            $weatherData = \Cache::remember($cacheKey, 10800, function() use ($viagem) {
+                return $this->fetchWeatherFromAPI($viagem->destino_viagem);
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $weatherData
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Erro ao buscar dados do clima', ['viagem_id' => $id, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Erro ao carregar clima'], 500);
+        }
+    }
+
+    /**
+     * Carrega notícias via AJAX
+     */
+    public function getNewsData($id)
+    {
+        try {
+            $viagem = Viagens::select('destino_viagem', 'fk_id_usuario')->findOrFail($id);
+            
+            // Verificar permissões
+            if ($viagem->fk_id_usuario !== auth()->id()) {
+                return response()->json(['success' => false, 'message' => 'Acesso negado'], 403);
+            }
+            
+            // Cache por 6 horas
+            $cacheKey = "news_data_{$id}";
+            $newsData = \Cache::remember($cacheKey, 21600, function() use ($viagem) {
+                return $this->fetchNewsFromAPI($viagem->destino_viagem);
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $newsData
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Erro ao buscar notícias', ['viagem_id' => $id, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Erro ao carregar notícias'], 500);
+        }
+    }
+
+    /**
+     * Busca dados do clima de forma otimizada
+     */
+    private function fetchWeatherFromAPI($destino)
+    {
+        try {
+            // Primeiro buscar coordenadas (com timeout menor)
+            $geocodeUrl = "https://api.openweathermap.org/geo/1.0/direct?q=" . urlencode($destino) . "&limit=1&appid=" . env('OPENWEATHER_API_KEY', 'aa4dfd898f8821ac74f8c5dec5a7d2b4');
+            
+            $context = stream_context_create([
+                'http' => [
+                    'timeout' => 3, // Timeout agressivo de 3 segundos
+                    'ignore_errors' => true
+                ]
+            ]);
+            
+            $geocodeResponse = @file_get_contents($geocodeUrl, false, $context);
+            
+            if (!$geocodeResponse) {
+                throw new \Exception('Falha na geocodificação');
+            }
+            
+            $geocodeData = json_decode($geocodeResponse, true);
+            
+            if (empty($geocodeData)) {
+                throw new \Exception('Local não encontrado');
+            }
+            
+            $latitude = $geocodeData[0]['lat'];
+            $longitude = $geocodeData[0]['lon'];
+            
+            // Buscar dados do clima
+            $weatherUrl = "https://api.open-meteo.com/v1/forecast?latitude={$latitude}&longitude={$longitude}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=America/Sao_Paulo&forecast_days=7";
+            
+            $weatherResponse = @file_get_contents($weatherUrl, false, $context);
+            
+            if (!$weatherResponse) {
+                throw new \Exception('Falha ao buscar clima');
+            }
+            
+            return json_decode($weatherResponse, true);
+            
+        } catch (\Exception $e) {
+            // Retornar dados mockados em caso de erro
+            return [
+                'daily' => [
+                    'time' => array_fill(0, 7, date('Y-m-d')),
+                    'temperature_2m_max' => array_fill(0, 7, 25),
+                    'temperature_2m_min' => array_fill(0, 7, 18),
+                    'weathercode' => array_fill(0, 7, 0)
+                ]
+            ];
+        }
+    }
+
+    /**
+     * Busca notícias de forma otimizada
+     */
+    private function fetchNewsFromAPI($destino)
+    {
+        try {
+            $apiKey = env('SERPAPI_KEY');
+            if (!$apiKey) {
+                throw new \Exception('API key não configurada');
+            }
+
+            $queries = [
+                "turismo em $destino",
+                "pontos turísticos $destino",
+                "viagem $destino dicas"
+            ];
+
+            $allNews = [];
+            
+            foreach (array_slice($queries, 0, 2) as $query) { // Reduzir para 2 queries apenas
+                try {
+                    $context = stream_context_create([
+                        'http' => [
+                            'timeout' => 4, // Timeout de 4 segundos
+                            'ignore_errors' => true
+                        ]
+                    ]);
+                    
+                    $url = "https://serpapi.com/search.json?engine=google_news&q=" . urlencode($query) . "&api_key=$apiKey&num=3";
+                    $response = @file_get_contents($url, false, $context);
+                    
+                    if ($response) {
+                        $data = json_decode($response, true);
+                        if (isset($data['news_results'])) {
+                            $allNews = array_merge($allNews, array_slice($data['news_results'], 0, 2));
+                        }
+                    }
+                } catch (\Exception $e) {
+                    continue; // Continuar mesmo se uma query falhar
+                }
+            }
+
+            return array_slice($allNews, 0, 6); // Máximo 6 notícias
+            
+        } catch (\Exception $e) {
+            return []; // Retornar array vazio em caso de erro
         }
     }
 }

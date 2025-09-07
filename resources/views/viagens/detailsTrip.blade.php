@@ -305,35 +305,9 @@
                                             <i class="fas fa-info-circle mr-1"></i>
                                             Orçamento total
                                         </div>
-                                        <div class="text-gray-800 font-bold text-xl">R$ 
-                                            @php
-                                                $orcamento_liquido = $viagem->orcamento_viagem;
-                                            @endphp
-                                            @foreach ($viagem->hotel as $hotel)
-                                                @if($hotel->preco && $hotel->data_check_in && $hotel->data_check_out)
-                                                    @php
-                                                        $checkin = \Carbon\Carbon::parse($hotel->data_check_in);
-                                                        $checkout = \Carbon\Carbon::parse($hotel->data_check_out);
-                                                        $noites = $checkin->diffInDays($checkout);
-                                                        // Remove "R$", espaços e troca vírgula por ponto
-                                                        $precoFloat = convertToFloat($hotel->preco);
-                                                        $total = $precoFloat * $noites;
-                                                        $orcamento_liquido -= $total;
-                                                    @endphp
-                                                @endif
-                                            @endforeach
-                                            @foreach ($voos as $voo)
-                                                @if($voo->preco_voo)
-                                                    @php
-                                                        $precoFloat = $voo->preco_voo;
-                                                        $orcamento_liquido -= $precoFloat;
-                                                    @endphp
-                                                @endif
-                                            @endforeach
-                                            {{ number_format($orcamento_liquido, 2, ',', '.') }}
-                                        </div>
-                                        <div class="text-purple-600 text-sm mt-1">
-                                            <i class="fas fa-info-circle mr-1"></i>
+                                        <div class="text-gray-800 font-bold text-xl">R$ {{ number_format($estatisticas['orcamento_liquido'], 2, ',', '.') }}</div>
+                                        <div class="text-green-600 text-sm mt-1">
+                                            <i class="fas fa-wallet mr-1"></i>
                                             Orçamento líquido
                                         </div>
                                     </div>
@@ -367,15 +341,19 @@
                                     <div class="space-y-2">
                                         <div class="flex justify-between items-center">
                                             <span class="text-gray-600 text-sm">Viajantes:</span>
-                                            <span class="font-bold text-gray-800">{{ $viajantes->count() }}</span>
+                                            <span class="font-bold text-gray-800">{{ $estatisticas['total_viajantes'] }}</span>
                                         </div>
                                         <div class="flex justify-between items-center">
                                             <span class="text-gray-600 text-sm">Objetivos:</span>
-                                            <span class="font-bold text-gray-800">{{ $objetivos->count() }}</span>
+                                            <span class="font-bold text-gray-800">{{ $estatisticas['total_objetivos'] }}</span>
                                         </div>
                                         <div class="flex justify-between items-center">
                                             <span class="text-gray-600 text-sm">Locais:</span>
-                                            <span class="font-bold text-gray-800">{{ $pontosInteresse->count() }}</span>
+                                            <span class="font-bold text-gray-800">{{ $estatisticas['total_pontos'] }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-600 text-sm">Dias de viagem:</span>
+                                            <span class="font-bold text-gray-800">{{ $estatisticas['dias_viagem'] }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -460,16 +438,27 @@
                     <!-- Tab Content -->
                     <div class="tab-content">
                         <div id="content-visao-geral" class="tab-panel active">
-                            @include('components/myTrips/screenSections/visaoGeral', ['viagem' => $viagem, 'usuario' => $usuario])
+                            @include('components/myTrips/screenSections/visaoGeral', [
+                                'viagem' => $viagem, 
+                                'usuario' => $usuario,
+                                'hotel' => $hotel ?? collect()
+                            ])
                             {{-- Add flights section here if not already included --}}
                             {{-- Add insurance section below flights section --}}
-                            @include('components/myTrips/screenSections/themes/insuranceSection', ['seguros' => $seguros])
+                            @include('components/myTrips/screenSections/themes/insuranceSection', [
+                                'seguros' => $seguros ?? collect(),
+                                'viagem' => $viagem
+                            ])
                         </div>
                         <div id="content-rotas-mapa" class="tab-panel hidden">
                             @include('components/myTrips/screenSections/rotasMapa', ['viagem' => $viagem])
                         </div>
                         <div id="content-informacoes-estatisticas" class="tab-panel hidden">
-                            @include('components/myTrips/screenSections/informacoesEstatisticas', ['viagem' => $viagem, 'usuario' => $usuario])
+                            @include('components/myTrips/screenSections/informacoesEstatisticas', [
+                                'viagem' => $viagem, 
+                                'usuario' => $usuario,
+                                'eventos' => $eventos ?? collect()
+                            ])
                         </div>
                     </div>
                 </div>
@@ -562,6 +551,7 @@
 
     <!-- Scripts externos -->
     <script src="{{ asset('js/inlineEditManager.js') }}"></script>
+    <script src="{{ asset('js/lazyLoader.js') }}"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places,geometry&callback=initInlineEditMap" async defer></script>
     
     <!-- Script para controle das tabs -->
@@ -816,6 +806,7 @@
 
             // Inicializar os gerenciadores
             window.inlineEditManager = new InlineEditManager(window.currentTripId);
+            window.lazyLoader = new LazyLoader(window.currentTripId);
             new TripModalManager();
 
             // Fallback caso a API já esteja carregada

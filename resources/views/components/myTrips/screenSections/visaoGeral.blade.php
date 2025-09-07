@@ -12,7 +12,9 @@
     @include('components/myTrips/screenSections/themes/flightSection')
 
     <!-- Seção de Hotéis -->
-    @include('components/myTrips/screenSections/themes/hotelSection')
+    @include('components/myTrips/screenSections/themes/hotelSection', ['hotel' => $hotel ?? collect()])
+
+    {{-- REMOVIDO: Seções de clima e notícias (movidas para informacoesEstatisticas) --}}
 </div>
 
 <style>
@@ -71,14 +73,13 @@
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        
-        
-        const addViajanteEmptyBtn = document.getElementById('open-add-viajante-modal-btn-empty');
-        if (addViajanteEmptyBtn) {
-            addViajanteEmptyBtn.addEventListener('click', function() {
-                document.getElementById('open-add-viajante-modal-btn').click();
-            });
-        }
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    // Funcionalidade existente para viajantes
+    const addViajanteEmptyBtn = document.getElementById('open-add-viajante-modal-btn-empty');
+    if (addViajanteEmptyBtn) {
+        addViajanteEmptyBtn.addEventListener('click', function() {
+            document.getElementById('open-add-viajante-modal-btn').click();
+        });
+    }
+});
 </script>

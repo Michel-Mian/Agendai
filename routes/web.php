@@ -49,6 +49,8 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/viagens/{id}', [ViagensController::class, 'show'])->name('viagens');
     Route::patch('/viagens/{id}/update', [ViagensController::class, 'updateViagem'])->name('viagens.update');
     Route::delete('/viagens/{id}', [ViagensController::class, 'destroyViagem'])->name('viagens.destroy');
+    Route::get('/viagens/{id}/weather', [ViagensController::class, 'getWeatherData'])->name('viagens.weather');
+    Route::get('/viagens/{id}/news', [ViagensController::class, 'getNewsData'])->name('viagens.news');
 
     // Exportar PDF da viagem
     Route::get('/viagens/{id}/exportar-pdf', [ViagemPdfController::class, 'export'])->name('viagens.exportar_pdf');
