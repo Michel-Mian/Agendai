@@ -1,3 +1,8 @@
+@php
+    // Garantir que $seguros sempre existe
+    $seguros = $seguros ?? collect();
+@endphp
+
 <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mt-8">
     <div class="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
         <div class="flex items-center justify-between">
@@ -7,7 +12,7 @@
                 </div>
                 <div>
                     <h2 class="text-xl font-bold text-green-800">Seguro Viagem</h2>
-                    <p class="text-green-600 text-sm">{{ isset($seguros) ? count($seguros) : 0 }} {{ (isset($seguros) && count($seguros) == 1) ? 'seguro' : 'seguros' }} cadastrados</p>
+                    <p class="text-green-600 text-sm">{{ $seguros->count() }} {{ $seguros->count() == 1 ? 'seguro' : 'seguros' }} cadastrados</p>
                 </div>
             </div>
             <button type="button" id="open-add-insurance-modal-btn" class="bg-white/20 hover:bg-white/30 text-green-800 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
@@ -16,7 +21,7 @@
         </div>
     </div>
     <div class="p-6">
-        @if(isset($seguros) && count($seguros))
+        @if($seguros->count() > 0)
             @php
                 $seguroSelecionado = $seguros->where('is_selected', true)->last();
             @endphp
