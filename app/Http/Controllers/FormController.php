@@ -46,10 +46,15 @@ class FormController extends Controller
             $flightData = json_decode($request->input('selected_flight_data', '{}'), true);
             $voo = new \App\Models\Voos();
             $primeiroTrecho = $flightData['flights'][0] ?? [];
-
+            $conexao = isset($flightData['flights'][1]) ? $flightData['flights'][1] : null;
+            
             $voo->desc_aeronave_voo = $primeiroTrecho['airplane'] ?? '';
             $voo->origem_voo = $primeiroTrecho['departure_airport']['id'] ?? '';
-            $voo->destino_voo = $primeiroTrecho['arrival_airport']['id'] ?? '';
+            $voo->origem_nome_voo = $primeiroTrecho['departure_airport']['name'] ?? '';
+            $voo->destino_voo = $conexao['arrival_airport']['id'] ?? '';
+            $voo->destino_nome_voo = $conexao['arrival_airport']['name'] ?? '';
+            $voo->conexao_voo = $conexao['departure_airport']['id'] ?? '';
+            $voo->conexao_nome_voo = $conexao['departure_airport']['name'] ?? '';
             $voo->data_hora_partida = !empty($primeiroTrecho['departure_airport']['time'])
                 ? date('Y-m-d H:i:s', strtotime($primeiroTrecho['departure_airport']['time']))
                 : now();
@@ -59,6 +64,8 @@ class FormController extends Controller
             $voo->companhia_voo = $primeiroTrecho['airline'] ?? '';
             $voo->fk_id_viagem = $viagem->pk_id_viagem;
             $voo->preco_voo = $flightData['price'] ?? '';
+            $voo->numero_voo = $primeiroTrecho['flight_number'] ?? '';
+            $voo->classe_voo = $primeiroTrecho['travel_class'] ?? 'Econômica';
             $voo->save();
 
             // Verificação do preço do voo em relação ao orçamento
