@@ -267,9 +267,24 @@ class ExploreController extends Controller
                     'hotel' => $hotel
                 ]);
             } else {
+                // Salvar ponto de interesse comum
+                $ponto = PontoInteresse::create([
+                    'nome_ponto_interesse' => $validated['nome_ponto_interesse'],
+                    'placeid_ponto_interesse' => $validated['placeid_ponto_interesse'],
+                    'desc_ponto_interesse' => $validated['desc_ponto_interesse'] ?? null,
+                    'latitude' => $validated['latitude'],
+                    'longitude' => $validated['longitude'],
+                    'categoria' => $validated['categoria'] ?? null,
+                    'hora_ponto_interesse' => $validated['hora_ponto_interesse'] ?? null,
+                    'data_ponto_interesse' => $validated['data_ponto_interesse'] ?? null,
+                    'fk_id_viagem' => $tripId,
+                ]);
+                Log::info('Ponto de interesse salvo com sucesso:', ['id' => $ponto->pk_id_ponto_interesse]);
                 return response()->json([
-                    'error' => 'Categoria não suportada para este endpoint.'
-                ], 400);
+                    'success' => true,
+                    'message' => 'Ponto de interesse adicionado com sucesso!',
+                    'ponto' => $ponto
+                ]);
             }
         } catch (\Exception $e) {
             Log::error('Erro ao salvar ponto:', [

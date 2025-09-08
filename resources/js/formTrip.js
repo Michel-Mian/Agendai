@@ -231,8 +231,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // -------------------- Eventos dos botões de navegação --------------------
     nextBtns.forEach((btn, idx) => {
         btn.addEventListener('click', async function() {
-            // Adicione esta linha:
-            if (!validarStep(currentStep)) return;
+            console.log('validarStep', currentStep);
+            if (!validarStep(currentStep)) {
+                console.log('validarStep retornou false no step', currentStep);
+                return;
+            }
+            console.log('Avançando step', currentStep);
 
             const seguro = document.getElementById('seguroViagem');
             const meioSelect = document.querySelectorAll('.form-step')[1].querySelector('select');
@@ -424,6 +428,31 @@ document.getElementById('multiStepForm').addEventListener('submit', function (e)
 });
 
 // -------------------- Tratamento de erros e mensagens de feedback --------------------
+function showNotification(message, type = 'warning') {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+    `;
+    notification.style.backgroundColor = type === 'error' ? '#EF4444' : (type === 'success' ? '#10B981' : '#F59E0B');
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => notification.remove(), 300);
+    }, 4000);
+}
+
 function validarStep(idx) {
     if (idx === 0) {
         const destino = document.getElementById('tripDestination');
@@ -433,60 +462,64 @@ function validarStep(idx) {
         const dataVolta = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[1];
 
         if (!destino.value.trim()) {
-            alert('Informe o destino.');
+            showNotification('Informe o destino.', 'error');
             destino.focus();
             return false;
         }
         if (!destino._placeSelected) {
-            alert('Selecione um destino válido da lista sugerida.');
+            showNotification('Selecione um destino válido da lista sugerida.', 'error');
             destino.classList.add('border-red-500');
             destino.focus();
             return false;
         }
         if (!origem.value.trim()) {
-            alert('Informe a origem.');
+            showNotification('Informe a origem.', 'error');
             origem.focus();
             return false;
         }
         if (!origem._placeSelected) {
-            alert('Selecione uma origem válida da lista sugerida.');
+            showNotification('Selecione uma origem válida da lista sugerida.', 'error');
             origem.classList.add('border-red-500');
             origem.focus();
             return false;
         }
         if (!adultos || !adultos.value) {
-            alert('Informe o número de adultos.');
+            showNotification('Informe o número de adultos.', 'error');
             adultos.focus();
             return false;
         }
         if (!dataIda.value) {
-            alert('Informe a data de ida.');
+            showNotification('Informe a data de ida.', 'error');
             dataIda.focus();
             return false;
         }
         if (!dataVolta.value) {
-            alert('Informe a data de volta.');
+            showNotification('Informe a data de volta.', 'error');
             dataVolta.focus();
             return false;
         }
         if (dataVolta.value < dataIda.value) {
-            alert('A data de volta não pode ser menor que a data de ida.');
+            showNotification('A data de volta não pode ser menor que a data de ida.', 'error');
             dataVolta.focus();
             return false;
         }
         if (new Date(dataIda.value) < new Date()) {
-            alert('A data de ida não pode ser no passado.');
+            showNotification('A data de ida não pode ser no passado.', 'error');
             dataIda.focus();
             return false;
         }
         if (new Date(dataVolta.value) < dataIda.value)  {
-            alert('A data de volta não pode ser anterior à data de ida.');
+            showNotification('A data de volta não pode ser anterior à data de ida.', 'error');
             dataVolta.focus();
             return false;
         }
         const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
         let algumVazio = false;
+        let temAdulto = false;
         idadeInputs.forEach(input => {
+            if (input.value >= 18) {
+                temAdulto = true;
+            }
             if (!input.value.trim()) {
                 algumVazio = true;
                 input.classList.add('border-red-500');
@@ -494,8 +527,13 @@ function validarStep(idx) {
                 input.classList.remove('border-red-500');
             }
         });
+        if (!temAdulto) {
+            showNotification('Pelo menos um adulto deve participar da viagem.', 'error');
+            if (idadeInputs.length > 0) idadeInputs[0].focus();
+            return false;
+        }
         if (idadeInputs.length === 0 || algumVazio) {
-            alert('Preencha todas as idades dos viajantes.');
+            showNotification('Preencha todas as idades dos viajantes.', 'error');
             if (idadeInputs.length > 0) idadeInputs[0].focus();
             return false;
         }
@@ -507,7 +545,7 @@ function validarStep(idx) {
         const meioLocomocao = document.querySelectorAll('.form-step')[1]?.querySelectorAll('select')[0];
         const seguro = document.getElementById('seguroViagem');
         if (!orcamento.value || Number(orcamento.value) <= 0) {
-            alert('Informe um orçamento válido.');
+            showNotification('Informe um orçamento válido.', 'error');
             orcamento.focus();
             return false;
         }
@@ -515,12 +553,12 @@ function validarStep(idx) {
             const depIata = document.getElementById('dep_iata');
             const arrIata = document.getElementById('arr_iata');
             if (!depIata.value.trim()) {
-                alert('Informe o aeroporto de partida.');
+                showNotification('Informe o aeroporto de partida.', 'error');
                 depIata.focus();
                 return false;
             }
             if (!arrIata.value.trim()) {
-                alert('Informe o aeroporto de chegada.');
+                showNotification('Informe o aeroporto de chegada.', 'error');
                 arrIata.focus();
                 return false;
             }
@@ -529,11 +567,11 @@ function validarStep(idx) {
             const motivo = document.getElementById('MainContent_Cotador_ddlMotivoDaViagem');
             const destinoSeguro = document.getElementById('MainContent_Cotador_selContinente');
             if (!motivo.querySelector('option:checked') || motivo.value === '') {
-                alert('Selecione uma opção de seguro.');
+                showNotification('Selecione uma opção de seguro.', 'error');
                 return false;
             }
             if(!destinoSeguro.querySelector('option:checked').value || destinoSeguro.value === '') {
-                alert('Selecione um destino para a viagem.');
+                showNotification('Selecione um destino para a viagem.', 'error');
                 destinoSeguro.focus();
                 return false;
             }
