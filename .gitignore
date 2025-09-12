@@ -23,3 +23,7 @@ yarn-error.log
 /.zed
 composer.lock
 package-lock.json
+vendor
+
+composer.lock
+package-lock.json

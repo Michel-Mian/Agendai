@@ -89,7 +89,7 @@ class DashBoardController extends Controller
             $labels[] = date('d/m/Y', $item['timestamp']);
             $data[] = (float) $item['bid'];
         }
-        
+        $viagensFlutter = $viagens->toArray();
         // Se a requisição for JSON (ex: chamada do app Flutter), retorna os dados em JSON
         if (request()->wantsJson()) {
             // Formata as viagens para o Flutter
@@ -124,17 +124,22 @@ class DashBoardController extends Controller
                 'data' => $data,
             ]);
         }
-        // Renderização padrão para web
-        return view('dashboard', [
+        // Render the dashboard view with all data
+        $dados = [
             'user' => $user,
             'viagens' => $viagens,
+            'viagensFlutter' => $viagensFlutter,
             'currencies' => $currencies,
             'cotacao' => $cotacao,
             'historico' => $historico,
             'labels' => $labels,
             'data' => $data,
             'title' => 'Dashboard',
-        ]);
+        ];
+        if (request()->wantsJson()) {
+            return response()->json($dados);
+        }
+        return view('dashboard', $dados);
     }
 
     /**
