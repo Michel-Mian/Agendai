@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashBoardController;
+use App\Http\Controllers\ViagensController;
 
 // Rotas de autenticação (não protegidas)
 Route::prefix('auth')->group(function () {
@@ -23,3 +24,4 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 Route::middleware('auth:sanctum')->get('/dashboard', [DashBoardController::class, 'dashboard']);
+Route::middleware('auth:sanctum')->get('/viagens/{id}', [ViagensController::class, 'showApi']);

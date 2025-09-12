@@ -101,7 +101,7 @@ class DashBoardController extends Controller
                 }
                 $pessoas = $viagem->viajantes()->count();
                 return [
-                    'id' => $viagem->id,
+                    'id' => $viagem->pk_id_viagem,
                     'destino' => $viagem->destino ?? ($viagem->destino_viagem ?? null),
                     'dataInicio' => $viagem->data_inicio_viagem,
                     'dataFim' => $viagem->data_final_viagem ?? null,
