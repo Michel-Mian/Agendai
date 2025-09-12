@@ -444,4 +444,37 @@ class ViagensController extends Controller
             ], 500);
         }
     }
+    public function showApi($id) {
+        try{
+            $viagem = Viagens::with([
+                'viajantes', 'voos', 'objetivos', 'user', 'hotel', 'pontosInteresse', 'seguros'
+            ])->findOrFail($id);
+
+            $viagemMobile = [
+                'id' => $viagem->pk_id_viagem, 
+                'destino' => $viagem->destino_viagem ?? '-',
+                'origem' => $viagem->origem_viagem ?? '-',
+                'dataInicio' => $viagem->data_inicio_viagem ?? '-',
+                'dataFim' => $viagem->data_final_viagem,
+                'dias' => \Carbon\Carbon::parse($viagem->data_inicio_viagem)->diffInDays(\Carbon\Carbon::parse($viagem->data_final_viagem)),
+                'viajantes' => $viagem->viajantes ? $viagem->viajantes->count() : 0,
+                'orcamento' => $viagem->orcamento_viagem,
+                'hotel' => $viagem->hotel,
+                'voos' => $viagem->voos,
+                'objetivos' => $viagem->objetivos,
+                'pontosInteresse' => $viagem->pontosInteresse,
+                'user' => $viagem->user,
+                'seguros' => $viagem->seguros,
+                'created_at' => $viagem->created_at,
+                'updated_at' => $viagem->updated_at,
+            ];
+
+            return response()->json($viagemMobile);
+        
+            }
+            catch(\Exception $e){
+                \Log::error('Erro ao buscar detalhes da viagem', ['erro' => $e->getMessage()]);
+                return response()->json(['success' => false, 'message' => 'Erro interno', 'error' => $e->getMessage()], 500);
+            }
+        }
 }
