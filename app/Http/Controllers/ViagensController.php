@@ -450,6 +450,104 @@ class ViagensController extends Controller
                 'viajantes', 'voos', 'objetivos', 'user', 'hotel', 'pontosInteresse', 'seguros'
             ])->findOrFail($id);
 
+            // Busca notícias da SerpAPI
+            $destino = $viagem->destino_viagem;
+            $apiKey = env('SERPAPI_KEY');
+            $categorias = [
+                'Cultura' => "Cultura em $destino",
+                'Saúde' => "Saúde em $destino",
+                'Entretenimento' => "Entretenimento em $destino",
+                'Esportes' => "Jogos de esporte em $destino",
+                'Local' => "Notícias locais na região de $destino"
+            ];
+            $noticias = [];
+            foreach ($categorias as $tipo => $query) {
+                $params = [
+                    'engine' => 'google_news',
+                    'q' => $query,
+                    'hl' => 'pt-br',
+                    'api_key' => $apiKey,
+                ];
+                $url = 'https://serpapi.com/search.json?' . http_build_query($params);
+                $response = @file_get_contents($url);
+                $data = json_decode($response, true);
+
+                $noticia = $data['news_results'][0] ?? null;
+                if ($noticia) {
+                    // Formata a data, se existir
+                    if (isset($noticia['date'])) {
+                        $dataLimpa = preg_replace('/, \+\d{4} UTC$/', '', $noticia['date']);
+                        $carbonDate = Carbon::createFromFormat('m/d/Y, h:i A', trim($dataLimpa));
+                        $noticia['date'] = $carbonDate->format('d/m/Y H:i');
+                    }
+                    $noticia['source_name'] = $noticia['source']['name'] ?? 'Fonte desconhecida';
+                    $noticia['source_icon'] = $noticia['source']['icon'] ?? '';
+                    $noticia['q'] = $query;
+                    unset($noticia['source']);
+                    $noticias[$tipo] = $noticia;
+                }
+            }
+
+            // Busca eventos na SerpAPI
+            $eventos = [];
+
+            $params = [
+                'engine' => 'google_events',
+                'q' => 'Events in ' . $destino,
+                'start' => 0,
+                'api_key' => $apiKey
+            ];
+
+            $url = 'https://serpapi.com/search.json?' . http_build_query($params);
+            $response = @file_get_contents($url);
+
+            if ($response !== false) {
+                $dados = json_decode($response, true);
+                $eventosBrutos = $dados['events_results'] ?? [];
+
+                // Formata a data dos eventos
+                foreach ($eventosBrutos as $evento) {
+                    if (isset($evento['date']['start_date'])) {
+                        try {
+                            $dataFormatada = Carbon::parse($evento['date']['start_date'])->format('d/m/Y');
+                            $evento['data_formatada'] = $dataFormatada;
+                        } catch (\Exception $e) {
+                            $evento['data_formatada'] = 'Data inválida';
+                        }
+                    } else {
+                        $evento['data_formatada'] = 'Data não informada';
+                    }
+
+                    $eventos[] = $evento;
+                }
+
+            }
+
+            //Busca o clima na Open-Meteo
+            $destino = $viagem->destino_viagem;
+            $coordenadas = $this->getLatLngFromAddress($destino);
+            $data_inicio = Carbon::parse($viagem->data_inicio_viagem)->format('Y-m-d');
+            $data_fim = Carbon::parse($viagem->data_final_viagem)->format('Y-m-d');
+            $hoje = Carbon::today();
+            $diasDiferenca = $hoje->diffInDays($data_inicio, false);
+
+            $climas = [];
+            if ($diasDiferenca < 7) {
+                if ($coordenadas) {
+                    $latitude = $coordenadas['lat'];
+                    $longitude = $coordenadas['lng'];
+                    $weatherUrl = "https://api.open-meteo.com/v1/forecast?latitude={$latitude}&longitude={$longitude}&daily=temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_sum,rain_sum,precipitation_probability_max&start_date={$data_inicio}&end_date={$data_fim}";
+                    $weatherResponse = file_get_contents($weatherUrl);
+                    $clima = json_decode($weatherResponse, true);
+
+                    $climas[] = $clima;
+                } else {
+                    $clima = null;
+                }
+            } else {
+                $clima = null;
+            }
+
             $viagemMobile = [
                 'id' => $viagem->pk_id_viagem, 
                 'destino' => $viagem->destino_viagem ?? '-',
@@ -465,6 +563,9 @@ class ViagensController extends Controller
                 'pontosInteresse' => $viagem->pontosInteresse,
                 'user' => $viagem->user,
                 'seguros' => $viagem->seguros,
+                'noticias' => $noticias,
+                'eventos' => $eventos,
+                'clima' => $clima,
                 'created_at' => $viagem->created_at,
                 'updated_at' => $viagem->updated_at,
             ];
