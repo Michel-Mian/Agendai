@@ -15,6 +15,9 @@
 </div>
 
 <script>
+    let isWeatherLoading = false;
+    let isNewsLoading = false;
+
 document.addEventListener('DOMContentLoaded', function() {
     // Carregar dados apenas quando a aba de estatísticas estiver ativa
     const statsTab = document.getElementById('tab-informacoes-estatisticas');
@@ -31,57 +34,51 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Função para carregar dados do clima (versão aprimorada)
+// Função para carregar dados do clima 
 async function loadWeatherDataStats(tripId) {
-    const skeleton = document.getElementById('weather-skeleton-stats');
-    const content = document.getElementById('weather-content-stats');
-    const error = document.getElementById('weather-error-stats');
-    
-    if (!skeleton || !content || !error) return;
-    
-    skeleton.classList.remove('hidden');
-    content.classList.add('hidden');
-    error.classList.add('hidden');
-    
+    if (isWeatherLoading) return;
+    isWeatherLoading = true;
+    setUIState('weather', 'loading');
+
     try {
-        const response = await fetch(`/viagens/${tripId}/weather`);
+        const response = await fetch(`/viagens/${tripId}/weather`); //
         const data = await response.json();
-        
+
         if (data.success && data.data) {
             displayWeatherDataStatsEnhanced(data.data);
+            setUIState('weather', 'content');
         } else {
-            showWeatherErrorStats();
+            setUIState('weather', 'error'); 
         }
     } catch (error) {
         console.error('Erro ao carregar clima:', error);
-        showWeatherErrorStats();
+        setUIState('weather', 'error');
+    } finally {
+        isWeatherLoading = false;
     }
 }
 
-// Função para carregar notícias (versão aprimorada)
+// Função para carregar notícias 
 async function loadNewsDataStats(tripId) {
-    const skeleton = document.getElementById('news-skeleton-stats');
-    const content = document.getElementById('news-content-stats');
-    const error = document.getElementById('news-error-stats');
-    
-    if (!skeleton || !content || !error) return;
-    
-    skeleton.classList.remove('hidden');
-    content.classList.add('hidden');
-    error.classList.add('hidden');
-    
+    if (isNewsLoading) return;
+    isNewsLoading = true;
+    setUIState('news', 'loading'); 
+
     try {
-        const response = await fetch(`/viagens/${tripId}/news`);
+        const response = await fetch(`/viagens/${tripId}/news`); //
         const data = await response.json();
-        
+
         if (data.success && data.data) {
             displayNewsDataStatsEnhanced(data.data);
+            setUIState('news', 'content'); 
         } else {
-            showNewsErrorStats();
+            setUIState('news', 'error'); 
         }
     } catch (error) {
-        console.error('Erro ao carregar notícias:', error);
-        showNewsErrorStats();
+        console.error('Erro ao carregar notícias:', error); //
+        setUIState('news', 'error'); 
+    } finally {
+        isNewsLoading = false;
     }
 }
 
@@ -398,25 +395,16 @@ function displayNewsDataStatsEnhanced(newsData) {
     content.classList.remove('hidden');
 }
 
-// Funções para mostrar erros (mantidas)
-function showWeatherErrorStats() {
-    const skeleton = document.getElementById('weather-skeleton-stats');
-    const error = document.getElementById('weather-error-stats');
-    
-    if (skeleton && error) {
-        skeleton.classList.add('hidden');
-        error.classList.remove('hidden');
-    }
-}
+function setUIState(section, state) { // 'section' pode ser 'weather' ou 'news'. 'state' pode ser 'loading', 'content' ou 'error'
+    const skeleton = document.getElementById(`${section}-skeleton-stats`);
+    const content = document.getElementById(`${section}-content-stats`);
+    const error = document.getElementById(`${section}-error-stats`);
 
-function showNewsErrorStats() {
-    const skeleton = document.getElementById('news-skeleton-stats');
-    const error = document.getElementById('news-error-stats');
-    
-    if (skeleton && error) {
-        skeleton.classList.add('hidden');
-        error.classList.remove('hidden');
-    }
+    if (!skeleton || !content || !error) return;
+
+    skeleton.classList.toggle('hidden', state !== 'loading');
+    content.classList.toggle('hidden', state !== 'content');
+    error.classList.toggle('hidden', state !== 'error');
 }
 </script>
 
