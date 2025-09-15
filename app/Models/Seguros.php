@@ -3,48 +3,28 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Seguros extends Model
 {
+    use HasFactory;
+
     protected $table = 'seguros';
     protected $primaryKey = 'pk_id_seguro';
+    public $incrementing = true;
+    public $keyType = 'int';
 
     protected $fillable = [
-        'site',
-        'titulo',
-        'link',
-        'cobertura_medica',
-        'cobertura_bagagem',
-        'cobertura_cancelamento',
-        'cobertura_odonto',
-        'cobertura_medicamentos',
-        'cobertura_eletronicos',
-        'cobertura_mochila_mao',
-        'cobertura_atraso_embarque',
-        'cobertura_pet',
-        'cobertura_sala_vip',
-        'cobertura_telemedicina',
-        'preco_pix',
-        'preco_cartao',
-        'parcelas',
-        'preco',
-        'preco_pix',
-        'preco_cartao',
-        'parcelas',
-        'dados',
-        'link',
         'fk_id_viagem',
+        'seguradora',
+        'plano',
+        'detalhes_etarios',
+        'link',
         'cobertura_medica',
         'cobertura_bagagem',
-        'cobertura_cancelamento',
-        'cobertura_odonto',
-        'cobertura_medicamentos',
-        'cobertura_eletronicos',
-        'cobertura_mochila_mao',
-        'cobertura_atraso_embarque',
-        'cobertura_pet',
-        'cobertura_sala_vip',
-        'cobertura_telemedicina',
+        'preco_pix',
+        'preco_cartao',
+        'parcelamento_cartao',
         'is_selected',
     ];
 
