@@ -22,8 +22,6 @@ return new class extends Migration
             $table->string('destino_nome_voo', 100)->nullable(false);
             $table->string('conexao_voo', 100)->nullable(true);
             $table->string('conexao_nome_voo', 100)->nullable(true);
-            $table->string('conexao_destino_voo', 100)->nullable(true);
-            $table->string('conexao_nome_destino_voo', 100)->nullable(true);
             $table->string('classe_voo', 100)->nullable(false);
             $table->string('companhia_voo', 100)->nullable(false);
             $table->float('preco_voo')->nullable(false);
