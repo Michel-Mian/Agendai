@@ -48,10 +48,15 @@ class FormController extends Controller
             //dd($flightData);
             $voo = new \App\Models\Voos();
             $primeiroTrecho = $flightData['flights'][0] ?? [];
-
+            $conexao = isset($flightData['flights'][1]) ? $flightData['flights'][1] : null;
+            
             $voo->desc_aeronave_voo = $primeiroTrecho['airplane'] ?? '';
             $voo->origem_voo = $primeiroTrecho['departure_airport']['id'] ?? '';
-            $voo->destino_voo = $primeiroTrecho['arrival_airport']['id'] ?? '';
+            $voo->origem_nome_voo = $primeiroTrecho['departure_airport']['name'] ?? '';
+            $voo->destino_voo = $conexao['arrival_airport']['id'] ?? '';
+            $voo->destino_nome_voo = $conexao['arrival_airport']['name'] ?? '';
+            $voo->conexao_voo = $conexao['departure_airport']['id'] ?? '';
+            $voo->conexao_nome_voo = $conexao['departure_airport']['name'] ?? '';
             $voo->data_hora_partida = !empty($primeiroTrecho['departure_airport']['time'])
                 ? date('Y-m-d H:i:s', strtotime($primeiroTrecho['departure_airport']['time']))
                 : now();
