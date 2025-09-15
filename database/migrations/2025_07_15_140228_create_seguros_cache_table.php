@@ -11,8 +11,10 @@ return new class extends Migration
         Schema::create('seguros_cache', function (Blueprint $table) {
             $table->id();
             $table->string('cache_key')->unique();
-            $table->json('result_json');
-            $table->timestamp('updated_at')->nullable();
+            $table->json('result_json')->nullable();
+            $table->timestamps();
+            $table->timestamp('started_at')->nullable();
+            $table->string('status')->default('no');
         });
     }
 

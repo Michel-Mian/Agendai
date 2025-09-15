@@ -28,7 +28,7 @@ class FormController extends Controller
     public function store(Request $request)
     {
 
-        //dd($request->all());
+        // dd($request->all());
 
         // 1. Salve a viagem
         $viagem = new \App\Models\Viagens();
@@ -38,12 +38,14 @@ class FormController extends Controller
         $viagem->data_final_viagem = $request->date_return;
         $viagem->orcamento_viagem = $request->orcamento;
         $viagem->fk_id_usuario = auth()->id();
+
         $viagem->save();
 
         // 2. Salve o voo (se houver)
         if ($request->filled('selected_flight_index')) {
             // Busque os voos novamente ou recupere os dados do voo selecionado
             $flightData = json_decode($request->input('selected_flight_data', '{}'), true);
+            //dd($flightData);
             $voo = new \App\Models\Voos();
             $primeiroTrecho = $flightData['flights'][0] ?? [];
             $conexao = isset($flightData['flights'][1]) ? $flightData['flights'][1] : null;
@@ -63,51 +65,48 @@ class FormController extends Controller
                 : now();
             $voo->companhia_voo = $primeiroTrecho['airline'] ?? '';
             $voo->fk_id_viagem = $viagem->pk_id_viagem;
-            $voo->preco_voo = $flightData['price'] ?? '';
-            $voo->numero_voo = $primeiroTrecho['flight_number'] ?? '';
-            $voo->classe_voo = $primeiroTrecho['travel_class'] ?? 'Econômica';
             $voo->save();
-
-            // Verificação do preço do voo em relação ao orçamento
-            $orcamento = floatval($viagem->orcamento_viagem);
-            $precoVoo = floatval($voo->preco_voo);
-            if ($orcamento > 0 && $precoVoo > 0 && $precoVoo > 0.6 * $orcamento) {
-                session()->flash('warning', 'Atenção: o preço do voo selecionado é maior que 60% do orçamento da viagem!');
-            }
         }
 
-        // 3. Salve o seguro (se houver)
         $seguroId = null;
-        if ($request->has('seguroSelecionado')) {
-            $seguroSelecionado = $request->seguroSelecionado;
-            if (is_string($seguroSelecionado)) {
-                $seguroSelecionado = json_decode($seguroSelecionado, true);
+        if ($request->filled('seguroSelecionadoData')) {
+            try {
+                // Decodifica a string JSON enviada pelo formulário
+                $data = json_decode($request->seguroSelecionadoData, true);
+
+                // Função para extrair valor numérico de strings de preço
+                $extractNumeric = function ($price) {
+                    if (!$price) return null;
+                    $cleaned = preg_replace('/[^\d,]/', '', $price); // Remove tudo exceto dígitos e vírgula
+                    $cleaned = str_replace(',', '.', $cleaned); // Troca vírgula por ponto
+                    return is_numeric($cleaned) ? (float) $cleaned : null;
+                };
+
+                $seguro = \App\Models\Seguros::create([
+                    'fk_id_viagem' => $viagem->pk_id_viagem, 
+                    'seguradora' => $data['seguradora'] ?? 'N/A',
+                    'plano' => $data['plano'] ?? 'N/A',
+                    'detalhes_etarios' => $data['detalhes_etarios'] ?? null,
+                    'link' => $data['link'] ?? null,
+                    'cobertura_medica' => $data['coberturas']['medica'] ?? null,
+                    'cobertura_bagagem' => $data['coberturas']['bagagem'] ?? null,
+                    'preco_pix' => $extractNumeric($data['precos']['pix'] ?? null),
+                    'preco_cartao' => $extractNumeric($data['precos']['cartao'] ?? null),
+                    'parcelamento_cartao' => $data['precos']['parcelas'] ?? null,
+                    'is_selected' => true,
+                ]);
+
+                $seguroId = $seguro->pk_id_seguro;
+
+            } catch (\Exception $e) {
+                // Logar o erro é uma boa prática
+                \Log::error('Falha ao salvar seguro no FormController@store', [
+                    'error' => $e->getMessage(), 
+                    'data' => $request->seguroSelecionadoData
+                ]);
+                // Opcional: retornar com um erro
+                // return back()->withErrors(['seguro' => 'Ocorreu um erro ao salvar o seguro selecionado.']);
             }
-            $seguro = new \App\Models\Seguros();
-            $seguro->site = $seguroSelecionado['site'] ?? '';
-            $seguro->preco = $seguroSelecionado['preco'] ?? '';
-            $seguro->preco_pix = $seguroSelecionado['preco_pix'] ?? '';
-            $seguro->preco_cartao = $seguroSelecionado['preco_cartao'] ?? '';
-            $seguro->parcelas = $seguroSelecionado['parcelas'] ?? '';
-            $seguro->dados = isset($seguroSelecionado['dados'])
-                ? (is_array($seguroSelecionado['dados']) ? json_encode($seguroSelecionado['dados']) : json_encode([$seguroSelecionado['dados']]))
-                : json_encode([]);
-            $seguro->link = $seguroSelecionado['link'] ?? '';
-            $seguro->cobertura_medica = $seguroSelecionado['cobertura_medica'] ?? '';
-            $seguro->cobertura_bagagem = $seguroSelecionado['cobertura_bagagem'] ?? '';
-            $seguro->cobertura_cancelamento = $seguroSelecionado['cobertura_cancelamento'] ?? '';
-            $seguro->cobertura_odonto = $seguroSelecionado['cobertura_odonto'] ?? '';
-            $seguro->cobertura_medicamentos = $seguroSelecionado['cobertura_medicamentos'] ?? '';
-            $seguro->cobertura_eletronicos = $seguroSelecionado['cobertura_eletronicos'] ?? '';
-            $seguro->cobertura_mochila_mao = $seguroSelecionado['cobertura_mochila_mao'] ?? '';
-            $seguro->cobertura_atraso_embarque = $seguroSelecionado['cobertura_atraso_embarque'] ?? '';
-            $seguro->cobertura_pet = $seguroSelecionado['cobertura_pet'] ?? '';
-            $seguro->cobertura_sala_vip = $seguroSelecionado['cobertura_sala_vip'] ?? '';
-            $seguro->cobertura_telemedicina = $seguroSelecionado['cobertura_telemedicina'] ?? false;
-            $seguro->fk_id_viagem = $viagem->pk_id_viagem;
-            $seguro->is_selected = true;
-            $seguro->save();
-            $seguroId = $seguro->pk_id_seguro;
         }
 
         // 4. Salve as idades dos viajantes
@@ -121,12 +120,12 @@ class FormController extends Controller
         }
 
         // 5. Salve as preferências da viagem (vários objetivos para uma viagem)
-        if ($request->has('preferences')) {
+        if ($request->filled('preferences')) {
             $prefs = explode(',', $request->preferences[0]);
             foreach ($prefs as $pref) {
                 if (trim($pref) !== '') {
                     $objetivo = new \App\Models\Objetivos();
-                    $objetivo->nome = $pref;
+                    $objetivo->nome = trim($pref); // Adicionado trim() por segurança
                     $objetivo->fk_id_viagem = $viagem->pk_id_viagem;
                     $objetivo->save();
                 }
@@ -204,6 +203,65 @@ class FormController extends Controller
         ])->render();
 
         return response()->json(['html' => $html]);
+    }
+
+    // Novo método auxiliar para filtrar blocos relevantes dos dados do seguro
+    private function filtrarBlocosDados($dados)
+    {
+        $linhas = is_array($dados) ? $dados : [$dados];
+        $blocos = [];
+        foreach ($linhas as $linha) {
+            $linha_lower = mb_strtolower($linha);
+            if (
+                str_contains($linha_lower, 'despesas médico') ||
+                str_contains($linha_lower, 'despesas médicas') ||
+                str_contains($linha_lower, 'despesa médica hospitalar') ||
+                str_contains($linha_lower, 'dmh') ||
+                str_contains($linha_lower, 'bagagem') ||
+                str_contains($linha_lower, 'cancelamento') ||
+                str_contains($linha_lower, 'odontológicas') || str_contains($linha_lower, 'odontológica') ||
+                str_contains($linha_lower, 'medicamentos') ||
+                str_contains($linha_lower, 'eletrônicos') ||
+                str_contains($linha_lower, 'mochila') || str_contains($linha_lower, 'mão protegida') ||
+                str_contains($linha_lower, 'atraso de embarque') ||
+                str_contains($linha_lower, 'pet') ||
+                str_contains($linha_lower, 'sala vip') ||
+                str_contains($linha_lower, 'telemedicina') ||
+                str_contains($linha_lower, 'preço pix') ||
+                (str_contains($linha_lower, 'pix') && str_contains($linha_lower, 'r$')) ||
+                (str_contains($linha_lower, 'cartão') && str_contains($linha_lower, 'r$')) ||
+                (str_contains($linha_lower, 'em até') && str_contains($linha_lower, 'x') && str_contains($linha_lower, 'r$')) ||
+                str_contains($linha_lower, 'x de r$') ||
+                preg_match('/\d+x.*(sem juros|no cartão)/i', $linha) ||
+                str_contains($linha_lower, 'total à vista') ||
+                (str_contains($linha_lower, 'r$'))
+            ) {
+                $blocos[] = $linha;
+            }
+        }
+        return $blocos;
+    }
+
+    // Retorna os motivos e destinos válidos para o select do frontend
+    public function getInsuranceOptions()
+    {
+        $motivos = [
+            ['value' => '1', 'text' => 'LAZER/NEGÓCIO'],
+            ['value' => '2', 'text' => 'MULTI-VIAGENS'],
+            ['value' => '3', 'text' => 'ANUAL'],
+            ['value' => '4', 'text' => 'ESTUDANTE'],
+        ];
+        $destinos = [
+            ['value' => '5', 'text' => 'África'],
+            ['value' => '1', 'text' => 'América Do Norte'],
+            ['value' => '4', 'text' => 'América Do Sul'],
+            ['value' => '6', 'text' => 'Ásia'],
+            ['value' => '3', 'text' => 'Caribe-México'],
+            ['value' => '2', 'text' => 'Europa'],
+            ['value' => '7', 'text' => 'Oceânia'],
+            ['value' => '11', 'text' => 'Oriente Médio'],
+        ];
+        return response()->json(['motivos' => $motivos, 'destinos' => $destinos]);
     }
 
 }
