@@ -14,6 +14,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Http;
 Carbon::setLocale('pt_BR');
 
 
@@ -494,52 +495,46 @@ class ViagensController extends Controller
     private function fetchWeatherFromAPI($destino)
     {
         try {
-            // Primeiro buscar coordenadas (com timeout menor)
-            $geocodeUrl = "https://api.openweathermap.org/geo/1.0/direct?q=" . urlencode($destino) . "&limit=1&appid=" . env('OPENWEATHER_API_KEY', 'aa4dfd898f8821ac74f8c5dec5a7d2b4');
-            
+            $apiKey = config('services.openweather_api_key'); // Usando config() como boa prática
+            if (!$apiKey) {
+                throw new \Exception('Chave de API do OpenWeather não configurada.');
+            }
+
+            // Contexto para ignorar verificação SSL, se necessário
             $context = stream_context_create([
-                'http' => [
-                    'timeout' => 3, // Timeout agressivo de 3 segundos
-                    'ignore_errors' => true
-                ]
+                "ssl" => [
+                    "verify_peer" => false,
+                    "verify_peer_name" => false,
+                ],
             ]);
-            
+
+            // 1. Geocodificação para obter coordenadas
+            $geocodeUrl = "https://api.openweathermap.org/geo/1.0/direct?q=" . urlencode($destino) . "&limit=1&appid=" . $apiKey;
             $geocodeResponse = @file_get_contents($geocodeUrl, false, $context);
-            
-            if (!$geocodeResponse) {
-                throw new \Exception('Falha na geocodificação');
+            if ($geocodeResponse === FALSE) {
+                throw new \Exception('Não foi possível obter as coordenadas para o destino.');
             }
-            
             $geocodeData = json_decode($geocodeResponse, true);
-            
             if (empty($geocodeData)) {
-                throw new \Exception('Local não encontrado');
+                throw new \Exception('Destino não encontrado na API de geocodificação.');
             }
-            
             $latitude = $geocodeData[0]['lat'];
             $longitude = $geocodeData[0]['lon'];
-            
-            // Buscar dados do clima
-            $weatherUrl = "https://api.open-meteo.com/v1/forecast?latitude={$latitude}&longitude={$longitude}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=America/Sao_Paulo&forecast_days=7";
-            
+
+            // 2. Obter dados do clima usando as coordenadas
+            $weatherUrl = "https://api.openweathermap.org/data/2.5/onecall?lat={$latitude}&lon={$longitude}&exclude=current,minutely,hourly,alerts&appid={$apiKey}&units=metric&lang=pt_br";
             $weatherResponse = @file_get_contents($weatherUrl, false, $context);
-            
-            if (!$weatherResponse) {
-                throw new \Exception('Falha ao buscar clima');
+            if ($weatherResponse === FALSE) {
+                throw new \Exception('Não foi possível obter os dados do clima.');
             }
-            
-            return json_decode($weatherResponse, true);
-            
+            $weatherData = json_decode($weatherResponse, true);
+
+            return $weatherData;
+
         } catch (\Exception $e) {
-            // Retornar dados mockados em caso de erro
-            return [
-                'daily' => [
-                    'time' => array_fill(0, 7, date('Y-m-d')),
-                    'temperature_2m_max' => array_fill(0, 7, 25),
-                    'temperature_2m_min' => array_fill(0, 7, 18),
-                    'weathercode' => array_fill(0, 7, 0)
-                ]
-            ];
+            Log::error('Erro ao buscar dados do clima (lógica antiga): ' . $e->getMessage());
+            // Retorna nulo ou um array vazio para que a UI possa tratar o erro
+            return null;
         }
     }
 
@@ -549,9 +544,9 @@ class ViagensController extends Controller
     private function fetchNewsFromAPI($destino)
     {
         try {
-            $apiKey = env('SERPAPI_KEY');
+            $apiKey = config('services.serp_api_key'); // Usando config() como boa prática
             if (!$apiKey) {
-                throw new \Exception('API key não configurada');
+                throw new \Exception('Chave da SerpApi não configurada.');
             }
 
             $queries = [
@@ -559,36 +554,36 @@ class ViagensController extends Controller
                 "pontos turísticos $destino",
                 "viagem $destino dicas"
             ];
-
             $allNews = [];
-            
-            foreach (array_slice($queries, 0, 2) as $query) { // Reduzir para 2 queries apenas
-                try {
-                    $context = stream_context_create([
-                        'http' => [
-                            'timeout' => 4, // Timeout de 4 segundos
-                            'ignore_errors' => true
-                        ]
-                    ]);
-                    
-                    $url = "https://serpapi.com/search.json?engine=google_news&q=" . urlencode($query) . "&api_key=$apiKey&num=3";
-                    $response = @file_get_contents($url, false, $context);
-                    
-                    if ($response) {
-                        $data = json_decode($response, true);
-                        if (isset($data['news_results'])) {
-                            $allNews = array_merge($allNews, array_slice($data['news_results'], 0, 2));
-                        }
+
+            // Contexto para ignorar verificação SSL
+            $context = stream_context_create([
+                'http' => ['timeout' => 4], // Timeout de 4 segundos
+                "ssl" => [
+                    "verify_peer" => false,
+                    "verify_peer_name" => false,
+                ],
+            ]);
+
+            foreach (array_slice($queries, 0, 2) as $query) {
+                $url = "https://serpapi.com/search.json?engine=google_news&q=" . urlencode($query) . "&api_key=" . $apiKey . "&num=3";
+                $response = @file_get_contents($url, false, $context);
+
+                \Illuminate\Support\Facades\Log::info('Resposta crua da SerpApi:', ['response' => $response]);
+                $data = json_decode($response, true);
+                \Illuminate\Support\Facades\Log::info('Dados da SerpApi decodificados:', $data ?? ['error' => 'Falha ao decodificar JSON']);
+
+                if ($response !== false) {
+                    if (isset($data['news_results'])) {
+                        $allNews = array_merge($allNews, array_slice($data['news_results'], 0, 2));
                     }
-                } catch (\Exception $e) {
-                    continue; // Continuar mesmo se uma query falhar
                 }
             }
+            return array_slice($allNews, 0, 6);
 
-            return array_slice($allNews, 0, 6); // Máximo 6 notícias
-            
         } catch (\Exception $e) {
-            return []; // Retornar array vazio em caso de erro
+            Log::error('Erro ao buscar notícias via SerpAPI (lógica antiga): ' . $e->getMessage());
+            return []; // Retorna um array vazio em caso de erro
         }
     }
 }
