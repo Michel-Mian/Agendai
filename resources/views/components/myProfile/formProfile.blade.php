@@ -1,3 +1,7 @@
+<!-- Adicionados links para os arquivos nightMode.css e nightMode.js -->
+<link rel="stylesheet" href="{{ asset('resources/css/nightMode.css') }}">
+<script src="{{ asset('resources/js/nightMode.js') }}"></script>
+
 <div class="w-full px-2 sm:px-4 py-6 bg-gray-50">
     <div class="flex flex-col sm:flex-row bg-blue-50 rounded-lg shadow mb-6 max-w-xl mx-auto border border-blue-100">
         <button type="button" class="flex-1 px-4 sm:px-6 py-2 bg-white text-blue-900 rounded-lg font-semibold shadow transition cursor-pointer focus:outline-none" style="box-shadow: 0 2px 8px 0 #e0e7ef;" id="btnProfile">
@@ -71,8 +75,6 @@
         </form>
     </div>
     <div class="bg-white/90 shadow-xl rounded-2xl p-4 sm:p-8 max-w-xl mx-auto border border-blue-100 hidden" id="cardPreferences">
-        <h2 class="text-xl sm:text-2xl font-semibold text-blue-900 mb-6">Preferências</h2>
-        <!-- Formulário de preferências -->
         <form action="{{ route('user.updatePreferences', $user->id) }}" method="POST" id="preferencesForm">
             @csrf
             @method('PUT')
@@ -111,3 +113,35 @@
         </form>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const themeSelect = document.getElementById('theme');
+    
+    const savedTheme = localStorage.getItem('siteTheme') || 'light';
+    
+    // Aplica o tema usando o nightMode.js
+    if (window.nightMode && window.nightMode.apply) {
+        window.nightMode.apply(savedTheme);
+    }
+    
+    // Atualiza o valor do select para mostrar o tema atual
+    themeSelect.value = savedTheme;
+    
+    // Listener para mudança de tema
+    themeSelect.addEventListener('change', function() {
+        const selectedTheme = this.value;
+        
+        localStorage.setItem('siteTheme', selectedTheme);
+        
+        // Aplica o tema usando nightMode.js
+        if (window.nightMode && window.nightMode.apply) {
+            window.nightMode.apply(selectedTheme);
+        }
+        
+        console.log('[v0] Tema alterado para:', selectedTheme);
+    });
+});
+</script>
+<script src="{{ asset('resources/js/formProfile.js') }}"></script>
+<script src="{{ asset('resources/js/formPreferences.js') }}"></script>
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
