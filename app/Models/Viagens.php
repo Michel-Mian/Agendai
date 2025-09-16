@@ -15,6 +15,17 @@ class Viagens extends Model
         'fk_id_seguro_selecionado',
     ];
     
+    // Campos que podem ser preenchidos via mass assignment
+    protected $fillable = [
+        'destino_viagem',
+        'origem_viagem', 
+        'data_inicio_viagem',
+        'data_final_viagem',
+        'orcamento_viagem',
+        'fk_id_usuario',
+        'fk_id_seguro_selecionado'
+    ];
+    
     // Relação com  usuário (User)
     public function user()
     {

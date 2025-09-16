@@ -1,81 +1,81 @@
-<div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-    <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-4">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="bg-white/20 rounded-lg p-2">
-                    <i class="fas fa-cloud-sun text-white text-xl"></i>
+<div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+    <!-- Header com gradiente mais atrativo -->
+    <div class="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 px-8 py-6 relative overflow-hidden">
+        <!-- Elementos decorativos -->
+        <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+        <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
+        
+        <div class="relative z-10">
+            <h2 class="text-2xl font-bold text-blue-900 flex items-center mb-2">
+                <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mr-3">
+                    <i class="fas fa-cloud-sun text-blue-800 text-lg"></i>
                 </div>
-                <div>
-                    <h3 class="text-xl font-bold text-blue-700">Previsão do Tempo</h3>
-                    <p class="text-blue-400 text-sm">{{ $viagem->destino_viagem }}</p>
-                </div>
-            </div>
-            <div class="text-right">
-                <div class="text-blue-700 text-sm">Período da viagem</div>
-                <div class="text-blue-400 font-medium">{{ \Carbon\Carbon::parse($viagem->data_inicio_viagem)->format('d/m') }} - {{ \Carbon\Carbon::parse($viagem->data_final_viagem)->format('d/m') }}</div>
-            </div>
+                Previsão do Tempo
+            </h2>
+            <p class="text-blue-600 text-sm">Condições climáticas detalhadas para {{ $viagem->destino_viagem }}</p>
         </div>
     </div>
-    <div class="p-6">
-        @php
-            $dataPrevisao = isset($clima['daily']['time'][0]) ? \Carbon\Carbon::parse($clima['daily']['time'][0]) : null;
-            $dataInicioViagem = \Carbon\Carbon::parse($viagem->data_inicio_viagem);
-            $diasDiferenca = $dataPrevisao ? $dataPrevisao->diffInDays($dataInicioViagem, false) : null;
-        @endphp
-
-        @if(is_null($dataPrevisao) || $diasDiferenca > 7)
-            <div class="text-orange-600 font-semibold flex items-center justify-center">
-                A previsão do tempo só estará disponível até 7 dias antes do início da viagem. Volte mais próximo da data!
+    
+    <!-- Skeleton Loading Melhorado -->
+    <div id="weather-skeleton-stats" class="p-6">
+        <!-- Resumo do clima atual -->
+        <div class="bg-gradient-to-r from-blue-50 to-blue-600 rounded-xl p-6 mb-6 animate-pulse">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <div class="bg-gray-500 rounded h-6 w-32 mb-2"></div>
+                    <div class="bg-gray-500 rounded h-4 w-24"></div>
+                </div>
+                <div class="bg-gray-600 rounded-full h-16 w-16"></div>
             </div>
-        @else
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                @for ($i = 0; $i < count($clima['daily']['time']); $i++)
-                    <div class="relative bg-gradient-to-br from-blue-100 via-blue-50 to-white rounded-2xl shadow-xl border border-blue-200 p-6 flex flex-col justify-between min-h-[220px] hover:scale-[1.02] transition-transform duration-200">
-                        <span class="absolute top-3 right-4 bg-blue-500 text-white text-xs px-3 py-1 rounded-full shadow font-semibold z-10">
-                            Dia {{ $i+1 }}
-                        </span>
-                        <div class="flex items-center space-x-5 mb-4">
-                            <div class="bg-blue-500/30 rounded-full p-4 flex items-center justify-center shadow-md">
-                                @php
-                                    $maxProb = $clima['daily']['precipitation_probability_max'][$i] ?? 0;
-                                    $icon = $maxProb <= 30 ? 'fa-sun' : ($maxProb >= 60 ? 'fa-cloud-rain' : 'fa-cloud-sun');
-                                    $iconColor = $maxProb <= 30 ? 'text-yellow-400' : ($maxProb >= 60 ? 'text-blue-400' : 'text-orange-700');
-                                @endphp
-                                <i class="fas {{ $icon }} {{ $iconColor }} text-4xl"></i>
-                            </div>
-                            <div>
-                                <div class="text-3xl font-extrabold text-blue-700 flex items-center">
-                                    {{ $clima['daily']['temperature_2m_max'][$i]  ?? '-'}}°C
-                                    <span class="ml-2 text-base font-normal text-blue-400">máx</span>
-                                </div>
-                                <div class="text-lg text-blue-500">
-                                    Mín: <span class="font-semibold">{{ $clima['daily']['temperature_2m_min'][$i] ?? '-' }}°C</span>
-                                </div>
-                                <div class="text-sm text-gray-500 mt-1">
-                                    {{ \Carbon\Carbon::parse($clima['daily']['time'][$i])->translatedFormat('l, d/m/Y') }}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex flex-col space-y-2 mt-2">
-                            <div class="flex items-center space-x-2">
-                                <i class="fas fa-tint text-blue-400"></i>
-                                <span class="text-blue-700 text-sm">Precipitação:</span>
-                                <span class="font-semibold text-blue-900">{{ $clima['daily']['precipitation_sum'][$i] ?? '-' }} mm</span>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <i class="fas fa-wind text-blue-400"></i>
-                                <span class="text-blue-700 text-sm">Vento máx:</span>
-                                <span class="font-semibold text-blue-900">{{ $clima['daily']['wind_speed_10m_max'][$i] ?? '-' }} km/h</span>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <i class="fas fa-cloud-showers-heavy text-blue-400"></i>
-                                <span class="text-blue-700 text-sm">Prob. chuva:</span>
-                                <span class="font-semibold text-blue-900">{{ $clima['daily']['precipitation_probability_max'][$i] ?? '-' }}%</span>
-                            </div>
-                        </div>
-                    </div>
-                @endfor
+            <div class="grid grid-cols-3 gap-4">
+                <div class="text-center">
+                    <div class="bg-gray-600 rounded h-4 w-16 mx-auto mb-1"></div>
+                    <div class="bg-gray-500 rounded h-6 w-12 mx-auto"></div>
+                </div>
+                <div class="text-center">
+                    <div class="bg-gray-500 rounded h-4 w-16 mx-auto mb-1"></div>
+                    <div class="bg-gray-500 rounded h-6 w-12 mx-auto"></div>
+                </div>
+                <div class="text-center">
+                    <div class="bg-gray-500 rounded h-4 w-16 mx-auto mb-1"></div>
+                    <div class="bg-gray-500 rounded h-6 w-12 mx-auto"></div>
+                </div>
             </div>
-        @endif
+        </div>
+        
+        <!-- Previsão dos próximos dias -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+            @for($i = 0; $i < 7; $i++)
+            <div class="bg-gradient-to-b from-gray-50 to-gray-100 rounded-xl p-4 animate-pulse">
+                <div class="bg-gray-200 rounded h-4 w-16 mx-auto mb-3"></div>
+                <div class="bg-gray-200 rounded-full h-12 w-12 mx-auto mb-3"></div>
+                <div class="bg-gray-200 rounded h-5 w-8 mx-auto mb-2"></div>
+                <div class="bg-gray-200 rounded h-4 w-6 mx-auto mb-3"></div>
+                <div class="space-y-2">
+                    <div class="bg-gray-200 rounded h-3 w-full"></div>
+                    <div class="bg-gray-200 rounded h-3 w-full"></div>
+                </div>
+            </div>
+            @endfor
+        </div>
+    </div>
+    
+    <!-- Conteúdo Real do Clima APRIMORADO -->
+    <div id="weather-content-stats" class="p-6 hidden">
+        <!-- Conteúdo será carregado via AJAX -->
+    </div>
+    
+    <!-- Estado de Erro -->
+    <div id="weather-error-stats" class="p-6 text-center hidden">
+        <div class="text-gray-500">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Erro ao carregar clima</h3>
+            <p class="text-gray-600 mb-4">Não foi possível carregar a previsão do tempo</p>
+            <button onclick="loadWeatherDataStats(window.currentTripId)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                <i class="fas fa-redo mr-2"></i>Tentar novamente
+            </button>
+        </div>
     </div>
 </div>

@@ -24,6 +24,7 @@ class HotelsController extends Controller
 
     public function search(Request $request)
     {
+        $user = auth()->user();
         $request->validate([
             'q' => 'required|string',
             'check_in_date' => 'required|date',
@@ -46,7 +47,7 @@ class HotelsController extends Controller
                 'api_key' => $apiKey,
                 'hl' => 'pt-br',
                 'gl' => 'br',
-                'currency' => 'BRL',
+                'currency' => $user->currency,
             ];
 
             if ($request->input('next_page_token')) {

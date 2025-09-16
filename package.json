@@ -2,7 +2,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "setup": "echo 'Realizando todas as configurações de sistema, por favor espere...' && npm i && npm run build && composer i && php artisan storage:link && php artisan migrate && php artisan db:seed --class=AirportSeeder",
+        "setup": "echo 'Realizando todas as configurações de sistema, por favor espere...' && npm i && npm run build && composer i && php artisan storage:link && php artisan migrate && php artisan db:seed --class=AirportSeeder && composer require barryvdh/laravel-dompdf && echo 'Configuração concluída, agora você pode iniciar o sistema com npm run dev e php artisan serve'",
         "build": "vite build",
         "dev": "vite"
     },

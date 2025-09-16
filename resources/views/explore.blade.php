@@ -130,14 +130,51 @@
 <script>
 // Notificação simples (alert) para fallback
 if (typeof showNotification !== 'function') {
-    function showNotification(msg, type) {
-        // Você pode trocar por um toast mais bonito depois
-        let prefix = '';
-        if (type === 'success') prefix = '✔️ ';
-        else if (type === 'error') prefix = '❌ ';
-        else if (type === 'info') prefix = 'ℹ️ ';
-        alert(prefix + msg);
-    }
+    window.showNotification = function(message, type = 'success') {
+        console.log(`📢 ${type.toUpperCase()}: ${message}`);
+        
+        // Criar uma notificação visual simples
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 10000;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        `;
+        
+        switch(type) {
+            case 'success':
+                notification.style.backgroundColor = '#10B981';
+                break;
+            case 'error':
+                notification.style.backgroundColor = '#EF4444';
+                break;
+            case 'warning':
+                notification.style.backgroundColor = '#F59E0B';
+                break;
+            case 'info':
+            default:
+                notification.style.backgroundColor = '#3B82F6';
+                break;
+        }
+        
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        // Auto-remover após 4 segundos
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => notification.remove(), 300);
+        }, 4000);
+    };
 }
 
 // --- Floating menu open/close logic ---
@@ -163,8 +200,63 @@ window.dataInicioViagem = @json($dataInicio);
 window.dataFimViagem = @json($dataFim);
 window.destinoViagem = @json($destino);
 window.origemViagem = @json($origem);
+
+// Verificar se há filtros de objetivo vindos da URL
+@if(isset($filtrosObjetivo) && $filtrosObjetivo)
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎯 Filtros de objetivo detectados:', @json($filtrosObjetivo));
+    console.log('📝 Nome do objetivo:', @json($nomeObjetivo));
+    
+    // Armazenar filtros para aplicação posterior
+    window.autoApplyFilters = @json($filtrosObjetivo);
+    window.objectiveName = @json($nomeObjetivo);
+    window.shouldApplyObjectiveFilters = true;
+    
+    // Mostrar notificação sobre os filtros aplicados
+    setTimeout(() => {
+        if (typeof showNotification === 'function') {
+            showNotification('🎯 Preparando filtros para: {{ $nomeObjetivo }}', 'info');
+        }
+    }, 500);
+});
+@endif
 // Variável para cache dos pontos do banco
 let pontosCache = [];
+
+// Helper functions
+function getPlaceType(types) {
+    if (!types || !Array.isArray(types)) return 'tourist_attraction';
+    
+    const typeMapping = {
+        'restaurant': 'restaurant',
+        'cafe': 'cafe',
+        'bar': 'bar',
+        'museum': 'museum',
+        'park': 'park',
+        'tourist_attraction': 'tourist_attraction',
+        'amusement_park': 'amusement_park',
+        'shopping_mall': 'shopping_mall',
+        'hotel': 'lodging',
+        'church': 'church',
+        'hospital': 'hospital',
+        'school': 'school',
+        'university': 'university',
+        'gym': 'gym',
+        'spa': 'spa',
+        'zoo': 'zoo',
+        'aquarium': 'aquarium',
+        'night_club': 'night_club',
+        'casino': 'casino'
+    };
+    
+    for (let type of types) {
+        if (typeMapping[type]) {
+            return typeMapping[type];
+        }
+    }
+    
+    return types[0] || 'tourist_attraction';
+}
 
 /**
  * Normaliza datas para o formato YYYY-MM-DD.
@@ -327,8 +419,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Initialize Google Map
-window.initMap = function() {
+// Garantir que initMap seja uma função global acessível
+function initMap() {
+    console.log('🗺️ Função initMap chamada pelo Google Maps API');
+    console.log('🔍 Verificando elementos DOM...');
+    
+    const mapElement = document.getElementById("map");
+    if (!mapElement) {
+        console.error('❌ Elemento #map não encontrado!');
+        return;
+    }
+    
+    console.log('✅ Elemento #map encontrado');
+    console.log('🌐 Verificando Google Maps API...');
+    
+    if (!window.google || !window.google.maps) {
+        console.error('❌ Google Maps API não carregada!');
+        return;
+    }
+    
+    console.log('✅ Google Maps API disponível');
+    
     // Função para inicializar o mapa após obter as coordenadas
     function startMapWithCoords(coords) {
         map = new google.maps.Map(document.getElementById("map"), {
@@ -359,39 +470,69 @@ window.initMap = function() {
         });
 
         const service = new google.maps.places.PlacesService(map);
-        service.nearbySearch(
-            {
-                location: coords,
-                radius: 10000,
-                type: 'tourist_attraction',
-            },
-            (results, status) => {
-                if (status === google.maps.places.PlacesServiceStatus.OK) {
-                    places = [];
-                    results.forEach(place => {
-                        // [GOOGLE PLACES API] Cada 'place' vem da resposta da API Places
-                        places.push({
-                            id: place.place_id,
-                            name: place.name,
-                            lat: place.geometry.location.lat(), // [GOOGLE PLACES API] latitude
-                            lng: place.geometry.location.lng(), // [GOOGLE PLACES API] longitude
-                            type: getPlaceType(place.types),
-                            rating: place.rating || 4.0,
-                            address: place.vicinity,
-                            opening_hours: place.opening_hours ? place.opening_hours.weekday_text : [],
-                            description: place.vicinity || place.formatted_address || '',
-                            photos: place.photos ? place.photos.map(p => p.getUrl({ 'maxWidth': 400, 'maxHeight': 400 })) : [] // [GOOGLE PLACES API] URLs das fotos
-                        });
-                    });
-                    addMarkersToMap();
-                    updateSuggestions();
-                } else {
-                    console.error('Falha na busca de locais:', status);
-                }
-            }
-        );
-
         infoWindow = new google.maps.InfoWindow();
+        
+        // Verificar se deve aplicar filtros de objetivo automaticamente
+        if (window.shouldApplyObjectiveFilters && window.autoApplyFilters && window.autoApplyFilters.length > 0) {
+            console.log('🎯 Aplicando filtros automáticos de objetivo...');
+            
+            // Aguardar um pouco para garantir que tudo esteja carregado
+            setTimeout(() => {
+                if (typeof window.applyMapFilters === 'function') {
+                    const filters = {
+                        places: window.autoApplyFilters,
+                        location: window.destinoViagem || '',
+                        radius: '10000',
+                        objective: window.objectiveName
+                    };
+                    
+                    console.log('🚀 Chamando applyMapFilters com filtros de objetivo:', filters);
+                    window.applyMapFilters(filters);
+                    
+                    // Marcar como aplicado para evitar reaplicação
+                    window.shouldApplyObjectiveFilters = false;
+                    
+                } else {
+                    console.error('❌ Função applyMapFilters não encontrada');
+                }
+            }, 1000); // Reduzido para 1 segundo
+            
+        } else {
+            // Busca padrão apenas se não há filtros de objetivo
+            console.log('🔍 Realizando busca padrão (sem filtros de objetivo)');
+            
+            service.nearbySearch(
+                {
+                    location: coords,
+                    radius: 10000,
+                    type: 'tourist_attraction'
+                },
+                (results, status) => {
+                    if (status === google.maps.places.PlacesServiceStatus.OK) {
+                        places = [];
+                        results.forEach(place => {
+                            places.push({
+                                id: place.place_id,
+                                name: place.name,
+                                lat: place.geometry.location.lat(),
+                                lng: place.geometry.location.lng(),
+                                type: getPlaceType(place.types),
+                                rating: place.rating || 4.0,
+                                address: place.vicinity,
+                                opening_hours: place.opening_hours ? place.opening_hours.weekday_text : [],
+                                description: place.vicinity || place.formatted_address || '',
+                                photos: place.photos ? place.photos.map(p => p.getUrl({ 'maxWidth': 400, 'maxHeight': 400 })) : []
+                            });
+                        });
+                        addMarkersToMap();
+                        updateSuggestions();
+                    } else {
+                        console.error('Falha na busca de locais:', status);
+                    }
+                }
+            );
+        }
+        
         initPlacesAutocomplete();
     }
 
@@ -408,7 +549,28 @@ window.initMap = function() {
     } else {
         startMapWithCoords({ lat: -10.8263593, lng: -42.7335083 });
     }
-};
+}
+
+// Garantir que a função esteja disponível globalmente
+window.initMap = initMap;
+
+// Debug: verificar se a função existe quando a página carrega
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔧 DOM carregado. Verificando função initMap...');
+    console.log('✅ typeof initMap:', typeof initMap);
+    console.log('✅ typeof window.initMap:', typeof window.initMap);
+    
+    // Testar se conseguimos chamar a função manualmente
+    setTimeout(() => {
+        console.log('🧪 Testando chamada manual de initMap em 3 segundos...');
+        if (typeof window.google !== 'undefined' && window.google.maps) {
+            console.log('🌐 Google Maps API já carregada, tentando inicializar...');
+            // initMap(); // Descomente se quiser forçar
+        } else {
+            console.log('⏳ Aguardando Google Maps API carregar...');
+        }
+    }, 3000);
+});
 
 function startMapWithOrigemCoords() {
          if (window.origemViagem && typeof getCoordinatesFromAddress === 'function') {
@@ -826,6 +988,7 @@ function removePontoFromItinerary(pontoId) {
     closeModal();
     updateItineraryDisplay();
 }
+
 </script>
 
 <script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places&callback=initMap" async defer></script>
