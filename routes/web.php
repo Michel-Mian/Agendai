@@ -8,8 +8,10 @@ use App\http\controllers\UserController;
 use App\http\controllers\ExploreController;
 use App\http\controllers\ViagensController;
 use App\http\controllers\HotelsController;
+use App\http\controllers\MobileController;
 use Illuminate\Http\Request;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
+use App\Http\Controllers\ViagemPdfController;
 use App\Http\Controllers\TripController;
 
 Route::get('/', function () {
@@ -39,11 +41,19 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/formTrip/card-flight', [FormController::class, 'cardFlightAjax'])->name('formTrip.cardFlight.ajax');    
 
     Route::get('/dashboard/historico', [DashBoardController::class, 'historicoAjax'])->name('dashboard.historico');
-    Route::get('/dashboard', [DashBoardController::class, 'dashboard'])->name('dashboard');
+    
+    Route::get('/dashboard', [\App\Http\Controllers\DashBoardController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/myTrips', [ViagensController::class, 'index'])->name('myTrips');
 
     Route::get('/viagens/{id}', [ViagensController::class, 'show'])->name('viagens');
+    Route::patch('/viagens/{id}/update', [ViagensController::class, 'updateViagem'])->name('viagens.update');
+    Route::delete('/viagens/{id}', [ViagensController::class, 'destroyViagem'])->name('viagens.destroy');
+    Route::get('/viagens/{id}/weather', [ViagensController::class, 'getWeatherData'])->name('viagens.weather');
+    Route::get('/viagens/{id}/news', [ViagensController::class, 'getNewsData'])->name('viagens.news');
+
+    // Exportar PDF da viagem
+    Route::get('/viagens/{id}/exportar-pdf', [ViagemPdfController::class, 'export'])->name('viagens.exportar_pdf');
 
     Route::delete('/viajantes/{id}', [ViagensController::class, 'destroy'])->name('viajantes.destroy');
     Route::post('/viajantes', [ViagensController::class, 'addViajante'])->name('viajantes.store');
@@ -74,4 +84,5 @@ Route::middleware(['auth'])->group(function (){
     Route::post('/hotels/{id}', [HotelsController::class, 'addToTrip'])->name('hotels.addToTrip');
     Route::get('/trip/insurances', [TripController::class, 'getInsurancesAjax']);
     Route::post('/trip/update-insurance', [TripController::class, 'updateInsuranceAjax']);
+
 });

@@ -14,16 +14,10 @@
                     </svg>
                     Exportar
                 </button>
-                <button class="flex items-center px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all duration-200 shadow-sm">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"/>
-                    </svg>
-                    Salvar
-                </button>
             </div>
         @else
             <button id="new-trip" class="bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold px-4 py-2 rounded-lg flex items-center space-x-2 cursor-pointer mx-5 mt-4 hover:from-blue-700 hover:to-blue-600 transition">
-                <a href="#">
+                <a href="formTrip">
                     <span class="text-xl">+</span>
                     <span>Nova Viagem</span>
                 </a>

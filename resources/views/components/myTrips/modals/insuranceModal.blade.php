@@ -96,7 +96,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         "Content-Type": "application/json",
                         "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value
                     },
-                    body: JSON.stringify({ seguro_id: seguroData.pk_id_seguro })
+                    body: JSON.stringify({ seguro_id: seguroData.id })
                 }).then(() => {
                     // Atualiza sessionStorage para revisão
                     let fullName = (seguroData.site || '') + (seguroData.dados && seguroData.dados[0] ? ' ' + seguroData.dados[0] : '');
@@ -106,8 +106,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     setTimeout(() => {
                         document.getElementById('insurance-change-message').classList.add('hidden');
                     }, 1200);
-                    // Dispara evento para atualizar o seguro na tela principal
-                    window.dispatchEvent(new CustomEvent('insuranceChanged', { detail: { seguro: seguroData } }));
                 });
             });
         });
@@ -124,14 +122,14 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
-    // Carrega seguros instantaneamente ao abrir o modal
-    window.addEventListener('openInsuranceModal', function() {
-        fetchInsurances();
-    });
+    // Chama ao abrir o modal
+    fetchInsurances();
 
-    // Atualiza seguro selecionado ao fechar o modal (opcional)
+    // Atualiza seguro selecionado ao fechar o modal
     document.getElementById('close-insurance-modal-btn-footer')?.addEventListener('click', function() {
         fetchInsurances();
+        // Se quiser atualizar na tela principal, pode disparar um evento customizado aqui
+        // window.dispatchEvent(new Event('insuranceChanged'));
     });
 });
 </script>

@@ -25,7 +25,7 @@ class FlightsController extends Controller
             'max_price' => $request->price,
             'type' => $request->type_trip,
             'sort_by' => $request->sort_by,
-            'currency'    => $user->currency ?? 'BRL',
+            'currency'    => $user->currency,
             'hl' => 'pt-br',
             'travel_class' => $request->class,
             'api_key'     => $apiKey,
@@ -207,22 +207,28 @@ class FlightsController extends Controller
         ]);
         $flightData = json_decode($request->flight_data, true);
 
-        // Se vier como array de voos, pegue o primeiro
-        $flight = isset($flightData['flights'][0]) ? $flightData['flights'][0] : $flightData;
-
-
-        \DB::table('voos')->insert([
-            'desc_aeronave_voo' => $flight['airplane'] ?? 'Desconhecido',
-            'data_hora_partida' => $flight['departure_airport']['time'] ?? now(),
-            'data_hora_chegada' => $flight['arrival_airport']['time'] ?? now(),
-            'origem_voo'        => $flight['departure_airport']['id'] ?? '',
-            'destino_voo'       => $flight['arrival_airport']['id'] ?? '',
-            'companhia_voo'     => $flight['airline'] ?? '',
-            'preco_voo'         => $flightData['price'],
-            'fk_id_viagem'      => $request->viagem_id,
-            'created_at'        => now(),
-            'updated_at'        => now(),
-        ]);
+        if (isset($flightData['flights']) && is_array($flightData['flights'])) {
+            $flight = $flightData['flights'][0];
+            $conexao = isset($flightData['flights'][1]) ? $flightData['flights'][1] : null;
+            \DB::table('voos')->insert([
+                'desc_aeronave_voo' => $flight['airplane'] ?? 'Desconhecido',
+                'data_hora_partida' => $flight['departure_airport']['time'] ?? now(),
+                'data_hora_chegada' => $flight['arrival_airport']['time'] ?? now(),
+                'origem_voo'        => $flight['departure_airport']['id'] ?? '',
+                'origem_nome_voo'   => $flight['departure_airport']['name'] ?? '',
+                'destino_voo'       => $conexao['arrival_airport']['id'] ?? '',
+                'destino_nome_voo'  => $conexao['arrival_airport']['name'] ?? '',
+                'numero_voo'        => $flight['flight_number'] ?? null,
+                'conexao_voo'       => $conexao['departure_airport']['id'] ?? null,
+                'conexao_nome_voo'  => $conexao['departure_airport']['name'] ?? null,
+                'companhia_voo'     => $flight['airline'] ?? '',
+                'preco_voo'         => $flightData['price'],
+                'classe_voo'        => $flight['travel_class'] ?? 'Econômica',
+                'fk_id_viagem'      => $request->viagem_id,
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Voo salvo com sucesso!');
     }

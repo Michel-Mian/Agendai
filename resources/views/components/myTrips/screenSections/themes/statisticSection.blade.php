@@ -99,7 +99,7 @@
      */
     async function translateText(text, targetLanguage) {
         if (!GOOGLE_API_KEY) {
-            console.warn('GOOGLE_API_KEY não configurada. A tradução do país não será realizada.');
+            console.warn('GOOGLE_API_KEY não configurada. Usando nome original para busca.');
             return null;
         }
 
@@ -117,9 +117,7 @@
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                console.error(`Erro na API de Tradução do Google (status: ${response.status}):`, errorData);
-                // Retorna o texto original em caso de erro da API para que a busca REST Countries possa ser tentada com o nome original.
+                console.warn(`API de Tradução indisponível (status: ${response.status}). Usando nome original.`);
                 return null;
             }
 
@@ -127,7 +125,8 @@
             if (data && data.data && data.data.translations && data.data.translations.length > 0) {
                 return data.data.translations[0].translatedText;
             } else {
-                console.warn('Resposta da API de Tradução do Google sem tradução esperada:', data);
+                console.warn('Tradução não retornada. Usando nome original.');
+                return null;
                 return null;
             }
         } catch (error) {
@@ -199,7 +198,7 @@
                     if (partialResponse.ok) {
                         data = await partialResponse.json();
                     } else {
-                        console.warn(`Falha na busca REST Countries para '${countryNameToTry}' (status: ${partialResponse.status}).`);
+                        console.warn(`API REST Countries indisponível para '${countryNameToTry}'. Tentando próximo nome.`);
                         continue; // Tenta o próximo nome na lista
                     }
                 }
@@ -218,11 +217,11 @@
                     }
                 }
             } catch (error) {
-                console.error(`Erro ao buscar moeda do destino para '${countryNameToTry}' na API REST Countries:`, error);
+                console.warn(`Erro de rede ao buscar moeda para '${countryNameToTry}'. Tentando próximo nome.`);
             }
         }
 
-        console.warn('Moeda não encontrada para o destino após todas as tentativas:', destination);
+        console.info('APIs de moeda temporariamente indisponíveis. Usando USD como padrão.');
         return null;
     }
 

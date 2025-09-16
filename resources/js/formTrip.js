@@ -48,10 +48,21 @@ function initPlacesAutocompleteStrict() {
     });
 }
 
-// Callback global do Google Maps
+// Callback global do Google Maps - definido imediatamente
 window.initTripFormMap = function() {
+    console.log('Google Maps API carregada, inicializando autocomplete...');
     initPlacesAutocompleteStrict();
 };
+
+// Garantir que a função está disponível globalmente
+if (typeof window.initTripFormMap !== 'function') {
+    window.initTripFormMap = function() {
+        console.log('Fallback: Google Maps API carregada');
+        if (typeof initPlacesAutocompleteStrict === 'function') {
+            initPlacesAutocompleteStrict();
+        }
+    };
+}
 
 // Fallback caso a API já esteja carregada antes do DOM
 document.addEventListener('DOMContentLoaded', function() {
@@ -144,9 +155,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${dia}/${mes}/${ano}`;
     }
 
-    // Chame esta função ao exibir o passo 6!
     function preencherRevisao() {
-        const reviewList = document.getElementById('reviewList');
+        const reviewList = document.getElementById('reviewList'); //
         if (!reviewList) return;
 
         // Pegue os campos do DOM conforme o seu form
@@ -177,8 +187,18 @@ document.addEventListener('DOMContentLoaded', function() {
             preferences = preferencesInput.value.split(',').map(p => p.trim()).filter(p => p.length > 0);
         }
 
-        // --- DEBUG: Mostre no console o valor do seguro e nomeSeguro ---
-        // console.log('seguro:', seguro, 'nomeSeguro:', nomeSeguro);
+        let vooInfoHtml = '';
+        const selectedFlightDataInput = document.getElementById('selected_flight_data');
+        if (meio === 'Avião' && selectedFlightDataInput && selectedFlightDataInput.value) {
+            try {
+                const flightData = JSON.parse(selectedFlightDataInput.value);
+                const airline = flightData.flights[0]?.airline || 'Não selecionada';
+                vooInfoHtml = `<li><b>Companhia aérea:</b> ${airline}</li>`;
+            } catch (e) {
+                console.error("Erro ao ler dados do voo:", e);
+                vooInfoHtml = `<li><b>Companhia aérea:</b> Erro ao ler dados</li>`;
+            }
+        }
 
         reviewList.innerHTML = `
             <li><b>Destino:</b> ${destino}</li>
@@ -188,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <li><b>Data de volta:</b> ${formatarDataBR(dataVolta)}</li>
             <li><b>Meio de locomoção:</b> ${meio}</li>
             <li><b>Orçamento:</b> R$ ${orcamento}</li>
-            ${meio === 'Avião' ? `<li><b>Companhia aérea:</b> ${voo}</li>` : ''}
+            ${vooInfoHtml}
             ${seguro === 'Sim' && nomeSeguro ? `<li><b style="color:#fff">Seguro de viagem:</b> ${nomeSeguro}</li>` : ''}
             <li><b>Preferências:</b> ${preferences.length > 0 ? preferences.join(', ') : 'Nenhuma'}</li>
         `;
@@ -197,8 +217,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // -------------------- Eventos dos botões de navegação --------------------
     nextBtns.forEach((btn, idx) => {
         btn.addEventListener('click', async function() {
-            // Adicione esta linha:
-            if (!validarStep(currentStep)) return;
+            console.log('validarStep', currentStep);
+            if (!validarStep(currentStep)) {
+                console.log('validarStep retornou false no step', currentStep);
+                return;
+            }
+            console.log('Avançando step', currentStep);
 
             const seguro = document.getElementById('seguroViagem');
             const meioSelect = document.querySelectorAll('.form-step')[1].querySelector('select');
@@ -213,11 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     await searchFlights();
                 } else if (seguro && seguro.value === 'Sim') {
                     currentStep++;
-                    // Busca seguros automaticamente ao entrar na etapa 4
-                    setTimeout(() => {
-                        const btnBuscar = document.getElementById('buscar-seguros');
-                        if (btnBuscar) btnBuscar.click();
-                    }, 100);
+                    // Usuário pode clicar manualmente no botão "Buscar Seguros" no step 4
                 }
             } else if (currentStep === 3) {
                 if (meioLocomocao !== 'Avião') {
@@ -390,6 +410,31 @@ document.getElementById('multiStepForm').addEventListener('submit', function (e)
 });
 
 // -------------------- Tratamento de erros e mensagens de feedback --------------------
+function showNotification(message, type = 'warning') {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+    `;
+    notification.style.backgroundColor = type === 'error' ? '#EF4444' : (type === 'success' ? '#10B981' : '#F59E0B');
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => notification.remove(), 300);
+    }, 4000);
+}
+
 function validarStep(idx) {
     if (idx === 0) {
         const destino = document.getElementById('tripDestination');
@@ -399,60 +444,64 @@ function validarStep(idx) {
         const dataVolta = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[1];
 
         if (!destino.value.trim()) {
-            alert('Informe o destino.');
+            showNotification('Informe o destino.', 'error');
             destino.focus();
             return false;
         }
         if (!destino._placeSelected) {
-            alert('Selecione um destino válido da lista sugerida.');
+            showNotification('Selecione um destino válido da lista sugerida.', 'error');
             destino.classList.add('border-red-500');
             destino.focus();
             return false;
         }
         if (!origem.value.trim()) {
-            alert('Informe a origem.');
+            showNotification('Informe a origem.', 'error');
             origem.focus();
             return false;
         }
         if (!origem._placeSelected) {
-            alert('Selecione uma origem válida da lista sugerida.');
+            showNotification('Selecione uma origem válida da lista sugerida.', 'error');
             origem.classList.add('border-red-500');
             origem.focus();
             return false;
         }
         if (!adultos || !adultos.value) {
-            alert('Informe o número de adultos.');
+            showNotification('Informe o número de adultos.', 'error');
             adultos.focus();
             return false;
         }
         if (!dataIda.value) {
-            alert('Informe a data de ida.');
+            showNotification('Informe a data de ida.', 'error');
             dataIda.focus();
             return false;
         }
         if (!dataVolta.value) {
-            alert('Informe a data de volta.');
+            showNotification('Informe a data de volta.', 'error');
             dataVolta.focus();
             return false;
         }
         if (dataVolta.value < dataIda.value) {
-            alert('A data de volta não pode ser menor que a data de ida.');
+            showNotification('A data de volta não pode ser menor que a data de ida.', 'error');
             dataVolta.focus();
             return false;
         }
         if (new Date(dataIda.value) < new Date()) {
-            alert('A data de ida não pode ser no passado.');
+            showNotification('A data de ida não pode ser no passado.', 'error');
             dataIda.focus();
             return false;
         }
         if (new Date(dataVolta.value) < dataIda.value)  {
-            alert('A data de volta não pode ser anterior à data de ida.');
+            showNotification('A data de volta não pode ser anterior à data de ida.', 'error');
             dataVolta.focus();
             return false;
         }
         const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
         let algumVazio = false;
+        let temAdulto = false;
         idadeInputs.forEach(input => {
+            if (input.value >= 18) {
+                temAdulto = true;
+            }
             if (!input.value.trim()) {
                 algumVazio = true;
                 input.classList.add('border-red-500');
@@ -460,8 +509,13 @@ function validarStep(idx) {
                 input.classList.remove('border-red-500');
             }
         });
+        if (!temAdulto) {
+            showNotification('Pelo menos um adulto deve participar da viagem.', 'error');
+            if (idadeInputs.length > 0) idadeInputs[0].focus();
+            return false;
+        }
         if (idadeInputs.length === 0 || algumVazio) {
-            alert('Preencha todas as idades dos viajantes.');
+            showNotification('Preencha todas as idades dos viajantes.', 'error');
             if (idadeInputs.length > 0) idadeInputs[0].focus();
             return false;
         }
@@ -473,7 +527,7 @@ function validarStep(idx) {
         const meioLocomocao = document.querySelectorAll('.form-step')[1]?.querySelectorAll('select')[0];
         const seguro = document.getElementById('seguroViagem');
         if (!orcamento.value || Number(orcamento.value) <= 0) {
-            alert('Informe um orçamento válido.');
+            showNotification('Informe um orçamento válido.', 'error');
             orcamento.focus();
             return false;
         }
@@ -481,26 +535,22 @@ function validarStep(idx) {
             const depIata = document.getElementById('dep_iata');
             const arrIata = document.getElementById('arr_iata');
             if (!depIata.value.trim()) {
-                alert('Informe o aeroporto de partida.');
+                showNotification('Informe o aeroporto de partida.', 'error');
                 depIata.focus();
                 return false;
             }
             if (!arrIata.value.trim()) {
-                alert('Informe o aeroporto de chegada.');
+                showNotification('Informe o aeroporto de chegada.', 'error');
                 arrIata.focus();
                 return false;
             }
         }
         if (seguro && seguro.value === 'Sim') {
-            const motivo = document.getElementById('MainContent_Cotador_ddlMotivoDaViagem');
             const destinoSeguro = document.getElementById('MainContent_Cotador_selContinente');
-            if (!motivo.querySelector('option:checked') || motivo.value === '') {
-                alert('Selecione uma opção de seguro.');
-                return false;
-            }
-            if(!destinoSeguro.querySelector('option:checked').value || destinoSeguro.value === '') {
+            
+            if (!destinoSeguro || !destinoSeguro.value || destinoSeguro.value === '') {
                 alert('Selecione um destino para a viagem.');
-                destinoSeguro.focus();
+                if (destinoSeguro) destinoSeguro.focus();
                 return false;
             }
         }
@@ -559,160 +609,3 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-
-// -------------------- Tratamento de seleção de seguro (nova lógica) --------------------
-$(document).on('click', '.insurance-card, .seguro-card', function() {
-    $('.insurance-card, .seguro-card').removeClass('selected');
-    $(this).addClass('selected');
-
-    // Salva nome do seguro selecionado para revisão
-    var name = $(this).find('h5').text() || $(this).find('.text-lg.font-semibold').text() || $(this).find('.text-blue-700').first().text();
-    if (!name) {
-        // fallback para scraping cards
-        name = $(this).find('.text-lg').text();
-    }
-    sessionStorage.setItem('selectedSeguroName', name);
-
-    // Se o cartão contém o atributo data-seguro (JSON), atualiza o hidden input e pending storage
-    var seguroDataAttr = $(this).attr('data-seguro') || ($(this).attr('data-id') ? null : null);
-    if (seguroDataAttr) {
-        try {
-            var seguroData = JSON.parse(seguroDataAttr);
-            seguroData.site = name;
-            // atualiza hidden input se existir no DOM
-            var hidden = document.getElementById('seguroSelecionadoInput');
-            if (hidden) hidden.value = JSON.stringify(seguroData);
-            sessionStorage.setItem('pendingSeguro', JSON.stringify(seguroData));
-        } catch (e) {
-            sessionStorage.setItem('pendingSeguro', JSON.stringify({ site: name }));
-            var hidden2 = document.getElementById('seguroSelecionadoInput');
-            if (hidden2) hidden2.value = JSON.stringify({ site: name });
-        }
-    } else {
-        sessionStorage.setItem('pendingSeguro', JSON.stringify({ site: name }));
-        var hidden3 = document.getElementById('seguroSelecionadoInput');
-        if (hidden3) hidden3.value = JSON.stringify({ site: name });
-    }
-});
-
-// Seleção de seguro para cards dinâmicos (.seguro-card) e estáticos (.insurance-card)
-document.addEventListener('click', function(e) {
-    let card = e.target.closest('.seguro-card, .insurance-card');
-    if (card) {
-        document.querySelectorAll('.seguro-card, .insurance-card').forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-        // Extrai nome do seguro
-        let name = card.querySelector('h5')?.innerText
-            || card.querySelector('.text-lg.font-semibold')?.innerText
-            || card.querySelector('.text-blue-700')?.innerText
-            || card.querySelector('.text-lg')?.innerText
-            || '';
-        // Para scraping: site + nome do seguro
-        if (card.classList.contains('seguro-card')) {
-            try {
-                let seguroData = JSON.parse(card.getAttribute('data-seguro'));
-                let fullName = (seguroData.site || '') + (seguroData.dados && seguroData.dados[0] ? ' ' + seguroData.dados[0] : '');
-                sessionStorage.setItem('selectedSeguroName', fullName.trim());
-                // Salva no backend
-                seguroData.site = fullName.trim();
-                fetch("/trip/salvar-seguro", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": document.querySelector('input[name="_token"]').value
-                    },
-                    body: JSON.stringify(seguroData)
-                });
-            } catch {}
-        } else {
-            sessionStorage.setItem('selectedSeguroName', name.trim());
-        }
-    }
-});
-
-// Função para preencher revisão final (step6)
-function preencherRevisao() {
-    const reviewList = document.getElementById('reviewList');
-    if (!reviewList) return;
-
-    // Pegue os campos do DOM conforme o seu form
-    const destino = document.getElementById('tripDestination')?.value || '';
-    const adultosSelect = document.querySelectorAll('.form-step')[0]?.querySelectorAll('select')[0];
-    const adultos = adultosSelect ? adultosSelect.value : '';
-    const dataIdaInput = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[0];
-    const dataVoltaInput = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[1];
-    const dataIda = dataIdaInput ? dataIdaInput.value : '';
-    const dataVolta = dataVoltaInput ? dataVoltaInput.value : '';
-    const meioSelect = document.querySelectorAll('.form-step')[1]?.querySelector('select');
-    const meio = meioSelect ? meioSelect.value : '';
-    const orcamentoInput = document.querySelectorAll('.form-step')[1]?.querySelector('input[type="number"]');
-    const orcamento = orcamentoInput ? orcamentoInput.value : '';
-    const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
-    const idades = Array.from(idadeInputs).map(input => input.value).filter(value => value !== '');
-    const seguroSelect = document.getElementById('seguroViagem');
-    const seguro = seguroSelect ? seguroSelect.value : '';
-    let nomeSeguro = '';
-    if (seguro === 'Sim') {
-        nomeSeguro = sessionStorage.getItem('selectedSeguroName') || '';
-    }
-
-    // Recupera preferências do input hidden (atualizado no step3)
-    const preferencesInput = document.getElementById('preferences');
-    let preferences = [];
-    if (preferencesInput && preferencesInput.value) {
-        preferences = preferencesInput.value.split(',').map(p => p.trim()).filter(p => p.length > 0);
-    }
-
-    // Recupera nome completo do seguro selecionado da sessionStorage
-    reviewList.innerHTML = `
-        <li><b>Destino:</b> ${destino}</li>
-        <li><b>Adultos:</b> ${adultos}</li>
-        <li><b>Idades dos passageiros:</b> ${idades.length > 0 ? idades.join(', ') : 'Nenhuma'}</li>
-        <li><b>Data de ida:</b> ${formatarDataBR(dataIda)}</li>
-        <li><b>Data de volta:</b> ${formatarDataBR(dataVolta)}</li>
-        <li><b>Meio de locomoção:</b> ${meio}</li>
-        <li><b>Orçamento:</b> R$ ${orcamento}</li>
-        ${meio === 'Avião' ? `<li><b>Companhia aérea:</b> ${voo}</li>` : ''}
-        ${seguro === 'Sim' && nomeSeguro ? `<li><b style="color:#fff">Seguro de viagem:</b> ${nomeSeguro}</li>` : ''}
-        <li><b>Preferências:</b> ${preferences.length > 0 ? preferences.join(', ') : 'Nenhuma'}</li>
-    `;
-}
-
-// Certifique-se de chamar preencherRevisao() ao exibir o passo 6
-// Por exemplo, ao avançar para o passo 6:
-document.querySelector('.next-btn-step5')?.addEventListener('click', function() {
-    preencherRevisao();
-    // aqui vai o código para mostrar o passo 6, se necessário
-});
-// Por exemplo, ao avançar para o passo 6:
-document.querySelector('.next-btn-step5')?.addEventListener('click', function() {
-    preencherRevisao();
-    // ...código para mostrar o passo 6...
-});
-    // ...código para mostrar o passo 6...
-    reviewList.innerHTML = `
-        <li><b>Destino:</b> ${destino}</li>
-        <li><b>Adultos:</b> ${adultos}</li>
-        <li><b>Idades dos passageiros:</b> ${idades.length > 0 ? idades.join(', ') : 'Nenhuma'}</li>
-        <li><b>Data de ida:</b> ${formatarDataBR(dataIda)}</li>
-        <li><b>Data de volta:</b> ${formatarDataBR(dataVolta)}</li>
-        <li><b>Meio de locomoção:</b> ${meio}</li>
-        <li><b>Orçamento:</b> R$ ${orcamento}</li>
-        ${meio === 'Avião' ? `<li><b>Companhia aérea:</b> ${voo}</li>` : ''}
-        ${seguro === 'Sim' && nomeSeguro ? `<li><b style="color:#fff">Seguro de viagem:</b> ${nomeSeguro}</li>` : ''}
-        <li><b>Preferências:</b> ${preferences.length > 0 ? preferences.join(', ') : 'Nenhuma'}</li>
-    `;
-
-
-// Certifique-se de chamar preencherRevisao() ao exibir o passo 6
-// Por exemplo, ao avançar para o passo 6:
-document.querySelector('.next-btn-step5')?.addEventListener('click', function() {
-    preencherRevisao();
-    // aqui vai o código para mostrar o passo 6, se necessário
-});
-// Por exemplo, ao avançar para o passo 6:
-document.querySelector('.next-btn-step5')?.addEventListener('click', function() {
-    preencherRevisao();
-    // ...código para mostrar o passo 6...
-});
-    // ...código para mostrar o passo 6...
