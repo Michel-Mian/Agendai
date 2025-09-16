@@ -17,12 +17,25 @@
         <link rel="stylesheet" href="{{ asset('css/formTrip.css') }}">
         <link rel="stylesheet" href="{{ asset('css/explore.css') }}">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/dashBoard.js', 'resources/js/searchFlights.js', 'resources/js/formTrip.js' , 'resources/js/hotels.js'])
+        {{-- Adicionando nightMode.css e nightMode.js ao Vite --}}
+        @vite(['resources/css/app.css', 'resources/css/explore.css', 'resources/css/nightMode.css', 'resources/js/app.js', 'resources/js/dashBoard.js', 'resources/js/searchFlights.js', 'resources/js/formTrip.js' , 'resources/js/hotels.js', 'resources/js/nightMode.js'])
+        <script>
+        // Aplica night-mode globalmente em todas as telas
+        document.addEventListener('DOMContentLoaded', function() {
+            const theme = localStorage.getItem('siteTheme');
+            if (theme === 'night') {
+                document.documentElement.classList.add('night-mode');
+                document.body.classList.add('night-mode');
+            } else {
+                document.documentElement.classList.remove('night-mode');
+                document.body.classList.remove('night-mode');
+            }
+        });
+        </script>
     </head>
     <body>
             <main class="">
                 @yield('content')
             </main>
     </body>
-    
 </html>
