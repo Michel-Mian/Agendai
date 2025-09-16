@@ -9,11 +9,6 @@ class Viagens extends Model
     protected $primaryKey = 'pk_id_viagem'; 
     public $incrementing = true; 
     public $keyType = 'int';
-
-    protected $fillable = [
-        // ...outros campos...
-        'fk_id_seguro_selecionado',
-    ];
     
     // Campos que podem ser preenchidos via mass assignment
     protected $fillable = [
