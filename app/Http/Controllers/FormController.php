@@ -30,16 +30,21 @@ class FormController extends Controller
 
         // dd($request->all());
 
-        // 1. Salve a viagem
-        $viagem = new \App\Models\Viagens();
-        $viagem->destino_viagem = $request->searchInput;
+        $viagem = new \App\Models\Viagem();
+        $viagem->nome_viagem = $request->searchInput; 
         $viagem->origem_viagem = $request->origem;
         $viagem->data_inicio_viagem = $request->date_departure;
         $viagem->data_final_viagem = $request->date_return;
         $viagem->orcamento_viagem = $request->orcamento;
         $viagem->fk_id_usuario = auth()->id();
-
         $viagem->save();
+        $destino = new \App\Models\Destino();
+        $destino->fk_id_viagem = $viagem->pk_id_viagem; 
+        $destino->nome_destino = $request->searchInput; 
+        $destino->data_chegada_destino = $request->date_departure; 
+        $destino->data_partida_destino = $request->date_return; 
+        $destino->ordem_destino = 1;
+        $destino->save();
 
         // 2. Salve o voo (se houver)
         if ($request->filled('selected_flight_index')) {
