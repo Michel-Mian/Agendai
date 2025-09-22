@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
+use App\Models\Destinos;
 Carbon::setLocale('pt_BR');
 
 
@@ -43,6 +44,7 @@ class ViagensController extends Controller
                 'user',
                 'hotel',
                 'seguros',
+                'destinos',
                 'pontosInteresse' => function($query) {
                     $query->orderBy('data_ponto_interesse', 'asc')
                           ->orderBy('hora_ponto_interesse', 'asc');
@@ -275,9 +277,9 @@ class ViagensController extends Controller
             $rules = [];
             $messages = [];
 
-            if ($request->has('destino_viagem')) {
-                $rules['destino_viagem'] = 'required|string|max:255';
-                $messages['destino_viagem.required'] = 'O destino é obrigatório.';
+            if ($request->has('nome_viagem')) {
+                $rules['nome_viagem'] = 'required|string|max:255';
+                $messages['nome_viagem.required'] = 'O nome da viagem é obrigatório.';
             }
 
             if ($request->has('origem_viagem')) {
@@ -314,7 +316,7 @@ class ViagensController extends Controller
 
             // Atualizar apenas os campos enviados
             $updateData = $request->only([
-                'destino_viagem', 
+                'nome_viagem', 
                 'origem_viagem', 
                 'data_inicio_viagem', 
                 'data_final_viagem', 
@@ -429,161 +431,138 @@ class ViagensController extends Controller
         }
     }
 
-    /**
-     * Carrega dados de clima via AJAX
-     */
-    public function getWeatherData($id)
+    public function getWeatherDataForDestination(Viagens $viagem, Destinos $destino)
     {
+        if ($viagem->fk_id_usuario !== auth()->id()) {
+            return response()->json(['success' => false, 'message' => 'Acesso negado'], 403);
+        }
+
         try {
-            $viagem = Viagens::select('destino_viagem', 'fk_id_usuario')->findOrFail($id);
-            
-            // Verificar permissões
-            if ($viagem->fk_id_usuario !== auth()->id()) {
-                return response()->json(['success' => false, 'message' => 'Acesso negado'], 403);
-            }
-            
-            // Cache por 3 horas
-            $cacheKey = "weather_data_{$id}";
-            $weatherData = \Cache::remember($cacheKey, 10800, function() use ($viagem) {
-                return $this->fetchWeatherFromAPI($viagem->destino_viagem);
+            $cacheKey = "weather_data_destino_{$destino->pk_id_destino}";
+            $weatherData = \Cache::remember($cacheKey, 7200, function () use ($destino) { // Cache por 2 horas
+                return $this->fetchWeatherFromAPI($destino->nome_destino);
             });
 
-            return response()->json([
-                'success' => true,
-                'data' => $weatherData
-            ]);
+            if (!$weatherData) {
+                return response()->json(['success' => false, 'message' => 'Não foi possível obter os dados do clima.'], 500);
+            }
 
+            return response()->json(['success' => true, 'data' => $weatherData]);
         } catch (\Exception $e) {
-            \Log::error('Erro ao buscar dados do clima', ['viagem_id' => $id, 'error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'message' => 'Erro ao carregar clima'], 500);
+            Log::error('Erro ao buscar clima para o destino', ['destino_id' => $destino->pk_id_destino, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Erro ao carregar dados do clima.'], 500);
         }
     }
 
-    /**
-     * Carrega notícias via AJAX
-     */
-    public function getNewsData($id)
+    public function getNewsDataForDestination(Viagens $viagem, Destinos $destino)
     {
+        if ($viagem->fk_id_usuario !== auth()->id()) {
+            return response()->json(['success' => false, 'message' => 'Acesso negado'], 403);
+        }
+
         try {
-            $viagem = Viagens::select('destino_viagem', 'fk_id_usuario')->findOrFail($id);
-            
-            // Verificar permissões
-            if ($viagem->fk_id_usuario !== auth()->id()) {
-                return response()->json(['success' => false, 'message' => 'Acesso negado'], 403);
-            }
-            
-            // Cache por 6 horas
-            $cacheKey = "news_data_{$id}";
-            $newsData = \Cache::remember($cacheKey, 21600, function() use ($viagem) {
-                return $this->fetchNewsFromAPI($viagem->destino_viagem);
+            $cacheKey = "news_data_destino_{$destino->pk_id_destino}";
+            $newsData = \Cache::remember($cacheKey, 21600, function () use ($destino) { // Cache por 6 horas
+                return $this->fetchNewsFromAPI($destino->nome_destino);
             });
 
-            return response()->json([
-                'success' => true,
-                'data' => $newsData
-            ]);
-
+            return response()->json(['success' => true, 'data' => $newsData]);
         } catch (\Exception $e) {
-            \Log::error('Erro ao buscar notícias', ['viagem_id' => $id, 'error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'message' => 'Erro ao carregar notícias'], 500);
+            Log::error('Erro ao buscar notícias para o destino', ['destino_id' => $destino->pk_id_destino, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Erro ao carregar notícias.'], 500);
         }
     }
-
-    /**
-     * Busca dados do clima de forma otimizada
-     */
+     
     private function fetchWeatherFromAPI($destino)
     {
+        $coordinates = $this->getLatLngFromAddress($destino);
+        if (!$coordinates) {
+            Log::warning('Não foi possível obter coordenadas para o destino de clima.', ['destino' => $destino]);
+            return null;
+        }
+
+        $lat = $coordinates['lat'];
+        $lon = $coordinates['lng'];
+        
+        $url = "https://api.open-meteo.com/v1/forecast?latitude={$lat}&longitude={$lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,uv_index_max&timezone=auto";
         try {
-            $apiKey = config('services.openweather_api_key'); // Usando config() como boa prática
-            if (!$apiKey) {
-                throw new \Exception('Chave de API do OpenWeather não configurada.');
-            }
+            $response = Http::timeout(10)->get($url);
 
-            // Contexto para ignorar verificação SSL, se necessário
-            $context = stream_context_create([
-                "ssl" => [
-                    "verify_peer" => false,
-                    "verify_peer_name" => false,
-                ],
-            ]);
-
-            // 1. Geocodificação para obter coordenadas
-            $geocodeUrl = "https://api.openweathermap.org/geo/1.0/direct?q=" . urlencode($destino) . "&limit=1&appid=" . $apiKey;
-            $geocodeResponse = @file_get_contents($geocodeUrl, false, $context);
-            if ($geocodeResponse === FALSE) {
-                throw new \Exception('Não foi possível obter as coordenadas para o destino.');
+            if ($response->successful()) {
+                return $response->json();
             }
-            $geocodeData = json_decode($geocodeResponse, true);
-            if (empty($geocodeData)) {
-                throw new \Exception('Destino não encontrado na API de geocodificação.');
-            }
-            $latitude = $geocodeData[0]['lat'];
-            $longitude = $geocodeData[0]['lon'];
-
-            // 2. Obter dados do clima usando as coordenadas
-            $weatherUrl = "https://api.openweathermap.org/data/2.5/onecall?lat={$latitude}&lon={$longitude}&exclude=current,minutely,hourly,alerts&appid={$apiKey}&units=metric&lang=pt_br";
-            $weatherResponse = @file_get_contents($weatherUrl, false, $context);
-            if ($weatherResponse === FALSE) {
-                throw new \Exception('Não foi possível obter os dados do clima.');
-            }
-            $weatherData = json_decode($weatherResponse, true);
-
-            return $weatherData;
+            Log::error('Falha na API Open-Meteo', ['status' => $response->status(), 'body' => $response->body()]);
+            return null;
 
         } catch (\Exception $e) {
-            Log::error('Erro ao buscar dados do clima (lógica antiga): ' . $e->getMessage());
-            // Retorna nulo ou um array vazio para que a UI possa tratar o erro
+            Log::error('Erro ao buscar dados do clima na Open-Meteo', ['error' => $e->getMessage()]);
             return null;
         }
     }
 
-    /**
-     * Busca notícias de forma otimizada
-     */
     private function fetchNewsFromAPI($destino)
     {
+        $apiKey = config('services.serp_api_key');
+        if (!$apiKey) {
+            Log::error('Chave da SerpAPI não configurada.');
+            return [];
+        }
+
+        $query = "notícias turismo em " . $destino;
+        $url = "https://serpapi.com/search.json";
+
         try {
-            $apiKey = config('services.serp_api_key'); // Usando config() como boa prática
-            if (!$apiKey) {
-                throw new \Exception('Chave da SerpApi não configurada.');
-            }
-
-            $queries = [
-                "turismo em $destino",
-                "pontos turísticos $destino",
-                "viagem $destino dicas"
-            ];
-            $allNews = [];
-
-            // Contexto para ignorar verificação SSL
-            $context = stream_context_create([
-                'http' => ['timeout' => 4], // Timeout de 4 segundos
-                "ssl" => [
-                    "verify_peer" => false,
-                    "verify_peer_name" => false,
-                ],
+            $response = Http::get($url, [
+                'engine' => 'google_news',
+                'q' => $query,
+                'api_key' => $apiKey,
+                'num' => 7, // Pede 7 resultados
             ]);
 
-            foreach (array_slice($queries, 0, 2) as $query) {
-                $url = "https://serpapi.com/search.json?engine=google_news&q=" . urlencode($query) . "&api_key=" . $apiKey . "&num=3";
-                $response = @file_get_contents($url, false, $context);
-
-                \Illuminate\Support\Facades\Log::info('Resposta crua da SerpApi:', ['response' => $response]);
-                $data = json_decode($response, true);
-                \Illuminate\Support\Facades\Log::info('Dados da SerpApi decodificados:', $data ?? ['error' => 'Falha ao decodificar JSON']);
-
-                if ($response !== false) {
-                    if (isset($data['news_results'])) {
-                        $allNews = array_merge($allNews, array_slice($data['news_results'], 0, 2));
-                    }
-                }
+            if ($response->successful() && isset($response->json()['news_results'])) {
+                return $response->json()['news_results'];
             }
-            return array_slice($allNews, 0, 6);
+            
+            Log::warning('Não foi possível buscar notícias na SerpAPI', ['response' => $response->body()]);
+            return [];
 
         } catch (\Exception $e) {
-            Log::error('Erro ao buscar notícias via SerpAPI (lógica antiga): ' . $e->getMessage());
-            return []; // Retorna um array vazio em caso de erro
+            Log::error('Erro ao chamar a SerpAPI', ['error' => $e->getMessage()]);
+            return [];
+        }
+    }
+
+    public function getNewsData($id)
+    {
+        try {
+            $viagem = Viagens::with('destinos')->findOrFail($id);
+            if ($viagem->fk_id_usuario !== auth()->id()) {
+                return response()->json(['success' => false, 'message' => 'Acesso negado'], 403);
+            }
+            // Usa o primeiro destino como padrão, se existir
+            $primeiroDestino = $viagem->destinos->first()->nome_destino ?? 'mundo';
+            $newsData = $this->fetchNewsFromAPI($primeiroDestino);
+            return response()->json(['success' => true, 'data' => $newsData]);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao buscar notícias (método antigo)', ['viagem_id' => $id, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Erro ao carregar notícias'], 500);
+        }
+    }
+
+    public function getWeatherData($id)
+    {
+        try {
+            $viagem = Viagens::with('destinos')->findOrFail($id);
+             if ($viagem->fk_id_usuario !== auth()->id()) {
+                return response()->json(['success' => false, 'message' => 'Acesso negado'], 403);
+            }
+            // Usa o primeiro destino como padrão
+            $primeiroDestino = $viagem->destinos->first()->nome_destino ?? 'São Paulo';
+            $weatherData = $this->fetchWeatherFromAPI($primeiroDestino);
+            return response()->json(['success' => true, 'data' => $weatherData]);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao buscar clima (método antigo)', ['viagem_id' => $id, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Erro ao carregar clima'], 500);
         }
     }
 }

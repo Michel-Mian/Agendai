@@ -5,11 +5,26 @@
     <!-- Container principal do mapa -->
     <div class="flex-1 flex flex-col">
         <!-- Header do mapa -->
-        <div class="bg-gradient-to-br from-blue-900 to-blue-800 text-blue-900 p-5 text-center">
-            <h3 class="m-0 text-xl font-semibold flex items-center justify-center gap-2">
+        <div class="bg-gradient-to-br from-blue-900 to-blue-800 text-white p-5 text-center">
+            <h3 class="m-0 text-xl font-semibold flex items-center justify-center gap-2 mb-3">
                 <i class="fas fa-map-marker-alt"></i>
-                {{ $viagem->destino_viagem }}
+                Mapa de Rotas - {{ $viagem->nome_viagem }}
             </h3>
+            
+            @if($viagem->destinos && $viagem->destinos->count() > 0)
+                <div class="flex justify-center">
+                    <select id="destino-selector" class="bg-white text-gray-800 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        <option value="">Selecione um destino</option>
+                        @foreach($viagem->destinos as $destino)
+                            <option value="{{ $destino->nome_destino }}" {{ $loop->first ? 'selected' : '' }}>
+                                {{ $destino->nome_destino }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @else
+                <p class="text-blue-200 text-sm">Nenhum destino cadastrado para esta viagem</p>
+            @endif
         </div>
 
         <!-- Container do mapa -->
@@ -58,7 +73,8 @@
     let routeVisible = false;
     let panelExpanded = true; // Variável para controlar estado do painel
     
-    const viagemDestino = @json($viagem->destino_viagem);
+    const destinos = @json($viagem->destinos);
+    const destinoAtual = destinos && destinos.length > 0 ? destinos[0].nome_destino : '';
     const pontosInteresse = @json($viagem->pontosInteresse()->orderBy('data_ponto_interesse')->orderBy('hora_ponto_interesse')->get());
     const googleMapsApiKey = @json(config('services.google_maps_api_key'));
 
@@ -247,7 +263,9 @@
     }
 
     function geocodeDestinationForCenter() {
-        if (!viagemDestino) {
+        const destinoSelecionado = document.getElementById('destino-selector')?.value || destinoAtual;
+        
+        if (!destinoSelecionado) {
             hideLoading();
             return;
         }
@@ -256,7 +274,7 @@
             handleMapError();
         }, 8000);
 
-        geocoder.geocode({ address: viagemDestino }, function(results, status) {
+        geocoder.geocode({ address: destinoSelecionado }, function(results, status) {
             clearTimeout(timeoutId);
             
             if (status === 'OK' && results && results.length > 0) {
@@ -459,7 +477,17 @@
     }
 
     function centerMap() {
-        if (pontosInteresse && pontosInteresse.length > 0 && pontosInteresse[0].latitude && pontosInteresse[0].longitude) {
+        const destinoSelecionado = document.getElementById('destino-selector')?.value || destinoAtual;
+        
+        if (destinoSelecionado && geocoder) {
+            geocoder.geocode({ address: destinoSelecionado }, function(results, status) {
+                if (status === 'OK' && results && results.length > 0) {
+                    const location = results[0].geometry.location;
+                    map.setCenter(location);
+                    map.setZoom(15);
+                }
+            });
+        } else if (pontosInteresse && pontosInteresse.length > 0 && pontosInteresse[0].latitude && pontosInteresse[0].longitude) {
             const location = {
                 lat: parseFloat(pontosInteresse[0].latitude),
                 lng: parseFloat(pontosInteresse[0].longitude)
@@ -496,6 +524,23 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         waitForGoogleMaps(initMapComponent);
+        
+        // Adicionar evento para o dropdown de destinos
+        const destinoSelector = document.getElementById('destino-selector');
+        if (destinoSelector) {
+            destinoSelector.addEventListener('change', function() {
+                const destinoSelecionado = this.value;
+                if (destinoSelecionado && map && geocoder) {
+                    geocoder.geocode({ address: destinoSelecionado }, function(results, status) {
+                        if (status === 'OK' && results && results.length > 0) {
+                            const location = results[0].geometry.location;
+                            map.setCenter(location);
+                            map.setZoom(15);
+                        }
+                    });
+                }
+            });
+        }
     });
 </script>
 

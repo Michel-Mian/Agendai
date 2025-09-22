@@ -118,23 +118,23 @@
                                             </div>
                                             <div class="flex flex-col md:flex-row md:items-center md:space-x-4">
                                                 <div class="relative group">
-                                                    <div class="destino-display">
-                                                        <h1 class="text-4xl font-bold text-gray-800 mb-1">{{ $viagem->destino_viagem }}</h1>
+                                                    <div class="nome-display">
+                                                        <h1 class="text-4xl font-bold text-gray-800 mb-1">{{ $viagem->nome_viagem }}</h1>
                                                         <p class="text-blue-600 text-lg">Sua próxima aventura te espera</p>
                                                     </div>
-                                                    <div class="destino-edit hidden">
-                                                        <input type="text" id="edit-destino-input" class="destino-input places-autocomplete text-4xl font-bold text-gray-800 mb-1 bg-white border-2 border-blue-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="{{ $viagem->destino_viagem }}" autocomplete="off">
+                                                    <div class="nome-edit hidden">
+                                                        <input type="text" id="edit-nome-input" class="nome-input places-autocomplete text-4xl font-bold text-gray-800 mb-1 bg-white border-2 border-blue-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="{{ $viagem->nome_viagem }}" autocomplete="off">
                                                         <p class="text-blue-600 text-lg">Sua próxima aventura te espera</p>
                                                         <div class="flex space-x-2 mt-2">
-                                                            <button class="save-destino-btn px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition">
+                                                            <button class="save-nome-btn px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition">
                                                                 <i class="fas fa-check mr-1"></i>Salvar
                                                             </button>
-                                                            <button class="cancel-destino-btn px-3 py-1 bg-gray-400 text-white text-sm rounded hover:bg-gray-500 transition">
+                                                            <button class="cancel-nome-btn px-3 py-1 bg-gray-400 text-white text-sm rounded hover:bg-gray-500 transition">
                                                                 <i class="fas fa-times mr-1"></i>Cancelar
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <button class="edit-destino-btn absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-white hover:bg-blue-50 rounded-full shadow-lg border border-blue-200" title="Editar destino">
+                                                    <button class="edit-nome-btn absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-white hover:bg-blue-50 rounded-full shadow-lg border border-blue-200" title="Editar nome">
                                                         <i class="fas fa-edit text-blue-700 text-sm"></i>
                                                     </button>
                                                 </div>
@@ -327,35 +327,50 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Estatísticas rápidas -->
+                                <!-- Lista de Destinos -->
                                 <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200">
                                     <div class="flex items-center space-x-3 mb-3">
                                         <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center p-6">
-                                            <i class="fas fa-chart-line text-white text-lg"></i>
+                                            <i class="fas fa-map-marker-alt text-white text-lg"></i>
                                         </div>
                                         <div>
-                                            <div class="text-orange-800 font-semibold text-lg">Resumo</div>
-                                            <div class="text-orange-600 text-sm">Estatísticas</div>
+                                            <div class="text-orange-800 font-semibold text-lg">Destinos</div>
+                                            <div class="text-orange-600 text-sm">
+                                                {{ $viagem->destinos ? $viagem->destinos->count() : 0 }} 
+                                                {{ $viagem->destinos && $viagem->destinos->count() == 1 ? 'destino' : 'destinos' }}
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="space-y-2">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-gray-600 text-sm">Viajantes:</span>
-                                            <span class="font-bold text-gray-800">{{ $estatisticas['total_viajantes'] }}</span>
+                                    
+                                    @if($viagem->destinos && $viagem->destinos->count() > 0)
+                                        <div class="max-h-32 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                                            @foreach($viagem->destinos as $index => $destino)
+                                                <div class="flex items-center justify-between bg-white/60 rounded-lg p-3 border border-orange-200">
+                                                    <div class="flex items-center space-x-3">
+                                                        <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                                            {{ $index + 1 }}
+                                                        </div>
+                                                        <div>
+                                                            <div class="font-semibold text-gray-800 text-sm">{{ $destino->nome_destino }}</div>
+                                                            <div class="text-gray-600 text-xs">
+                                                                {{ \Carbon\Carbon::parse($destino->data_chegada_destino)->format('d/m/Y') }} - 
+                                                                {{ \Carbon\Carbon::parse($destino->data_partida_destino)->format('d/m/Y') }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-orange-600">
+                                                        <i class="fas fa-chevron-right text-xs"></i>
+                                                    </div>
+                                                </div>
+                                            @endforeach
                                         </div>
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-gray-600 text-sm">Objetivos:</span>
-                                            <span class="font-bold text-gray-800">{{ $estatisticas['total_objetivos'] }}</span>
+                                    @else
+                                        <div class="bg-white/60 rounded-lg p-4 border border-orange-200 text-center">
+                                            <i class="fas fa-map-marker text-gray-400 text-2xl mb-2"></i>
+                                            <p class="text-gray-600 text-sm">Nenhum destino cadastrado</p>
+                                            <p class="text-gray-500 text-xs">Adicione destinos à sua viagem</p>
                                         </div>
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-gray-600 text-sm">Locais:</span>
-                                            <span class="font-bold text-gray-800">{{ $estatisticas['total_pontos'] }}</span>
-                                        </div>
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-gray-600 text-sm">Dias de viagem:</span>
-                                            <span class="font-bold text-gray-800">{{ $estatisticas['dias_viagem'] }}</span>
-                                        </div>
-                                    </div>
+                                    @endif
                                 </div>
                             </div>
                             
@@ -496,7 +511,7 @@
                     <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-trash-alt text-red-600 text-2xl"></i>
                     </div>
-                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Excluir viagem para {{ $viagem->destino_viagem }}?</h4>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Excluir viagem: {{ $viagem->nome_viagem }}?</h4>
                     <p class="text-gray-600 text-sm">
                         Todos os dados relacionados à viagem serão permanentemente removidos, incluindo:
                     </p>
@@ -866,6 +881,30 @@
         
         .bg-gradient-to-br:hover {
             transform: translateY(-2px);
+        }
+        
+        /* Scrollbar customizado para lista de destinos */
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #fb923c #fed7aa;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #fed7aa;
+            border-radius: 3px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #fb923c;
+            border-radius: 3px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #ea580c;
         }
     </style>
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Viagens extends Model
 {
@@ -66,11 +67,6 @@ class Viagens extends Model
     public function seguroSelecionado()
     {
         return $this->belongsTo(Seguros::class, 'fk_id_seguro_selecionado', 'pk_id_seguro');
-    }
-
-    public function destinoPrincipal(): HasOne
-    {
-        return $this->hasOne(Destinos::class, 'fk_id_viagem', 'pk_id_viagem')->orderBy('ordem_destino', 'asc');
     }
 
     public function destinos(): HasMany

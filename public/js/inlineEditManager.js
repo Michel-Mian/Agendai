@@ -9,6 +9,7 @@ class InlineEditManager {
     }
 
     initializeInlineEdits() {
+        this.initNomeEdit();
         this.initDestinoEdit();
         this.initOrigemEdit();
         this.initDatasEdit();
@@ -72,6 +73,38 @@ class InlineEditManager {
                 }
             }
         });
+    }
+
+    // Edição do Nome da Viagem
+    initNomeEdit() {
+        const editBtn = document.querySelector('.edit-nome-btn');
+        const saveBtn = document.querySelector('.save-nome-btn');
+        const cancelBtn = document.querySelector('.cancel-nome-btn');
+        const displayDiv = document.querySelector('.nome-display');
+        const editDiv = document.querySelector('.nome-edit');
+        const input = editDiv?.querySelector('input');
+
+        if (editBtn) {
+            editBtn.addEventListener('click', () => {
+                displayDiv.classList.add('hidden');
+                editDiv.classList.remove('hidden');
+                input.focus();
+            });
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                input.value = input.defaultValue;
+                editDiv.classList.add('hidden');
+                displayDiv.classList.remove('hidden');
+            });
+        }
+
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                this.saveField('nome_viagem', input.value, 'nome');
+            });
+        }
     }
 
     // Edição do Destino
@@ -280,6 +313,21 @@ class InlineEditManager {
 
     updateInterface(type, value) {
         switch(type) {
+            case 'nome':
+                // Atualizar o título do nome da viagem no header
+                const nomeTitle = document.querySelector('.nome-display h1');
+                if (nomeTitle) {
+                    nomeTitle.textContent = value;
+                    this.highlightUpdatedElement(nomeTitle);
+                }
+                // Atualizar o input para manter sincronizado
+                const nomeInput = document.querySelector('.nome-input');
+                if (nomeInput) {
+                    nomeInput.value = value;
+                    nomeInput.defaultValue = value;
+                }
+                break;
+
             case 'destino':
                 // Atualizar o título do destino no header
                 const destinoTitle = document.querySelector('.destino-display h1');
