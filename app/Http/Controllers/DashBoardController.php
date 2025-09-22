@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Viagem; // Corrigido para Viagem (singular)
-use App\Models\Viajante; // Corrigido para Viajante (singular)
+use App\Models\Viagens as Viagem;
+use App\Models\Viajantes as Viajante; 
+use App\Models\Destinos; 
 use Carbon\Carbon;
 
 /**
@@ -24,18 +25,12 @@ class DashBoardController extends Controller
     {
         $user = auth()->user();
 
-        // VIAGENS - MODIFICAÇÃO PRINCIPAL AQUI
-        // Usamos with('destinoPrincipal') para carregar o primeiro destino de cada viagem
-        // de forma otimizada (Eager Loading), evitando múltiplas queries ao banco.
         $viagens = Viagem::where('fk_id_usuario', $user->id)
-            ->with('destinoPrincipal') // << CARREGA O DESTINO PRINCIPAL
+            ->with('destinos')
             ->orderBy('data_inicio_viagem', 'asc')
             ->get();
-        
-        // A busca de viajantes parece incorreta, deveria ser por viagem.
-        // Se quiser todos os viajantes do usuário, a lógica precisaria de um join.
-        // Por ora, vou manter, mas é um ponto de atenção.
-        // $viajantes = Viajantes::where('fk_id_viagem', $user->id)->get(); // Esta linha parece ter um erro de lógica (compara fk_id_viagem com user->id)
+
+        $viajantes = Viajante::where('fk_id_viagem', $user->id)->get();
 
         // Fetch available currencies from the API
         $response = Http::get('https://economia.awesomeapi.com.br/json/available/uniq');
@@ -107,7 +102,7 @@ class DashBoardController extends Controller
                 }
                 $pessoas = $viagem->viajantes()->count();
 
-                $nomeExibicao = optional($viagem->destinoPrincipal)->nome_destino ?? $viagem->nome_viagem;
+                $nomeExibicao = optional($viagem->nome_viagem)->nome_destino ?? $viagem->nome_viagem;
 
                 return [
                     'id' => $viagem->pk_id_viagem,
