@@ -404,15 +404,6 @@
   box-shadow: 0 0 0 2px rgba(31, 111, 235, 0.3) !important;
 }
 
-/* Gradientes azuis ficam com cores escuras do GitHub */
-.night-mode .bg-gradient-to-r,
-.night-mode .bg-gradient-to-br,
-.night-mode .bg-gradient-to-l,
-.night-mode .from-blue-600,
-.night-mode .to-blue-700 {
-  background: linear-gradient(to right, #161b22, #161b22) !important;
-}
-
 /* === BADGES E TAGS GITHUB === */
 .night-mode .bg-green-100,
 .night-mode .bg-blue-100,
@@ -1347,11 +1338,6 @@
     transition: none !important; /* remove transições de hover */
 }
 
-.night-mode .bg-gradient-to-r.from-blue-600.to-blue-500:hover {
-    background: linear-gradient(to right, #0d1117, #0d1117) !important; /* mantém a cor original */
-    color: #ffffff !important; /* mantém o texto branco */
-}
-
 /* Botão Voltar igual ao Próximo */
 .night-mode .prev-btn.btn-secondary {
     background: #0d1117 !important;        /* Fundo sólido */
@@ -1762,4 +1748,120 @@ a[href^="http://127.0.0.1:8000/viagens/"]:hover svg {
     transition: background 0.3s ease, color 0.3s ease;
 }
 
+/* Estilo específico para o botão "Salvar Preferências" */
+.night-mode button.from-blue-600 {
+    background-color: #21262d !important;
+    border: 1px solid #30363d !important;
+    color: #f0f6fc !important;
+    background-image: none !important; /* Anula o gradiente */
+}
 
+.night-mode button.from-blue-600:hover {
+    background-color: #ffffff !important;
+    color: #0d1117 !important;
+    border-color: #ffffff !important;
+    background-image: none !important; /* Anula o gradiente no hover */
+}
+
+/* Esta regra possui a maior especificidade e garante o comportamento desejado */
+.night-mode .bg-gradient-to-r.from-blue-600.to-blue-500:hover {
+    background-color: #ffffff !important; /* Fundo branco */
+    background-image: none !important; /* Remove o gradiente */
+    color: #0d1117 !important; /* Cor da fonte: preta */
+}
+
+/*
+  === CORREÇÕES DE ESPECIFICIDADE PARA MODO NOTURNO ===
+  - Garante que os gradientes de cards e botões mantenham sua cor de fundo no hover,
+    evitando o comportamento de fundo branco indesejado.
+  - Aplica um filtro na imagem do 'objetivo-card' para deixá-la escura no hover.
+*/
+
+/* Remove o efeito de hover de fundo branco em todos os gradientes do modo noturno */
+.night-mode .bg-gradient-to-r:hover,
+.night-mode .bg-gradient-to-br:hover {
+    background-image: none !important;
+    background-color: transparent !important;
+}
+
+/* Regra para garantir que o botão "Salvar Preferências" tenha o estilo de hover desejado */
+.night-mode .bg-gradient-to-r.from-blue-600.to-blue-500:hover {
+    background-color: #ffffff !important;
+    background-image: none !important;
+    color: #0d1117 !important;
+}
+
+/* Regra para manter o estilo de hover para o card de objetivo (roxo) */
+.night-mode .objetivo-card.group:hover {
+    background-color: #21262d !important;
+    border-color: #30363d !important;
+}
+
+/* Aplica o filtro na imagem dentro do card de objetivo para deixá-la escura no hover */
+.night-mode .objetivo-card:hover img {
+    filter: brightness(0) invert(1) !important; /* Filtro para deixar a imagem preta */
+}
+
+/* Regras para os botões dentro dos outros cards de gradiente (roxo e verde) */
+/* Botão "Adicionar Viajantes" */
+.night-mode .bg-gradient-to-r.from-green-600.to-green-700 button:hover {
+    background-color: #ffffff !important;
+    color: #0d1117 !important;
+    border-color: #ffffff !important;
+}
+
+/* Botão "Adicionar Objetivos" */
+.night-mode .bg-gradient-to-r.from-purple-600.to-purple-700 button:hover {
+    background-color: #ffffff !important;
+    color: #0d1117 !important;
+    border-color: #ffffff !important;
+}
+
+/* Garante que o botão com fundo bg-blue-600 fique com o fundo branco no hover */
+.night-mode .bg-blue-600:hover {
+    background-color: #ffffff !important;
+    color: #0d1117 !important;
+}
+
+/* Garante que o gradiente original seja mantido no hover para o card de cotação de moeda */
+.night-mode .bg-gradient-to-r.from-blue-700.to-blue-800:hover {
+    background: #21262d !important;
+    background-image: #21262d !important;
+    color: inherit !important;
+}
+
+/* Altera a cor de fundo da barra de voos no modo noturno */
+.night-mode .bg-gradient-to-r.from-blue-600.to-blue-700 {
+    background-image: none !important;
+    background-color: #161b22 !important;
+}
+
+/* Estiliza o card de "Hospedagem" para combinar com o card de "Voos" no modo noturno */
+.night-mode .bg-white.rounded-lg.shadow-md.p-6.mb-6 {
+    background-color: #21262d !important;
+}
+
+/* Altera a cor do ícone e do título para branco suave */
+.night-mode .fa-hotel,
+.night-mode .h3.text-pink-600 {
+    color: #f0f6fc !important;
+}
+
+/* Altera a cor do botão principal de "Adicionar hospedagem" e seu hover */
+.night-mode a.bg-pink-600.hover\:bg-pink-700 {
+    background-color: #161b22 !important; /* Cor de fundo escura */
+    color: #f0f6fc !important; /* Cor do texto branca */
+}
+.night-mode a.bg-pink-600.hover\:bg-pink-700:hover {
+    background-color: #30363d !important; /* Cor de hover mais clara */
+}
+
+/* Altera a cor do texto e do ícone SVG dentro do card */
+.night-mode .text-gray-500,
+.night-mode .text-gray-400 {
+    color: #7d8590 !important;
+}
+
+.night-mode svg.w-12.h-12 {
+    color: #f0f6fc !important; /* Cor do ícone branca */
+}
