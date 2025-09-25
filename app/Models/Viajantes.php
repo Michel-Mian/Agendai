@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Viajantes extends Model
 {
+    protected $fillable = [
+        'nome_viajante',
+        'idade',
+        'responsavel_viajante_id',
+        'fk_id_viagem'
+    ];
+
     protected $primaryKey = 'pk_id_viajante'; 
     public function viagem()
     {

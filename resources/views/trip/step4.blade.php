@@ -103,19 +103,43 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function getFormData() {
-        const dataIdaInput = document.querySelector('input[name="date_departure"]');
-        const dataVoltaInput = document.querySelector('input[name="date_return"]');
+        // Buscar todas as datas dos destinos
+        const dataInicioInputs = document.querySelectorAll('input[name="destino_data_inicio[]"]');
+        const dataFimInputs = document.querySelectorAll('input[name="destino_data_fim[]"]');
         const destinoSelect = document.getElementById('MainContent_Cotador_selContinente');
 
-        if (!dataIdaInput || !dataVoltaInput || !destinoSelect) {
-            console.error('Campos de data ou destino não encontrados no formulário.');
-            return { error: 'Campos essenciais ausentes.' };
+        if (!destinoSelect) {
+            console.error('Campo de destino não encontrado no formulário.');
+            return { error: 'Campo de destino ausente.' };
+        }
+        
+        // Para o seguro, usar a data do primeiro destino como data de início e a data do último destino como data de fim
+        let dataIda = '';
+        let dataVolta = '';
+        
+        if (dataInicioInputs.length > 0 && dataInicioInputs[0].value) {
+            dataIda = dataInicioInputs[0].value; // Data de início do primeiro destino
+        }
+        
+        if (dataFimInputs.length > 0) {
+            // Pegar a data de fim do último destino que tenha valor
+            for (let i = dataFimInputs.length - 1; i >= 0; i--) {
+                if (dataFimInputs[i].value) {
+                    dataVolta = dataFimInputs[i].value;
+                    break;
+                }
+            }
+        }
+
+        if (!dataIda || !dataVolta) {
+            console.error('Datas de início ou fim dos destinos não encontradas.');
+            return { error: 'Datas dos destinos não encontradas.' };
         }
         
         const formData = {
             destino: destinoSelect.value,
-            data_ida: dataIdaInput.value,
-            data_volta: dataVoltaInput.value
+            data_ida: dataIda,
+            data_volta: dataVolta
         };
 
         return formData;
