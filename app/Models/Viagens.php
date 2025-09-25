@@ -13,7 +13,7 @@ class Viagens extends Model
     
     // Campos que podem ser preenchidos via mass assignment
     protected $fillable = [
-        'destino_viagem',
+        'nome_viagem',
         'origem_viagem', 
         'data_inicio_viagem',
         'data_final_viagem',

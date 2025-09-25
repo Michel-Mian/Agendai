@@ -1,14 +1,28 @@
 <div class="form-step active">
     <h2 class="text-2xl font-extrabold text-gray-800 mb-6">Informações iniciais</h2>
     
+    <!-- Nome da viagem -->
+    <div class="mb-6">
+        <label class="block text-gray-600 font-semibold mb-2">Nome da sua viagem<label class="text-red-600 text-base font-thin">*</label></label>
+        <input type="text" 
+               id="nome_viagem" 
+               name="nome_viagem" 
+               class="input" 
+               placeholder="Ex: Eurotrip 2025, Lua de mel em Paris, Aventura na Ásia..."
+               maxlength="100"
+               required>
+        <p class="text-sm text-gray-500 mt-1">Dê um nome especial para a sua viagem dos sonhos</p>
+    </div>
+    
     <!-- Container de destinos -->
     <div class="mb-6">
         <label class="block text-gray-600 font-semibold mb-2">Quais seus destinos?<label class="text-red-600 text-base font-thin">*</label></label>
         <div id="destinos-container">
             <!-- Primeiro destino (sempre presente) -->
-            <div class="destino-item mb-4" data-destino-index="0">
-                <div class="flex items-center gap-3">
+            <div class="destino-item mb-6 p-4 border border-gray-200 rounded-lg" data-destino-index="0">
+                <div class="flex items-center gap-3 mb-4">
                     <div class="flex-1">
+                        <label class="block text-gray-600 font-semibold mb-2">Destino 1<label class="text-red-600 text-base font-thin">*</label></label>
                         <input type="text" 
                                id="tripDestination_0" 
                                name="destinos[]" 
@@ -22,6 +36,24 @@
                             data-index="0">
                         <i class="fas fa-trash text-sm"></i>
                     </button>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="block text-gray-600 font-semibold mb-2">Data de início<label class="text-red-600 text-base font-thin">*</label></label>
+                        <input type="date" 
+                               class="input destino-data-inicio" 
+                               name="destino_data_inicio[]" 
+                               id="destino_data_inicio_0"
+                               data-destino-index="0">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-gray-600 font-semibold mb-2">Data de fim<label class="text-red-600 text-base font-thin">*</label></label>
+                        <input type="date" 
+                               class="input destino-data-fim" 
+                               name="destino_data_fim[]" 
+                               id="destino_data_fim_0"
+                               data-destino-index="0">
+                    </div>
                 </div>
             </div>
         </div>
@@ -62,16 +94,6 @@
         </div>
     </div>
     <div id="idades-container" class="flex gap-4 mb-6"></div>
-    <div class="flex gap-6 mb-8">
-        <div class="flex-1">
-            <label class="block text-gray-600 font-semibold mb-2">Data de ida:<label class="text-red-600 text-base font-thin">*</label></label>
-            <input type="date" class="input" name="date_departure" id="date_departure">
-        </div>
-        <div class="flex-1">
-            <label class="block text-gray-600 font-semibold mb-2">Data de volta:<label class="text-red-600 text-base font-thin">*</label></label>
-            <input type="date" class="input" name="date_return" id="date_return">
-        </div>
-    </div>
     <div class="flex justify-end">
         <button type="button" class="next-btn btn-primary">Próximo →</button>
     </div>
@@ -108,9 +130,10 @@ document.addEventListener('DOMContentLoaded', function() {
         destinoCounter++;
         
         const novoDestinoHTML = `
-            <div class="destino-item mb-4 animate-fade-in" data-destino-index="${destinoCounter}">
-                <div class="flex items-center gap-3">
+            <div class="destino-item mb-6 p-4 border border-gray-200 rounded-lg animate-fade-in" data-destino-index="${destinoCounter}">
+                <div class="flex items-center gap-3 mb-4">
                     <div class="flex-1">
+                        <label class="block text-gray-600 font-semibold mb-2">Destino ${destinoCounter + 1}<label class="text-red-600 text-base font-thin">*</label></label>
                         <input type="text" 
                                id="tripDestination_${destinoCounter}" 
                                name="destinos[]" 
@@ -125,6 +148,24 @@ document.addEventListener('DOMContentLoaded', function() {
                         <i class="fas fa-trash text-sm"></i>
                     </button>
                 </div>
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="block text-gray-600 font-semibold mb-2">Data de início<label class="text-red-600 text-base font-thin">*</label></label>
+                        <input type="date" 
+                               class="input destino-data-inicio" 
+                               name="destino_data_inicio[]" 
+                               id="destino_data_inicio_${destinoCounter}"
+                               data-destino-index="${destinoCounter}">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-gray-600 font-semibold mb-2">Data de fim<label class="text-red-600 text-base font-thin">*</label></label>
+                        <input type="date" 
+                               class="input destino-data-fim" 
+                               name="destino_data_fim[]" 
+                               id="destino_data_fim_${destinoCounter}"
+                               data-destino-index="${destinoCounter}">
+                    </div>
+                </div>
             </div>
         `;
         
@@ -132,6 +173,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Inicializar autocomplete para o novo input
         window.initializeDestinationAutocomplete(destinoCounter);
+        
+        // Configurar validações de data para o novo destino
+        setupDateValidation(destinoCounter);
         
         // Atualizar visibilidade dos botões de remover
         updateRemoveButtonsVisibility();
@@ -178,10 +222,29 @@ document.addEventListener('DOMContentLoaded', function() {
             // Atualizar data-destino-index
             item.setAttribute('data-destino-index', newIndex);
             
-            // Atualizar IDs dos inputs
+            // Atualizar label do destino
+            const label = item.querySelector('label');
+            if (label) {
+                label.innerHTML = `Destino ${newIndex + 1}<label class="text-red-600 text-base font-thin">*</label>`;
+            }
+            
+            // Atualizar IDs dos inputs de destino
             const input = item.querySelector('.destino-input');
             input.id = `tripDestination_${newIndex}`;
             input.setAttribute('data-index', newIndex);
+            
+            // Atualizar IDs dos inputs de data
+            const dataInicioInput = item.querySelector('.destino-data-inicio');
+            if (dataInicioInput) {
+                dataInicioInput.id = `destino_data_inicio_${newIndex}`;
+                dataInicioInput.setAttribute('data-destino-index', newIndex);
+            }
+            
+            const dataFimInput = item.querySelector('.destino-data-fim');
+            if (dataFimInput) {
+                dataFimInput.id = `destino_data_fim_${newIndex}`;
+                dataFimInput.setAttribute('data-destino-index', newIndex);
+            }
             
             // Atualizar data-index dos botões
             const removeBtn = item.querySelector('.remove-destino-btn');
@@ -190,8 +253,146 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
+        // Reconfigurar validações de data para todos os destinos
+        allDestinos.forEach((item, index) => {
+            setupDateValidation(index);
+        });
+        
         // Atualizar contador
         destinoCounter = allDestinos.length - 1;
+    }
+    
+    // Função para configurar validações de data
+    function setupDateValidation(destinoIndex) {
+        const dataInicioInput = document.getElementById(`destino_data_inicio_${destinoIndex}`);
+        const dataFimInput = document.getElementById(`destino_data_fim_${destinoIndex}`);
+        
+        if (!dataInicioInput || !dataFimInput) return;
+        
+        // Validação para data de início
+        dataInicioInput.addEventListener('change', function() {
+            validateDateSequence();
+            updateMinDateForFim(destinoIndex);
+        });
+        
+        // Validação para data de fim
+        dataFimInput.addEventListener('change', function() {
+            validateDateSequence();
+        });
+        
+        // Configurar data mínima inicial
+        updateMinDateForInicio(destinoIndex);
+        updateMinDateForFim(destinoIndex);
+    }
+    
+    function updateMinDateForInicio(destinoIndex) {
+        const dataInicioInput = document.getElementById(`destino_data_inicio_${destinoIndex}`);
+        if (!dataInicioInput) return;
+        
+        if (destinoIndex === 0) {
+            // Primeiro destino pode começar a partir de hoje
+            const today = new Date().toISOString().split('T')[0];
+            dataInicioInput.setAttribute('min', today);
+        } else {
+            // Destinos subsequentes devem começar após o fim do destino anterior
+            const prevDataFimInput = document.getElementById(`destino_data_fim_${destinoIndex - 1}`);
+            if (prevDataFimInput && prevDataFimInput.value) {
+                const nextDay = new Date(prevDataFimInput.value);
+                nextDay.setDate(nextDay.getDate());
+                dataInicioInput.setAttribute('min', nextDay.toISOString().split('T')[0]);
+            }
+        }
+    }
+    
+    function updateMinDateForFim(destinoIndex) {
+        const dataInicioInput = document.getElementById(`destino_data_inicio_${destinoIndex}`);
+        const dataFimInput = document.getElementById(`destino_data_fim_${destinoIndex}`);
+        
+        if (!dataInicioInput || !dataFimInput) return;
+        
+        if (dataInicioInput.value) {
+            // Data de fim deve ser pelo menos no mesmo dia da data de início
+            dataFimInput.setAttribute('min', dataInicioInput.value);
+        }
+    }
+    
+    function validateDateSequence() {
+        const allDestinos = document.querySelectorAll('.destino-item');
+        let isValid = true;
+        
+        allDestinos.forEach((item, index) => {
+            const dataInicioInput = document.getElementById(`destino_data_inicio_${index}`);
+            const dataFimInput = document.getElementById(`destino_data_fim_${index}`);
+            
+            if (!dataInicioInput || !dataFimInput) return;
+            
+            // Reset styles
+            dataInicioInput.style.borderColor = '';
+            dataFimInput.style.borderColor = '';
+            window.hideErrorMessage(dataInicioInput);
+            window.hideErrorMessage(dataFimInput);
+            
+            if (dataInicioInput.value && dataFimInput.value) {
+                const dataInicio = new Date(dataInicioInput.value);
+                const dataFim = new Date(dataFimInput.value);
+                
+                // Validar se data de fim não é anterior à data de início
+                if (dataFim < dataInicio) {
+                    dataFimInput.style.borderColor = '#ef4444';
+                    window.showErrorMessage(dataFimInput, 'A data de fim não pode ser anterior à data de início');
+                    isValid = false;
+                }
+                
+                // Validar sequência com destino anterior
+                if (index > 0) {
+                    const prevDataFimInput = document.getElementById(`destino_data_fim_${index - 1}`);
+                    if (prevDataFimInput && prevDataFimInput.value) {
+                        const prevDataFim = new Date(prevDataFimInput.value);
+                        if (dataInicio < prevDataFim) {
+                            dataInicioInput.style.borderColor = '#ef4444';
+                            window.showErrorMessage(dataInicioInput, 'A data de início deve ser posterior ao fim do destino anterior');
+                            isValid = false;
+                        }
+                    }
+                }
+                
+                // Atualizar datas mínimas para próximo destino
+                updateMinDateForInicio(index + 1);
+            }
+        });
+        
+        return isValid;
+    }
+    
+    // Função para validar todas as datas
+    function validateAllDates() {
+        const allDestinos = document.querySelectorAll('.destino-item');
+        let allValid = true;
+        
+        allDestinos.forEach((item, index) => {
+            const dataInicioInput = document.getElementById(`destino_data_inicio_${index}`);
+            const dataFimInput = document.getElementById(`destino_data_fim_${index}`);
+            
+            // Verificar se ambos os campos têm valores
+            if (!dataInicioInput.value.trim()) {
+                dataInicioInput.style.borderColor = '#ef4444';
+                window.showErrorMessage(dataInicioInput, 'A data de início é obrigatória');
+                allValid = false;
+            }
+            
+            if (!dataFimInput.value.trim()) {
+                dataFimInput.style.borderColor = '#ef4444';
+                window.showErrorMessage(dataFimInput, 'A data de fim é obrigatória');
+                allValid = false;
+            }
+        });
+        
+        // Validar sequência de datas
+        if (allValid) {
+            allValid = validateDateSequence();
+        }
+        
+        return allValid;
     }
     
     // Função para validar todos os destinos
@@ -252,16 +453,56 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Função de validação geral
     function validateTripForm() {
+        // Validar nome da viagem
+        const nomeViagemInput = document.getElementById('nome_viagem');
+        if (!nomeViagemInput || !nomeViagemInput.value.trim()) {
+            nomeViagemInput.style.borderColor = '#ef4444';
+            window.showErrorMessage && window.showErrorMessage(nomeViagemInput, 'O nome da viagem é obrigatório');
+            nomeViagemInput.focus();
+            return false;
+        } else {
+            nomeViagemInput.style.borderColor = '';
+            window.hideErrorMessage && window.hideErrorMessage(nomeViagemInput);
+        }
+        
         const destinationsValid = validateAllDestinations();
         const originValid = validateOrigin();
+        const datesValid = validateAllDates();
         
-        return destinationsValid && originValid;
+        return destinationsValid && originValid && datesValid;
     }
     
     // Expor funções globalmente para uso em outros scripts
     window.validateDestinations = validateAllDestinations;
     window.validateOrigin = validateOrigin;
+    window.validateDates = validateAllDates;
     window.validateTripForm = validateTripForm;
+    
+    // Configurar validações de data para o primeiro destino
+    document.addEventListener('DOMContentLoaded', function() {
+        setupDateValidation(0);
+        
+        // Configurar validação para nome da viagem
+        const nomeViagemInput = document.getElementById('nome_viagem');
+        if (nomeViagemInput) {
+            nomeViagemInput.addEventListener('blur', function() {
+                if (!this.value.trim()) {
+                    this.style.borderColor = '#ef4444';
+                    window.showErrorMessage && window.showErrorMessage(this, 'O nome da viagem é obrigatório');
+                } else {
+                    this.style.borderColor = '';
+                    window.hideErrorMessage && window.hideErrorMessage(this);
+                }
+            });
+            
+            nomeViagemInput.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    this.style.borderColor = '';
+                    window.hideErrorMessage && window.hideErrorMessage(this);
+                }
+            });
+        }
+    });
 });
 </script>
 
