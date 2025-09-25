@@ -8,6 +8,14 @@ function initPlacesAutocompleteStrict() {
     fields.forEach(field => {
         const input = document.getElementById(field.id);
         if (input && typeof google !== 'undefined' && google.maps && google.maps.places) {
+            // Verificar se já existe nosso novo sistema de autocomplete (step1)
+            if (input.classList.contains('origem-input') || 
+                input.classList.contains('destino-input') ||
+                input.hasAttribute('data-new-autocomplete')) {
+                console.log(`Pulando inicialização do formTrip.js para ${field.id} - novo sistema já ativo`);
+                return;
+            }
+            
             if (!input._autocompleteInitialized) {
                 const autocomplete = new google.maps.places.Autocomplete(input, {
                     types: ['(regions)'],
