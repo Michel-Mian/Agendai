@@ -24,4 +24,5 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 Route::middleware('auth:sanctum')->get('/dashboard', [DashBoardController::class, 'dashboard']);
+// TEMPORÁRIO: Rota sem autenticação para teste - remova quando configurar auth
 Route::get('/viagens/{id}', [ViagensController::class, 'showApi']);

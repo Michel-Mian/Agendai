@@ -6,10 +6,15 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
-                'resources/css/app.css', 
-                'resources/js/app.js', 
+                'resources/css/app.css',
+                'resources/css/explore.css',
+                'resources/css/nightMode.css',
+                'resources/js/app.js',
                 'resources/js/dashBoard.js',
-                'resources/js/formTrip.js'
+                'resources/js/searchFlights.js',
+                'resources/js/formTrip.js',
+                'resources/js/hotels.js',
+                'resources/js/nightMode.js'
             ],
             refresh: true,
         }),
