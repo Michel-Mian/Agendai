@@ -27,124 +27,200 @@ class FormController extends Controller
 
     public function store(Request $request)
     {
+        \Log::info('FormController@store - Iniciando processo de criação da viagem', $request->all());
+        
+        // Validação dos dados
+        $validatedData = $request->validate([
+            'nome_viagem' => 'required|string|max:100',
+            'origem' => 'required|string|max:255',
+            'destinos' => 'required|array|min:1',
+            'destinos.*' => 'required|string|max:255',
+            'destino_data_inicio' => 'required|array|min:1',
+            'destino_data_inicio.*' => 'required|date',
+            'destino_data_fim' => 'required|array|min:1',
+            'destino_data_fim.*' => 'required|date',
+            'num_pessoas' => 'required|integer|min:1|max:8',
+            'orcamento' => 'nullable|numeric|min:0',
+            'idades' => 'nullable|array',
+            'idades.*' => 'nullable|integer|min:1|max:120',
+            'preferences' => 'nullable',
+        ]);
 
-        // dd($request->all());
+        \Log::info('Validação concluída com sucesso');
 
-        // 1. Salve a viagem
-        $viagem = new \App\Models\Viagens();
-        $viagem->destino_viagem = $request->searchInput;
-        $viagem->origem_viagem = $request->origem;
-        $viagem->data_inicio_viagem = $request->date_departure;
-        $viagem->data_final_viagem = $request->date_return;
-        $viagem->orcamento_viagem = $request->orcamento;
-        $viagem->fk_id_usuario = auth()->id();
+        // Verificar autenticação
+        if (!auth()->check()) {
+            \Log::error('Usuário não autenticado');
+            return redirect()->route('login')->with('error', 'Você precisa estar logado.');
+        }
 
-        $viagem->save();
-
-        // 2. Salve o voo (se houver)
-        if ($request->filled('selected_flight_index')) {
-            // Busque os voos novamente ou recupere os dados do voo selecionado
-            $flightData = json_decode($request->input('selected_flight_data', '{}'), true);
-            //dd($flightData);
-            $voo = new \App\Models\Voos();
-            $primeiroTrecho = $flightData['flights'][0] ?? [];
-            $conexao = isset($flightData['flights'][1]) ? $flightData['flights'][1] : null;
+        try {
+            // Extrair dados validados
+            $destinos = $validatedData['destinos'];
+            $datasInicio = $validatedData['destino_data_inicio'];
+            $datasFim = $validatedData['destino_data_fim'];
             
-            $voo->desc_aeronave_voo = $primeiroTrecho['airplane'] ?? '';
-            $voo->origem_voo = $primeiroTrecho['departure_airport']['id'] ?? '';
-            $voo->origem_nome_voo = $primeiroTrecho['departure_airport']['name'] ?? '';
-            $voo->destino_voo = $conexao['arrival_airport']['id'] ?? '';
-            $voo->destino_nome_voo = $conexao['arrival_airport']['name'] ?? '';
-            $voo->conexao_voo = $conexao['departure_airport']['id'] ?? '';
-            $voo->conexao_nome_voo = $conexao['departure_airport']['name'] ?? '';
-            $voo->data_hora_partida = !empty($primeiroTrecho['departure_airport']['time'])
-                ? date('Y-m-d H:i:s', strtotime($primeiroTrecho['departure_airport']['time']))
-                : now();
-            $voo->data_hora_chegada = !empty($primeiroTrecho['arrival_airport']['time'])
-                ? date('Y-m-d H:i:s', strtotime($primeiroTrecho['arrival_airport']['time']))
-                : now();
-            $voo->companhia_voo = $primeiroTrecho['airline'] ?? '';
-            $voo->fk_id_viagem = $viagem->pk_id_viagem;
-            $voo->save();
-        }
-
-        $seguroId = null;
-        if ($request->filled('seguroSelecionadoData')) {
-            try {
-                // Decodifica a string JSON enviada pelo formulário
-                $data = json_decode($request->seguroSelecionadoData, true);
-
-                // Função para extrair valor numérico de strings de preço
-                $extractNumeric = function ($price) {
-                    if (!$price) return null;
-                    $cleaned = preg_replace('/[^\d,]/', '', $price); // Remove tudo exceto dígitos e vírgula
-                    $cleaned = str_replace(',', '.', $cleaned); // Troca vírgula por ponto
-                    return is_numeric($cleaned) ? (float) $cleaned : null;
-                };
-
-                $seguro = \App\Models\Seguros::create([
-                    'fk_id_viagem' => $viagem->pk_id_viagem, 
-                    'seguradora' => $data['seguradora'] ?? 'N/A',
-                    'plano' => $data['plano'] ?? 'N/A',
-                    'detalhes_etarios' => $data['detalhes_etarios'] ?? null,
-                    'link' => $data['link'] ?? null,
-                    'cobertura_medica' => $data['coberturas']['medica'] ?? null,
-                    'cobertura_bagagem' => $data['coberturas']['bagagem'] ?? null,
-                    'preco_pix' => $extractNumeric($data['precos']['pix'] ?? null),
-                    'preco_cartao' => $extractNumeric($data['precos']['cartao'] ?? null),
-                    'parcelamento_cartao' => $data['precos']['parcelas'] ?? null,
-                    'is_selected' => true,
-                ]);
-
-                $seguroId = $seguro->pk_id_seguro;
-
-            } catch (\Exception $e) {
-                // Logar o erro é uma boa prática
-                \Log::error('Falha ao salvar seguro no FormController@store', [
-                    'error' => $e->getMessage(), 
-                    'data' => $request->seguroSelecionadoData
-                ]);
-                // Opcional: retornar com um erro
-                // return back()->withErrors(['seguro' => 'Ocorreu um erro ao salvar o seguro selecionado.']);
-            }
-        }
-
-        // 4. Salve as idades dos viajantes
-        if ($request->has('idades') && is_array($request->idades)) {
-            foreach ($request->idades as $idade) {
-                $viajante = new \App\Models\Viajantes();
-                $viajante->idade = $idade;
-                $viajante->fk_id_viagem = $viagem->pk_id_viagem;
-                $viajante->save();
-            }
-        }
-
-        // 5. Salve as preferências da viagem (vários objetivos para uma viagem)
-        if ($request->filled('preferences')) {
-            $prefs = explode(',', $request->preferences[0]);
-            foreach ($prefs as $pref) {
-                if (trim($pref) !== '') {
-                    $objetivo = new \App\Models\Objetivos();
-                    $objetivo->nome = trim($pref); // Adicionado trim() por segurança
-                    $objetivo->fk_id_viagem = $viagem->pk_id_viagem;
-                    $objetivo->save();
+            // Validar datas
+            for ($i = 0; $i < count($destinos); $i++) {
+                if (isset($datasInicio[$i]) && isset($datasFim[$i])) {
+                    if (strtotime($datasFim[$i]) < strtotime($datasInicio[$i])) {
+                        return back()->withErrors([
+                            "destino_data_fim.$i" => "A data de fim do destino " . ($i + 1) . " não pode ser anterior à data de início."
+                        ])->withInput();
+                    }
                 }
             }
+
+            // Calcular período da viagem
+            $dataInicioViagem = $datasInicio[0];
+            $dataFimViagem = end($datasFim);
+
+            \Log::info('Criando viagem principal', [
+                'nome' => $validatedData['nome_viagem'],
+                'periodo' => $dataInicioViagem . ' a ' . $dataFimViagem
+            ]);
+
+            // 1. Criar viagem principal
+            $viagem = \App\Models\Viagens::create([
+                'nome_viagem' => $validatedData['nome_viagem'],
+                'origem_viagem' => $validatedData['origem'],
+                'data_inicio_viagem' => $dataInicioViagem,
+                'data_final_viagem' => $dataFimViagem,
+                'orcamento_viagem' => $validatedData['orcamento'] ?? 0,
+                'fk_id_usuario' => auth()->id(),
+            ]);
+
+            \Log::info('Viagem principal criada', ['id' => $viagem->pk_id_viagem]);
+
+            // 2. Criar destinos
+            foreach ($destinos as $index => $nomeDestino) {
+                if (!empty($nomeDestino) && isset($datasInicio[$index]) && isset($datasFim[$index])) {
+                    \App\Models\Destinos::create([
+                        'fk_id_viagem' => $viagem->pk_id_viagem,
+                        'nome_destino' => $nomeDestino,
+                        'data_chegada_destino' => $datasInicio[$index],
+                        'data_partida_destino' => $datasFim[$index],
+                        'ordem_destino' => $index + 1,
+                    ]);
+                }
+            }
+            \Log::info('Destinos criados', ['total' => count($destinos)]);
+
+            // 3. Criar voo se houver dados
+            if ($request->filled('selected_flight_data')) {
+                $flightData = json_decode($request->input('selected_flight_data'), true);
+                if ($flightData && isset($flightData['flights']) && count($flightData['flights']) > 0) {
+                    $primeiroVoo = $flightData['flights'][0];
+                    $ultimoVoo = end($flightData['flights']);
+                    
+                    \App\Models\Voos::create([
+                        'fk_id_viagem' => $viagem->pk_id_viagem,
+                        'desc_aeronave_voo' => $primeiroVoo['airplane'] ?? '',
+                        'origem_voo' => $primeiroVoo['departure_airport']['id'] ?? '',
+                        'origem_nome_voo' => $primeiroVoo['departure_airport']['name'] ?? '',
+                        'destino_voo' => $ultimoVoo['arrival_airport']['id'] ?? '',
+                        'destino_nome_voo' => $ultimoVoo['arrival_airport']['name'] ?? '',
+                        'data_hora_partida' => isset($primeiroVoo['departure_airport']['time']) 
+                            ? date('Y-m-d H:i:s', strtotime($primeiroVoo['departure_airport']['time']))
+                            : $dataInicioViagem . ' 00:00:00',
+                        'data_hora_chegada' => isset($ultimoVoo['arrival_airport']['time'])
+                            ? date('Y-m-d H:i:s', strtotime($ultimoVoo['arrival_airport']['time']))
+                            : $dataFimViagem . ' 23:59:59',
+                        'companhia_voo' => $primeiroVoo['airline'] ?? '',
+                    ]);
+                    \Log::info('Voo criado com sucesso');
+                }
+            }
+
+            // 4. Criar seguro se houver dados
+            $seguroId = null;
+            if ($request->filled('seguroSelecionadoData')) {
+                $seguroData = json_decode($request->seguroSelecionadoData, true);
+                if ($seguroData) {
+                    $extractNumeric = function ($price) {
+                        if (!$price) return null;
+                        $cleaned = preg_replace('/[^\d,]/', '', $price);
+                        return is_numeric(str_replace(',', '.', $cleaned)) ? (float) str_replace(',', '.', $cleaned) : null;
+                    };
+
+                    $seguro = \App\Models\Seguros::create([
+                        'fk_id_viagem' => $viagem->pk_id_viagem,
+                        'seguradora' => $seguroData['seguradora'] ?? 'N/A',
+                        'plano' => $seguroData['plano'] ?? 'N/A',
+                        'detalhes_etarios' => $seguroData['detalhes_etarios'] ?? null,
+                        'link' => $seguroData['link'] ?? null,
+                        'cobertura_medica' => $seguroData['coberturas']['medica'] ?? null,
+                        'cobertura_bagagem' => $seguroData['coberturas']['bagagem'] ?? null,
+                        'preco_pix' => $extractNumeric($seguroData['precos']['pix'] ?? null),
+                        'preco_cartao' => $extractNumeric($seguroData['precos']['cartao'] ?? null),
+                        'parcelamento_cartao' => $seguroData['precos']['parcelas'] ?? null,
+                        'is_selected' => true,
+                    ]);
+                    $seguroId = $seguro->pk_id_seguro;
+                    \Log::info('Seguro criado', ['id' => $seguroId]);
+                }
+            }
+
+            // 5. Criar viajantes
+            if (isset($validatedData['idades']) && is_array($validatedData['idades'])) {
+                foreach ($validatedData['idades'] as $idade) {
+                    if (!empty($idade)) {
+                        \App\Models\Viajantes::create([
+                            'fk_id_viagem' => $viagem->pk_id_viagem,
+                            'idade' => (int)$idade,
+                            'nome' => 'Viajante ' . $idade . ' anos',
+                        ]);
+                    }
+                }
+                \Log::info('Viajantes criados', ['total' => count($validatedData['idades'])]);
+            }
+
+            // 6. Criar objetivos/preferências
+            if (!empty($validatedData['preferences'])) {
+                $preferencesString = is_array($validatedData['preferences']) 
+                    ? $validatedData['preferences'][0] 
+                    : $validatedData['preferences'];
+                    
+                $prefs = explode(',', $preferencesString);
+                foreach ($prefs as $pref) {
+                    $prefTrimmed = trim($pref);
+                    if ($prefTrimmed !== '') {
+                        \App\Models\Objetivos::create([
+                            'fk_id_viagem' => $viagem->pk_id_viagem,
+                            'nome' => $prefTrimmed,
+                        ]);
+                    }
+                }
+                \Log::info('Objetivos criados', ['total' => count($prefs)]);
+            }
+
+            // 7. Atualizar viagem com seguro se houver
+            if ($seguroId) {
+                $viagem->update(['fk_id_seguro_selecionado' => $seguroId]);
+            }
+
+            // 8. Salvar na sessão
+            session(['trip_id' => $viagem->pk_id_viagem]);
+
+            \Log::info('Viagem completa criada com sucesso!', [
+                'viagem_id' => $viagem->pk_id_viagem,
+                'nome' => $viagem->nome_viagem,
+                'destinos_count' => count($destinos)
+            ]);
+
+            return redirect()->route('explore')->with('success', 'Viagem criada com sucesso!');
+
+        } catch (\Exception $e) {
+            \Log::error('Erro ao criar viagem', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()
+                ->withErrors(['error' => 'Erro ao criar viagem: ' . $e->getMessage()])
+                ->withInput();
         }
-
-        // 6. Salve o ID da viagem na sessão
-        session(['trip_id' => $viagem->pk_id_viagem]);
-
-        // 7. Atualize o seguro selecionado na viagem
-        if ($seguroId) {
-            $viagem->fk_id_seguro_selecionado = $seguroId;
-            $viagem->save();
-        }
-
-        // 8. Redirecione ou retorne sucesso
-        return redirect()->route('explore')->with('success', 'Viagem salva com sucesso!');
     }
-
 
     public function searchAjax(Request $request)
     {

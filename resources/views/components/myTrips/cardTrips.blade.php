@@ -7,7 +7,7 @@
                 <div class="flex items-center mb-2">
                     <div class="w-3 h-3 bg-green-400 rounded-full mr-3 animate-pulse"></div>
                     <h2 class="text-2xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
-                        {{ $viagem->destino_viagem }}
+                        {{ $viagem->nome_viagem }}
                     </h2>
                 </div>
                 

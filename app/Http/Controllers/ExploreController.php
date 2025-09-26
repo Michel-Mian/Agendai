@@ -26,13 +26,13 @@ class ExploreController extends Controller
         
         if (session()->has('trip_id')) {
             $tripId = session('trip_id');
-            $viagem = Viagens::findOrFail($tripId);
-            $dataInicio = $viagem?->data_inicio_viagem;
-            $dataFim = $viagem?->data_final_viagem;
-            $destino = $viagem?->destino_viagem;
-            $origem = $viagem?->origem_viagem;
+            $viagem = Viagens::with('destinos')->findOrFail($tripId);
+            $dataInicio = $viagem->data_inicio_viagem;
+            $dataFim = $viagem->data_final_viagem;
+            $origem = $viagem->origem_viagem;
+            $nomeViagem = $viagem->nome_viagem; 
+            $destinos = $viagem->destinos->pluck('nome_destino')->toArray();
         }
-        
         // Verificar se há filtros de objetivo na URL
         if ($request->has('filters')) {
             try {

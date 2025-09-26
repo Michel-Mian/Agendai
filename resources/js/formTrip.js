@@ -8,6 +8,14 @@ function initPlacesAutocompleteStrict() {
     fields.forEach(field => {
         const input = document.getElementById(field.id);
         if (input && typeof google !== 'undefined' && google.maps && google.maps.places) {
+            // Verificar se já existe nosso novo sistema de autocomplete (step1)
+            if (input.classList.contains('origem-input') || 
+                input.classList.contains('destino-input') ||
+                input.hasAttribute('data-new-autocomplete')) {
+                console.log(`Pulando inicialização do formTrip.js para ${field.id} - novo sistema já ativo`);
+                return;
+            }
+            
             if (!input._autocompleteInitialized) {
                 const autocomplete = new google.maps.places.Autocomplete(input, {
                     types: ['(regions)'],
@@ -78,6 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const prevBtns = document.querySelectorAll('.prev-btn');
     let meioLocomocao = document.querySelectorAll('.form-step')[1].querySelector('select').value;
     let voosCarregados = []; // Armazena voos carregados
+    let flightSearchInitiated = false; // Controla se a busca de voos já foi iniciada
 
     // -------------------- Função para mostrar o passo atual --------------------
     function showStep(idx) {
@@ -87,6 +96,12 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.step-indicator').forEach((el, i) => {
             el.classList.toggle('active', i === idx);
         });
+
+        // Se chegou no step de voos (step 4, index 4) e meio de locomoção é avião
+        if (idx === 4 && meioLocomocao === 'Avião' && !flightSearchInitiated) {
+            flightSearchInitiated = true;
+            searchFlights();
+        }
 
         // Se for o último passo, preenche a revisão
         if (idx === steps.length - 1) {
@@ -98,54 +113,121 @@ document.addEventListener('DOMContentLoaded', function() {
     async function searchFlights() {
         if (meioLocomocao === 'Avião') {
             document.querySelectorAll('.form-step')[4].classList.remove('hidden');
+            
+            // Contar quantos destinos foram preenchidos
+            const destinosInputs = document.querySelectorAll('.destino-input');
+            let destinosPreenchidos = 0;
+            
+            for (let input of destinosInputs) {
+                if (input.value.trim() && input.getAttribute('data-valid') === 'true') {
+                    destinosPreenchidos++;
+                }
+            }
+            
+            // Buscar datas do primeiro destino
+            const primeiraDataInicio = document.getElementById('destino_data_inicio_0')?.value || '';
+            const primeiraDataFim = document.getElementById('destino_data_fim_0')?.value || '';
+            
+            // Para qualquer quantidade de destinos, sempre buscar ida e volta usando as datas do primeiro destino
             const data = {
                 dep_iata: document.getElementById('dep_iata')?.value || '',
                 arr_iata: document.getElementById('arr_iata')?.value || '',
-                date_departure: document.getElementById('date_departure')?.value || '',
-                date_return: document.getElementById('date_return')?.value || '',
+                date_departure: primeiraDataInicio,
+                date_return: primeiraDataFim,
             };
+            
             const container = document.getElementById('flights-container');
-            container.innerHTML = '<div class="text-gray-500">Carregando voos...</div>';
-            let timeout = false;
-            const timer = setTimeout(() => {
-                timeout = true;
-                container.innerHTML = '<div class="text-red-500">Tempo esgotado ao buscar voos.</div>';
-            }, 8000);
-            try {
-                const resVoos = await fetch('/formTrip/flights?' + new URLSearchParams(data));
-                if (timeout) return;
-                clearTimeout(timer);
-                const result = await resVoos.json();
-                if (result.flights && result.flights.length) {
-                    voosCarregados = result.flights;
-                    container.innerHTML = '';
-                    for (let i = 0; i < result.flights.length; i++) {
-                        const flight = result.flights[i];
-                        const resCard = await fetch('/formTrip/card-flight?' + new URLSearchParams({
-                            flight: JSON.stringify(flight),
-                            index: i
-                        }));
-                        const cardData = await resCard.json();
-                        container.innerHTML += cardData.html;
-                    }
-                    // Adiciona listeners nos checkboxes dos voos
-                    document.querySelectorAll('.select-flight-checkbox').forEach((checkbox, idx) => {
-                        checkbox.addEventListener('change', function() {
-                            if (this.checked) {
-                                document.getElementById('selected_flight_data').value = JSON.stringify(voosCarregados[idx]);
-                                document.getElementById('selected_flight_index').value = idx;
-                            }
-                        });
-                    });
-                } else {
-                    container.innerHTML = '<div class="text-gray-500">Nenhum voo encontrado para os critérios informados.</div>';
-                }
-            } catch (e) {
-                if (!timeout) container.innerHTML = '<div class="text-red-500">Erro ao buscar voos.</div>';
-            }
+            container.innerHTML = '<div class="flex flex-col items-center justify-center py-8"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div><div class="text-gray-600">Carregando voos em background...</div><div class="text-sm text-gray-500 mt-2">Você pode continuar preenchendo o formulário</div></div>';
+            
+            // Executar busca de voos de forma assíncrona sem bloquear
+            searchFlightsAsync(data, container);
+            
         } else {
             document.querySelectorAll('.form-step')[4].classList.add('hidden');
         }
+    }
+
+    // Função assíncrona separada para buscar voos
+    async function searchFlightsAsync(data, container) {
+        let timeout = false;
+        const timer = setTimeout(() => {
+            timeout = true;
+            container.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center"><div class="text-red-800 font-semibold mb-2">Tempo esgotado</div><div class="text-red-600 text-sm mb-4">A busca por voos demorou mais que o esperado</div><button onclick="retryFlightSearch()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Tentar Novamente</button></div>';
+        }, 15000); // Aumentei o timeout para 15 segundos
+        
+        try {
+            const resVoos = await fetch('/formTrip/flights?' + new URLSearchParams(data));
+            if (timeout) return;
+            clearTimeout(timer);
+            
+            const result = await resVoos.json();
+            if (result.flights && result.flights.length) {
+                voosCarregados = result.flights;
+                container.innerHTML = '';
+                
+                for (let i = 0; i < result.flights.length; i++) {
+                    const flight = result.flights[i];
+                    const resCard = await fetch('/formTrip/card-flight?' + new URLSearchParams({
+                        flight: JSON.stringify(flight),
+                        index: i
+                    }));
+                    const cardData = await resCard.json();
+                    container.innerHTML += cardData.html;
+                }
+                
+                // Adiciona listeners nos checkboxes dos voos
+                document.querySelectorAll('.select-flight-checkbox').forEach((checkbox, idx) => {
+                    checkbox.addEventListener('change', function() {
+                        if (this.checked) {
+                            document.getElementById('selected_flight_data').value = JSON.stringify(voosCarregados[idx]);
+                            document.getElementById('selected_flight_index').value = idx;
+                        }
+                    });
+                });
+                
+                // Mostrar notificação de sucesso
+                showFlightNotification('Voos carregados com sucesso!', 'success');
+                
+            } else {
+                container.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center"><div class="text-yellow-800 font-semibold mb-2">Nenhum voo encontrado</div><div class="text-yellow-600 text-sm mb-4">Não foram encontrados voos de ida e volta para os critérios informados</div><button onclick="retryFlightSearch()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">Buscar Novamente</button></div>';
+            }
+        } catch (e) {
+            if (!timeout) {
+                console.error('Erro na busca de voos:', e);
+                container.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center"><div class="text-red-800 font-semibold mb-2">Erro ao buscar voos</div><div class="text-red-600 text-sm mb-4">Ocorreu um erro técnico na busca</div><button onclick="retryFlightSearch()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Tentar Novamente</button></div>';
+            }
+        }
+    }
+    
+    // Função global para retry
+    window.retryFlightSearch = function() {
+        flightSearchInitiated = true;
+        searchFlights();
+    };
+    
+    // Função para mostrar notificações sobre voos
+    function showFlightNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transform translate-x-0 transition-all duration-300 ${
+            type === 'success' ? 'bg-green-500 text-white' : 
+            type === 'error' ? 'bg-red-500 text-white' : 
+            'bg-blue-500 text-white'
+        }`;
+        notification.innerHTML = `
+            <div class="flex items-center gap-3">
+                <i class="fas fa-plane"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto remove after 4 seconds
+        setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 300);
+        }, 4000);
     }
 
     // Função para formatar data yyyy-mm-dd para dd/mm/aaaa
@@ -156,62 +238,166 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function preencherRevisao() {
-        const reviewList = document.getElementById('reviewList'); //
+        const reviewList = document.getElementById('reviewList');
         if (!reviewList) return;
 
-        // Pegue os campos do DOM conforme o seu form
-        const destino = document.getElementById('tripDestination')?.value || '';
-        const adultosSelect = document.querySelectorAll('.form-step')[0]?.querySelectorAll('select')[0];
-        const adultos = adultosSelect ? adultosSelect.value : '';
-        const dataIdaInput = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[0];
-        const dataVoltaInput = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[1];
-        const dataIda = dataIdaInput ? dataIdaInput.value : '';
-        const dataVolta = dataVoltaInput ? dataVoltaInput.value : '';
-        const meioSelect = document.querySelectorAll('.form-step')[1]?.querySelector('select');
-        const meio = meioSelect ? meioSelect.value : '';
-        const orcamentoInput = document.querySelectorAll('.form-step')[1]?.querySelector('input[type="number"]');
-        const orcamento = orcamentoInput ? orcamentoInput.value : '';
+        console.log('🔍 Iniciando coleta de dados para revisão...');
+
+        // Pegar nome da viagem
+        const nomeViagemInput = document.getElementById('nome_viagem');
+        const nomeViagem = nomeViagemInput ? nomeViagemInput.value.trim() : '';
+        console.log('📝 Nome da viagem:', nomeViagem);
+
+        // Pegar origem
+        const origemInput = document.getElementById('origem');
+        const origem = origemInput ? origemInput.value.trim() : '';
+        console.log('📍 Origem:', origem);
+
+        // Pegar destinos preenchidos
+        const destinosInputs = document.querySelectorAll('.destino-input');
+        const destinosValidos = [];
+        
+        destinosInputs.forEach((input, index) => {
+            if (input.value.trim()) {
+                destinosValidos.push(input.value.trim());
+                console.log(`🎯 Destino ${index + 1}:`, input.value.trim());
+            }
+        });
+        
+        const destino = destinosValidos.length > 0 ? destinosValidos.join(', ') : '';
+        
+        // Pegar dados básicos do step 1
+        const numPessoasSelect = document.getElementById('num_pessoas');
+        const numPessoas = numPessoasSelect ? numPessoasSelect.value : '';
+        console.log('👥 Número de pessoas:', numPessoas);
+        
+        // Pegar idades dos viajantes
         const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
         const idades = Array.from(idadeInputs).map(input => input.value).filter(value => value !== '');
-        const seguroSelect = document.getElementById('seguroViagem');
-        const seguro = seguroSelect ? seguroSelect.value : '';
-        let nomeSeguro = '';
-        if (seguro === 'Sim') {
-            nomeSeguro = sessionStorage.getItem('selectedSeguroName') || '';
+        console.log('👶 Idades:', idades);
+        
+        // Pegar datas dos destinos
+        const dataInicioInputs = document.querySelectorAll('input[name="destino_data_inicio[]"]');
+        const dataFimInputs = document.querySelectorAll('input[name="destino_data_fim[]"]');
+        
+        let datasInfo = [];
+        for (let i = 0; i < Math.min(dataInicioInputs.length, dataFimInputs.length); i++) {
+            const dataInicio = dataInicioInputs[i].value;
+            const dataFim = dataFimInputs[i].value;
+            const destinoCorrespondente = destinosValidos[i] || `Destino ${i + 1}`;
+            
+            if (dataInicio && dataFim) {
+                datasInfo.push(`<span class="text-blue-100">${destinoCorrespondente}:</span> ${formatarDataBR(dataInicio)} a ${formatarDataBR(dataFim)}`);
+                console.log(`📅 Datas ${destinoCorrespondente}:`, dataInicio, 'a', dataFim);
+            }
+        }
+        
+        // Dados da primeira e última data para compatibilidade
+        let primeiraDataInicio = '';
+        let ultimaDataFim = '';
+        
+        if (dataInicioInputs.length > 0 && dataInicioInputs[0].value) {
+            primeiraDataInicio = dataInicioInputs[0].value;
+        }
+        
+        for (let i = dataFimInputs.length - 1; i >= 0; i--) {
+            if (dataFimInputs[i].value) {
+                ultimaDataFim = dataFimInputs[i].value;
+                break;
+            }
         }
 
-        // Recupera preferências do input hidden (atualizado no step3)
+        // Pegar dados do step 2 (detalhes da viagem)
+        const orcamentoInput = document.getElementById('orcamento');
+        const orcamento = orcamentoInput ? orcamentoInput.value : '';
+        console.log('💰 Orçamento:', orcamento);
+        
+        const meioSelect = document.querySelectorAll('.form-step')[1]?.querySelector('select');
+        const meio = meioSelect ? meioSelect.value : '';
+        console.log('🚗 Meio de locomoção:', meio);
+        
+        // Dados de aeroportos (se aplicável)
+        let aeroportosInfo = '';
+        if (meio === 'Avião') {
+            const depIataInput = document.getElementById('dep_iata');
+            const arrIataInput = document.getElementById('arr_iata');
+            const depIata = depIataInput ? depIataInput.value.trim() : '';
+            const arrIata = arrIataInput ? arrIataInput.value.trim() : '';
+            console.log('✈️ Aeroportos:', depIata, '→', arrIata);
+            
+            if (depIata || arrIata) {
+                aeroportosInfo = `<li><b>Aeroportos:</b> ${depIata || 'Não informado'} → ${arrIata || 'Não informado'}</li>`;
+            }
+        }
+        
+        // Dados de seguro
+        const seguroSelect = document.getElementById('seguroViagem');
+        const seguro = seguroSelect ? seguroSelect.value : '';
+        let seguroInfo = '';
+        if (seguro === 'Sim') {
+            const nomeSeguro = sessionStorage.getItem('selectedSeguroName') || '';
+            const destinoSeguroSelect = document.getElementById('MainContent_Cotador_selContinente');
+            const destinoSeguro = destinoSeguroSelect ? destinoSeguroSelect.options[destinoSeguroSelect.selectedIndex]?.text || '' : '';
+            console.log('🛡️ Seguro:', nomeSeguro, 'para', destinoSeguro);
+            
+            seguroInfo = `<li><b>Seguro de viagem:</b> ${seguro}`;
+            if (nomeSeguro) seguroInfo += ` - ${nomeSeguro}`;
+            if (destinoSeguro) seguroInfo += ` (${destinoSeguro})`;
+            seguroInfo += `</li>`;
+        } else {
+            console.log('🛡️ Seguro:', seguro);
+            seguroInfo = `<li><b>Seguro de viagem:</b> ${seguro}</li>`;
+        }
+
+        // Recuperar preferências do step 3
         const preferencesInput = document.getElementById('preferences');
         let preferences = [];
         if (preferencesInput && preferencesInput.value) {
             preferences = preferencesInput.value.split(',').map(p => p.trim()).filter(p => p.length > 0);
         }
+        console.log('❤️ Preferências:', preferences);
 
+        // Dados de voo do step 5
         let vooInfoHtml = '';
         const selectedFlightDataInput = document.getElementById('selected_flight_data');
         if (meio === 'Avião' && selectedFlightDataInput && selectedFlightDataInput.value) {
             try {
                 const flightData = JSON.parse(selectedFlightDataInput.value);
-                const airline = flightData.flights[0]?.airline || 'Não selecionada';
-                vooInfoHtml = `<li><b>Companhia aérea:</b> ${airline}</li>`;
+                if (flightData.flights && flightData.flights.length > 0) {
+                    const flight = flightData.flights[0];
+                    const airline = flight.airline || 'Não selecionada';
+                    const price = flightData.price || 'Não informado';
+                    console.log('✈️ Voo selecionado:', airline, '-', price);
+                    vooInfoHtml = `<li><b>Voo selecionado:</b> ${airline} - R$ ${price}</li>`;
+                }
             } catch (e) {
-                console.error("Erro ao ler dados do voo:", e);
-                vooInfoHtml = `<li><b>Companhia aérea:</b> Erro ao ler dados</li>`;
+                console.error("❌ Erro ao ler dados do voo:", e);
+                vooInfoHtml = `<li><b>Voo:</b> Dados não disponíveis</li>`;
             }
+        } else if (meio === 'Avião') {
+            console.log('✈️ Nenhum voo selecionado para meio de locomoção: Avião');
+            vooInfoHtml = `<li><b>Voo:</b> Nenhum voo selecionado</li>`;
         }
 
-        reviewList.innerHTML = `
-            <li><b>Destino:</b> ${destino}</li>
-            <li><b>Adultos:</b> ${adultos}</li>
-            <li><b>Idades dos passageiros:</b> ${idades.length > 0 ? idades.join(', ') : 'Nenhuma'}</li>
-            <li><b>Data de ida:</b> ${formatarDataBR(dataIda)}</li>
-            <li><b>Data de volta:</b> ${formatarDataBR(dataVolta)}</li>
-            <li><b>Meio de locomoção:</b> ${meio}</li>
-            <li><b>Orçamento:</b> R$ ${orcamento}</li>
+        // Montar HTML da revisão
+        let reviewHtml = `
+            ${nomeViagem ? `<li><b>✨ Nome da viagem:</b> ${nomeViagem}</li>` : ''}
+            ${origem ? `<li><b>🏠 Origem:</b> ${origem}</li>` : ''}
+            <li><b>🎯 Destinos:</b> ${destino || 'Nenhum destino informado'}</li>
+            <li><b>👥 Número de pessoas:</b> ${numPessoas}</li>
+            ${idades.length > 0 ? `<li><b>👶 Idades dos viajantes:</b> ${idades.join(', ')} anos</li>` : ''}
+            ${primeiraDataInicio && ultimaDataFim ? `<li><b>📅 Período da viagem:</b> ${formatarDataBR(primeiraDataInicio)} a ${formatarDataBR(ultimaDataFim)}</li>` : ''}
+            ${datasInfo.length > 0 ? `<li><b>📅 Datas por destino:</b><br>${datasInfo.join('<br>')}</li>` : ''}
+            <li><b>🚗 Meio de locomoção:</b> ${meio}</li>
+            ${orcamento ? `<li><b>💰 Orçamento:</b> R$ ${orcamento}</li>` : ''}
+            ${aeroportosInfo}
             ${vooInfoHtml}
-            ${seguro === 'Sim' && nomeSeguro ? `<li><b style="color:#fff">Seguro de viagem:</b> ${nomeSeguro}</li>` : ''}
-            <li><b>Preferências:</b> ${preferences.length > 0 ? preferences.join(', ') : 'Nenhuma'}</li>
+            ${seguroInfo}
+            <li><b>❤️ Preferências:</b> ${preferences.length > 0 ? preferences.join(', ') : 'Nenhuma'}</li>
         `;
+
+        console.log('✅ Dados coletados com sucesso!');
+        reviewList.innerHTML = reviewHtml;
     }
 
     // -------------------- Eventos dos botões de navegação --------------------
@@ -234,7 +420,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     currentStep += 3;
                 } else if (seguro && seguro.value === 'Não' && meioLocomocao === 'Avião') {
                     currentStep += 2;
-                    await searchFlights();
+                    flightSearchInitiated = true;
+                    searchFlights(); // Remover await para não bloquear
                 } else if (seguro && seguro.value === 'Sim') {
                     currentStep++;
                     // Usuário pode clicar manualmente no botão "Buscar Seguros" no step 4
@@ -244,7 +431,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     currentStep += 2;
                 } else {
                     currentStep++;
-                    await searchFlights();
+                    flightSearchInitiated = true;
+                    searchFlights(); // Remover await para não bloquear
                 }
             } else {
                 currentStep++;
@@ -404,9 +592,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // -------------------- Evento de submit do formulário --------------------
 document.getElementById('multiStepForm').addEventListener('submit', function (e) {
-    console.log('submit!');
-    // e.preventDefault(); // comente esta linha para testar
-    // this.submit(); // comente esta linha para testar
+    console.log('Formulário sendo enviado!');
+    // Permitir o envio normal do formulário para o servidor
+    // O formulário será enviado via POST para a rota definida
 });
 
 // -------------------- Tratamento de erros e mensagens de feedback --------------------
@@ -437,64 +625,93 @@ function showNotification(message, type = 'warning') {
 
 function validarStep(idx) {
     if (idx === 0) {
-        const destino = document.getElementById('tripDestination');
+        // Validar nome da viagem
+        const nomeViagem = document.getElementById('nome_viagem');
+        if (!nomeViagem || !nomeViagem.value.trim()) {
+            showNotification('Informe o nome da viagem.', 'error');
+            if (nomeViagem) nomeViagem.focus();
+            return false;
+        }
+        
+        // Usar as funções de validação que já existem no step1.blade.php
+        if (typeof window.validateTripForm === 'function') {
+            return window.validateTripForm();
+        }
+        
+        // Fallback para validação manual se a função não estiver disponível
         const origem = document.getElementById('origem');
         const adultos = document.querySelectorAll('.form-step')[0]?.querySelectorAll('select')[0];
-        const dataIda = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[0];
-        const dataVolta = document.querySelectorAll('.form-step')[0]?.querySelectorAll('input[type="date"]')[1];
-
-        if (!destino.value.trim()) {
-            showNotification('Informe o destino.', 'error');
-            destino.focus();
-            return false;
-        }
-        if (!destino._placeSelected) {
-            showNotification('Selecione um destino válido da lista sugerida.', 'error');
-            destino.classList.add('border-red-500');
-            destino.focus();
-            return false;
-        }
-        if (!origem.value.trim()) {
+        
+        // Validar origem
+        if (!origem || !origem.value.trim()) {
             showNotification('Informe a origem.', 'error');
-            origem.focus();
+            if (origem) origem.focus();
             return false;
         }
-        if (!origem._placeSelected) {
-            showNotification('Selecione uma origem válida da lista sugerida.', 'error');
-            origem.classList.add('border-red-500');
-            origem.focus();
-            return false;
-        }
+        
+        // Validar número de adultos
         if (!adultos || !adultos.value) {
-            showNotification('Informe o número de adultos.', 'error');
-            adultos.focus();
+            showNotification('Informe o número de pessoas.', 'error');
+            if (adultos) adultos.focus();
             return false;
         }
-        if (!dataIda.value) {
-            showNotification('Informe a data de ida.', 'error');
-            dataIda.focus();
+        
+        // Validar destinos
+        const allDestinos = document.querySelectorAll('.destino-input');
+        let temDestinoValido = false;
+        
+        for (let destino of allDestinos) {
+            if (destino.value.trim() && destino.getAttribute('data-valid') === 'true') {
+                temDestinoValido = true;
+                break;
+            }
+        }
+        
+        if (!temDestinoValido) {
+            showNotification('Informe pelo menos um destino válido.', 'error');
+            if (allDestinos[0]) allDestinos[0].focus();
             return false;
         }
-        if (!dataVolta.value) {
-            showNotification('Informe a data de volta.', 'error');
-            dataVolta.focus();
-            return false;
+        
+        // Validar datas
+        const allDataInicio = document.querySelectorAll('.destino-data-inicio');
+        const allDataFim = document.querySelectorAll('.destino-data-fim');
+        
+        for (let i = 0; i < allDataInicio.length; i++) {
+            const dataInicio = allDataInicio[i];
+            const dataFim = allDataFim[i];
+            
+            // Verificar se os campos têm valores quando há destino correspondente
+            const destinoCorrespondente = document.getElementById(`tripDestination_${i}`);
+            if (destinoCorrespondente && destinoCorrespondente.value.trim()) {
+                if (!dataInicio.value) {
+                    showNotification(`Informe a data de início para o destino ${i + 1}.`, 'error');
+                    dataInicio.focus();
+                    return false;
+                }
+                if (!dataFim.value) {
+                    showNotification(`Informe a data de fim para o destino ${i + 1}.`, 'error');
+                    dataFim.focus();
+                    return false;
+                }
+                
+                // Validar se data de fim não é anterior à data de início
+                if (dataFim.value < dataInicio.value) {
+                    showNotification(`A data de fim não pode ser anterior à data de início no destino ${i + 1}.`, 'error');
+                    dataFim.focus();
+                    return false;
+                }
+                
+                // Validar se data de início não é no passado (apenas para o primeiro destino)
+                if (i === 0 && new Date(dataInicio.value) < new Date()) {
+                    showNotification('A data de início do primeiro destino não pode ser no passado.', 'error');
+                    dataInicio.focus();
+                    return false;
+                }
+            }
         }
-        if (dataVolta.value < dataIda.value) {
-            showNotification('A data de volta não pode ser menor que a data de ida.', 'error');
-            dataVolta.focus();
-            return false;
-        }
-        if (new Date(dataIda.value) < new Date()) {
-            showNotification('A data de ida não pode ser no passado.', 'error');
-            dataIda.focus();
-            return false;
-        }
-        if (new Date(dataVolta.value) < dataIda.value)  {
-            showNotification('A data de volta não pode ser anterior à data de ida.', 'error');
-            dataVolta.focus();
-            return false;
-        }
+        
+        // Validar idades
         const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
         let algumVazio = false;
         let temAdulto = false;
@@ -519,6 +736,8 @@ function validarStep(idx) {
             if (idadeInputs.length > 0) idadeInputs[0].focus();
             return false;
         }
+        
+        return true;
     }
     
 
