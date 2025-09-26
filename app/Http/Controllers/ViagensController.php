@@ -31,6 +31,7 @@ class ViagensController extends Controller
             'viagens' => $viagens
         ]);
     }
+
     public function show($id, Request $request)
     {
         try {
@@ -44,11 +45,14 @@ class ViagensController extends Controller
                 'user',
                 'hotel',
                 'seguros',
-                'destinos',
+                'destinos' => function($query) {
+                    $query->orderBy('ordem_destino', 'asc');
+                },
                 'pontosInteresse' => function($query) {
                     $query->orderBy('data_ponto_interesse', 'asc')
                           ->orderBy('hora_ponto_interesse', 'asc');
-                }
+                },
+                'seguroSelecionado'
             ])->findOrFail($id);
             
             // Verificar permissões
@@ -61,6 +65,7 @@ class ViagensController extends Controller
             $usuario = $viagem->user;
             
             // Dados básicos para a view
+            $destinos = $viagem->destinos;
             $pontosOrdenados = $viagem->pontosInteresse;
             $viajantes = $viagem->viajantes;
             $objetivos = $viagem->objetivos;
@@ -68,11 +73,12 @@ class ViagensController extends Controller
                 return is_object($voo) && $voo !== false;
             });
 
-            // Corrigir: Garantir que $hotel seja passado corretamente
+            // Garantir que $hotel seja passado corretamente
             $hotel = $viagem->hotel;
 
             // Adicionar seguros
             $seguros = $viagem->seguros;
+            $seguroSelecionado = $viagem->seguroSelecionado;
 
             // Inicializar eventos/notícias vazios (serão carregados via AJAX)
             $eventos = collect();
@@ -82,12 +88,14 @@ class ViagensController extends Controller
                 'total_viajantes' => $viajantes->count(),
                 'total_pontos' => $pontosOrdenados->count(), 
                 'total_objetivos' => $objetivos->count(),
+                'total_destinos' => $destinos->count(),
                 'orcamento_liquido' => $viagem->orcamento_viagem - $voos->sum('preco_voo'),
                 'dias_viagem' => Carbon::parse($viagem->data_inicio_viagem)->diffInDays(Carbon::parse($viagem->data_final_viagem)) + 1
             ];
 
             Log::info('Dados carregados com sucesso', [
                 'viagem_id' => $id,
+                'destinos_count' => $destinos->count(),
                 'pontos_count' => $pontosOrdenados->count(),
                 'viajantes_count' => $viajantes->count(),
                 'seguros_count' => $seguros->count(),
@@ -96,13 +104,15 @@ class ViagensController extends Controller
 
             return view('viagens.detailsTrip', compact(
                 'viagem', 
-                'usuario', 
+                'usuario',
+                'destinos',
                 'pontosOrdenados',
                 'viajantes',
                 'objetivos', 
                 'voos',
                 'hotel',
                 'seguros',
+                'seguroSelecionado',
                 'eventos',
                 'estatisticas'
             ));
@@ -117,34 +127,6 @@ class ViagensController extends Controller
             
             return redirect()->route('myTrips')->with('error', 'Erro ao carregar detalhes da viagem: ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Calcula estatísticas básicas da viagem
-     */
-    private function calculateBasicStats($viagem)
-    {
-        $totalViajantes = $viagem->viajantes->count();
-        $totalPontos = $viagem->pontosInteresse->count();
-        $totalObjetivos = $viagem->objetivos->count();
-        
-        // Calcular orçamento líquido
-        $gastoVoos = $viagem->voos->sum('preco_voo');
-        $gastoHotel = $viagem->hotel ? $viagem->hotel->preco : 0;
-        $orcamentoLiquido = $viagem->orcamento_viagem - $gastoVoos - $gastoHotel;
-        
-        // Calcular dias até a viagem
-        $dataInicio = Carbon::parse($viagem->data_inicio_viagem);
-        $diasRestantes = now()->diffInDays($dataInicio, false);
-        
-        return [
-            'total_viajantes' => $totalViajantes,
-            'total_pontos' => $totalPontos,
-            'total_objetivos' => $totalObjetivos,
-            'orcamento_liquido' => $orcamentoLiquido,
-            'dias_restantes' => $diasRestantes,
-            'dias_viagem' => $dataInicio->diffInDays(Carbon::parse($viagem->data_final_viagem)) + 1
-        ];
     }
 
     public function destroyObjetivo($id)
@@ -569,18 +551,40 @@ class ViagensController extends Controller
     public function showApi($id) {
         try{
             $viagem = Viagens::with([
-                'viajantes', 'voos', 'objetivos', 'user', 'hotel', 'pontosInteresse', 'seguros'
+                'viajantes', 
+                'voos', 
+                'objetivos', 
+                'user', 
+                'hotel', 
+                'pontosInteresse' => function($query) {
+                    $query->orderBy('data_ponto_interesse', 'asc')
+                          ->orderBy('hora_ponto_interesse', 'asc');
+                },
+                'seguros', 
+                'destinos' => function($query) {
+                    $query->orderBy('ordem_destino', 'asc');
+                },
+                'seguroSelecionado'
             ])->findOrFail($id);
 
-            // Busca notícias da SerpAPI
-            $destino = $viagem->destino_viagem;
+            // TEMPORÁRIO: Verificação de permissão desabilitada para teste
+            // Descomente as linhas abaixo quando configurar autenticação
+            /*
+            if ($viagem->fk_id_usuario !== auth()->id()) {
+                return response()->json(['success' => false, 'message' => 'Acesso negado'], 403);
+            }
+            */
+
+            // Busca notícias da SerpAPI - usando o primeiro destino ou destino principal
+            $primeiroDestino = $viagem->destinos->first();
+            $nomeDestino = $primeiroDestino ? $primeiroDestino->nome_destino : 'Brasil';
             $apiKey = env('SERPAPI_KEY');
             $categorias = [
-                'Cultura' => "Cultura em $destino",
-                'Saúde' => "Saúde em $destino",
-                'Entretenimento' => "Entretenimento em $destino",
-                'Esportes' => "Jogos de esporte em $destino",
-                'Local' => "Notícias locais na região de $destino"
+                'Cultura' => "Cultura em $nomeDestino",
+                'Saúde' => "Saúde em $nomeDestino",
+                'Entretenimento' => "Entretenimento em $nomeDestino",
+                'Esportes' => "Jogos de esporte em $nomeDestino",
+                'Local' => "Notícias locais na região de $nomeDestino"
             ];
             $noticias = [];
             foreach ($categorias as $tipo => $query) {
@@ -615,7 +619,7 @@ class ViagensController extends Controller
 
             $params = [
                 'engine' => 'google_events',
-                'q' => 'Events in ' . $destino,
+                'q' => 'Events in ' . $nomeDestino,
                 'start' => 0,
                 'api_key' => $apiKey
             ];
@@ -646,8 +650,7 @@ class ViagensController extends Controller
             }
 
             //Busca o clima na Open-Meteo
-            $destino = $viagem->destino_viagem;
-            $coordenadas = $this->getLatLngFromAddress($destino);
+            $coordenadas = $this->getLatLngFromAddress($nomeDestino);
             $data_inicio = Carbon::parse($viagem->data_inicio_viagem)->format('Y-m-d');
             $data_fim = Carbon::parse($viagem->data_final_viagem)->format('Y-m-d');
             $hoje = Carbon::today();
@@ -672,10 +675,13 @@ class ViagensController extends Controller
 
             $viagemMobile = [
                 'id' => $viagem->pk_id_viagem, 
-                'destino' => $viagem->destino_viagem ?? '-',
+                'nome_da_viagem' => $viagem->nome_viagem ?? '-',
+                'origem_viagem' => $viagem->origem_viagem,
+                'destinos' => $viagem->destinos,
                 'pontosInteresse' => $viagem->pontosInteresse,
                 'user' => $viagem->user,
                 'seguros' => $viagem->seguros,
+                'seguro_selecionado' => $viagem->seguroSelecionado,
                 'noticias' => $noticias,
                 'eventos' => $eventos,
                 'clima' => $clima,
@@ -688,14 +694,29 @@ class ViagensController extends Controller
                 'data_fim' => $viagem->data_final_viagem,
                 'created_at' => $viagem->created_at,
                 'updated_at' => $viagem->updated_at,
+                'estatisticas' => [
+                    'total_viajantes' => $viagem->viajantes->count(),
+                    'total_pontos' => $viagem->pontosInteresse->count(),
+                    'total_objetivos' => $viagem->objetivos->count(),
+                    'total_destinos' => $viagem->destinos->count(),
+                    'total_voos' => $viagem->voos->count(),
+                    'total_seguros' => $viagem->seguros->count(),
+                    'total_hoteis' => $viagem->hotel->count(),
+                    'orcamento_liquido' => $viagem->orcamento_viagem - $viagem->voos->sum('preco_voo'),
+                    'dias_viagem' => Carbon::parse($viagem->data_inicio_viagem)->diffInDays(Carbon::parse($viagem->data_final_viagem)) + 1
+                ]
             ];
 
             return response()->json($viagemMobile);
 
-            }
-            catch(\Exception $e){
-                \Log::error('Erro ao buscar detalhes da viagem', ['erro' => $e->getMessage()]);
-                return response()->json(['success' => false, 'message' => 'Erro interno', 'error' => $e->getMessage()], 500);
-            }
+        } catch(\Exception $e){
+            \Log::error('Erro ao buscar detalhes da viagem via API', [
+                'viagem_id' => $id,
+                'user_id' => auth()->check() ? auth()->id() : 'não autenticado',
+                'erro' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['success' => false, 'message' => 'Erro interno', 'error' => $e->getMessage()], 500);
         }
+    }
 }

@@ -1,4 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 @import './explore.css';
+@import './sidebar.css';
+@import './myTrips.css';
+@import './formTrip.css';
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
