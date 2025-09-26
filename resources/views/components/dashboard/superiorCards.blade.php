@@ -71,13 +71,13 @@
                 }
 
                 $diasRestantes = $proximaViagem
-                    ? Carbon::today()->diffInDays(Carbon::parse($proximaViagem->data_inicio_viagem), false)
+                    ? Carbon::today()->diffInDays(Carbon::parse($proximaViagem->data_inicio_viagem))
                     : null;
             @endphp
 
             @if($proximaViagem)
                 <div class="text-lg md:text-xl font-bold mt-2">
-                    {{ $proximaViagem->destino_viagem }}
+                    {{ $proximaViagem->nome_viagem }}
                 </div>
                 @if(!is_null($diasRestantes) && $diasRestantes >= 0)
                     <div class="text-purple-600 text-xs mt-1">Em {{ $diasRestantes }} dias</div>

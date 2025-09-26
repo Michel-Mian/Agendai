@@ -49,6 +49,8 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/viagens/{id}', [ViagensController::class, 'show'])->name('viagens');
     Route::patch('/viagens/{id}/update', [ViagensController::class, 'updateViagem'])->name('viagens.update');
     Route::delete('/viagens/{id}', [ViagensController::class, 'destroyViagem'])->name('viagens.destroy');
+    
+    // Rotas antigas (mantidas por segurança, mas não serão mais usadas pela nova UI)
     Route::get('/viagens/{id}/weather', [ViagensController::class, 'getWeatherData'])->name('viagens.weather');
     Route::get('/viagens/{id}/news', [ViagensController::class, 'getNewsData'])->name('viagens.news');
 
@@ -85,4 +87,7 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/trip/insurances', [TripController::class, 'getInsurancesAjax']);
     Route::post('/trip/update-insurance', [TripController::class, 'updateInsuranceAjax']);
 
+    // NOVAS ROTAS PARA ESTATÍSTICAS POR DESTINO
+    Route::get('/viagens/{viagem}/weather/{destino}', [ViagensController::class, 'getWeatherDataForDestination'])->name('viagens.weather.destino');
+    Route::get('/viagens/{viagem}/news/{destino}', [ViagensController::class, 'getNewsDataForDestination'])->name('viagens.news.destino');
 });

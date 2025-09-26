@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('viagens', function (Blueprint $table) {
             $table->bigIncrements('pk_id_viagem');
-            $table->string('destino_viagem', 100);
+            $table->string('nome_viagem', 100);
             $table->date('data_inicio_viagem');
             $table->date('data_final_viagem');
             $table->string('origem_viagem', 100) -> nullable();

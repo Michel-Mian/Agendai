@@ -12,7 +12,7 @@
                 <div class="bg-white rounded-xl shadow flex flex-col h-full">
                     <div class="flex-1 p-4 sm:p-6">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                            <div class="font-semibold text-lg">{{ $viagem->destino_viagem }}</div>
+                            <div class="font-semibold text-lg">{{ $viagem->nome_viagem }}</div>
                             <span class="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full">
                                 {{ \Carbon\Carbon::parse($viagem->data_inicio_viagem)->isFuture() ? 'Próxima' : 'Concluída' }}
                             </span>

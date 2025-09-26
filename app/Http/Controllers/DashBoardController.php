@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Viagens;
-use App\Models\Viajantes;
+use App\Models\Viagens as Viagem;
+use App\Models\Viajantes as Viajante; 
+use App\Models\Destinos; 
 use Carbon\Carbon;
 
 /**
@@ -24,12 +25,12 @@ class DashBoardController extends Controller
     {
         $user = auth()->user();
 
-        //viagens
-        $viagens = Viagens::where('fk_id_usuario', $user->id)
+        $viagens = Viagem::where('fk_id_usuario', $user->id)
+            ->with('destinos')
             ->orderBy('data_inicio_viagem', 'asc')
             ->get();
-        
-        $viajantes = Viajantes::where('fk_id_viagem', $user->id)->get();
+
+        $viajantes = Viajante::where('fk_id_viagem', $user->id)->get();
 
         // Fetch available currencies from the API
         $response = Http::get('https://economia.awesomeapi.com.br/json/available/uniq');
@@ -42,7 +43,7 @@ class DashBoardController extends Controller
         $token = env('AWESOME_API_TOKEN');
         $currency = $user->currency ?? 'BRL';
 
-        // List of supported currencies
+        // List of supported currencies (mantido igual)
         $supported = [
             'AED', 'AFN', 'ALL', 'AMD', 'ANG', 'AOA', 'ARS', 'AUD', 'AZN', 'BAM',
             'BBD', 'BDT', 'BGN', 'BHD', 'BIF', 'BND', 'BOB', 'BRL', 'BRLT', 'BSD',
@@ -62,7 +63,7 @@ class DashBoardController extends Controller
             'XCD', 'XOF', 'XPF', 'XRP', 'YER', 'ZAR', 'ZMK', 'ZWL', 'XAU', 'BRLPTAX',
             'XAG', 'BRETT', 'SOL', 'BNB'
         ];
-        // Check if the currency is supported and fetch its exchange rate
+        // Check if the currency is supported and fetch its exchange rate (mantido igual)
         if (!in_array($currency, $supported)) {
             $cotacao = null;
         } elseif ($currency === 'USD') {
@@ -78,18 +79,18 @@ class DashBoardController extends Controller
             }
         }
 
-        // Fetch 60-day exchange rate history
+        // Fetch 60-day exchange rate history (mantido igual)
         $response = Http::get("https://economia.awesomeapi.com.br/json/daily/{$currency}-USD/60");
         $historico = $response->successful() ? $response->json() : [];
 
-        // Prepare data for the chart
+        // Prepare data for the chart (mantido igual)
         $labels = [];
         $data = [];
         foreach ($historico as $item) {
             $labels[] = date('d/m/Y', $item['timestamp']);
             $data[] = (float) $item['bid'];
         }
-        $viagensFlutter = $viagens->toArray();
+        
         // Se a requisição for JSON (ex: chamada do app Flutter), retorna os dados em JSON
         if (request()->wantsJson()) {
             // Formata as viagens para o Flutter
@@ -100,9 +101,12 @@ class DashBoardController extends Controller
                         ->diffInDays(\Carbon\Carbon::parse($viagem->data_final_viagem));
                 }
                 $pessoas = $viagem->viajantes()->count();
+
+                $nomeExibicao = optional($viagem->nome_viagem)->nome_destino ?? $viagem->nome_viagem;
+
                 return [
                     'id' => $viagem->pk_id_viagem,
-                    'destino' => $viagem->destino ?? ($viagem->destino_viagem ?? null),
+                    'nome' => $nomeExibicao,
                     'dataInicio' => $viagem->data_inicio_viagem,
                     'dataFim' => $viagem->data_final_viagem ?? null,
                     'dias' => $qtdDias,
@@ -124,11 +128,12 @@ class DashBoardController extends Controller
                 'data' => $data,
             ]);
         }
+
         // Render the dashboard view with all data
         $dados = [
             'user' => $user,
             'viagens' => $viagens,
-            'viagensFlutter' => $viagensFlutter,
+            //'viagensFlutter' => $viagensFlutter, // Não é necessário para a view web
             'currencies' => $currencies,
             'cotacao' => $cotacao,
             'historico' => $historico,
@@ -136,14 +141,13 @@ class DashBoardController extends Controller
             'data' => $data,
             'title' => 'Dashboard',
         ];
-        if (request()->wantsJson()) {
-            return response()->json($dados);
-        }
+        
         return view('dashboard', $dados);
     }
 
     /**
      * Returns summarized historical exchange rate data via AJAX for dynamic chart rendering.
+     * (Este método não precisa de alterações)
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
