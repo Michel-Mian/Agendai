@@ -12,12 +12,8 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
-        <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
-        <link rel="stylesheet" href="{{ asset('css/myTrips.css') }}">
-        <link rel="stylesheet" href="{{ asset('css/formTrip.css') }}">
-        <link rel="stylesheet" href="{{ asset('css/explore.css') }}">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        {{-- Adicionando nightMode.css e nightMode.js ao Vite --}}
+        {{-- Carregando todos os assets via Vite --}}
         @vite(['resources/css/app.css', 'resources/css/explore.css', 'resources/css/nightMode.css', 'resources/js/app.js', 'resources/js/dashBoard.js', 'resources/js/searchFlights.js', 'resources/js/formTrip.js' , 'resources/js/hotels.js', 'resources/js/nightMode.js'])
         <script>
         // Aplica night-mode globalmente em todas as telas
