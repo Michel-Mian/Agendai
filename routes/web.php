@@ -66,6 +66,7 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/explore/itinerary', [ExploreController::class, 'show'])->name('explore.itinerary');
     Route::post('/explore/ponto-interesse/{id}/horario', [ExploreController::class, 'updateHorario'])->name('explore.updateHorario');  
     Route::get('/explore/set-trip/{id}', [ExploreController::class, 'setTripIdAndRedirect'])->name('explore.setTrip');
+    Route::post('/explore/change-destination', [ExploreController::class, 'changeDestination'])->name('explore.changeDestination');
 
     Route::delete('/objetivos/{id}', [ViagensController::class, 'destroyObjetivo'])->name('objetivos.destroy');
     Route::post('/objetivos', [ViagensController::class, 'addObjetivo'])->name('objetivos.store');
