@@ -49,3 +49,37 @@ window.nightMode = {
 document.addEventListener("DOMContentLoaded", () => {
   window.nightMode.init()
 })
+
+document.addEventListener("DOMContentLoaded", () => {
+  window.nightMode.init()
+
+  const themeSelect = document.getElementById("theme")
+  if (themeSelect) {
+    themeSelect.addEventListener("change", (e) => {
+      const selectedTheme = e.target.value
+      window.nightMode.apply(selectedTheme)
+    })
+  }
+})
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Inicializa tema salvo
+  window.nightMode.init()
+
+  // Pega o ícone toggle
+  const themeToggle = document.getElementById("themeToggle")
+  if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+      const newTheme = window.nightMode.toggle()
+
+      // Opcional: mudar ícone (toggle-on / toggle-off) conforme tema
+      if (newTheme === "dark") {
+        themeToggle.classList.remove("fa-toggle-on")
+        themeToggle.classList.add("fa-toggle-off")
+      } else {
+        themeToggle.classList.remove("fa-toggle-off")
+        themeToggle.classList.add("fa-toggle-on")
+      }
+    })
+  }
+})

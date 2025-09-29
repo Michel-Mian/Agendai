@@ -890,8 +890,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
-<<<<<<< HEAD
-    });
+        
+        console.log('✅ Sistema de seleção de preferências configurado!');
+    }, 100);
 });
 
 // -------------------- Loader global --------------------
@@ -910,9 +911,4 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     });
-=======
-        
-        console.log('✅ Sistema de seleção de preferências configurado!');
-    }, 100);
->>>>>>> ff5a798ea646dd11a2d48abb54d0e1b5dc4af9ea
 });
