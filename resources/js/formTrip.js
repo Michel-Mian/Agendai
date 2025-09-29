@@ -796,8 +796,9 @@ document.addEventListener('DOMContentLoaded', function() {
 // -------------------- Mostrar/Ocultar detalhes do voo --------------------
 document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('ver-detalhes-btn') || e.target.closest('.ver-detalhes-btn')) {
-            const btn = e.target.closest('.ver-detalhes-btn');
+        const btn = e.target.closest('.ver-detalhes-btn');
+        if (btn) {
+            e.preventDefault(); // <-- Adicione isto!
             const targetId = btn.getAttribute('data-target');
             const detalhes = document.getElementById(targetId);
             if (detalhes) {
@@ -825,6 +826,24 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             // Atualiza o input hidden com todas as preferências selecionadas
             preferencesInput.value = selectedPrefs.join(',');
+        });
+    });
+});
+
+// -------------------- Loader global --------------------
+document.addEventListener("DOMContentLoaded", function() {
+    const loader = document.getElementById("global-loader");
+    if (loader) {
+        loader.classList.add("hidden");
+    }
+
+    document.querySelectorAll("a").forEach(link => {
+        link.addEventListener("click", e => {
+            // Não mostra loader se for botão de detalhes do voo
+            if (link.classList.contains('ver-detalhes-btn')) return;
+            if (link.href && link.href.startsWith(window.location.origin)) {
+                loader.classList.remove("hidden");
+            }
         });
     });
 });
