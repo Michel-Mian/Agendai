@@ -89,7 +89,14 @@ class ViagensController extends Controller
                 'total_pontos' => $pontosOrdenados->count(), 
                 'total_objetivos' => $objetivos->count(),
                 'total_destinos' => $destinos->count(),
-                'orcamento_liquido' => $viagem->orcamento_viagem - $voos->sum('preco_voo'),
+                'orcamento_liquido' => $viagem->orcamento_viagem - ($voos->sum('preco_voo') * $viajantes->count()) - (($seguros ?? collect())->sum(function($seguro) use ($viajantes) { 
+                    return ($seguro->preco_pix ?? $seguro->preco_cartao ?? 0) * $viajantes->count(); 
+                })) - ($hotel ? $hotel->sum(function($h) { 
+                    $checkin = Carbon::parse($h->data_check_in);
+                    $checkout = Carbon::parse($h->data_check_out);
+                    $noites = $checkin->diffInDays($checkout);
+                    return $h->preco * $noites;
+                }) : 0),
                 'dias_viagem' => Carbon::parse($viagem->data_inicio_viagem)->diffInDays(Carbon::parse($viagem->data_final_viagem)) + 1
             ];
 
