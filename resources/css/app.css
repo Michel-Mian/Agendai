@@ -62,3 +62,23 @@
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
+.theme-toggle-container {
+  justify-content: center;
+  align-items: center;
+
+}
+
+#themeToggle {
+  color: #0d1117; /* verde no modo claro */
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+/* No modo escuro, cor muda automaticamente */
+.night-mode #themeToggle {
+  color: #ffff; /* vermelho claro no modo escuro */
+}
+
+.night-mode #themeToggleContainer:hover {
+  color: #0d1117 !important; /* Preto no hover, no modo noturno */
+}
