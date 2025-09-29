@@ -12,7 +12,6 @@ function initPlacesAutocompleteStrict() {
             if (input.classList.contains('origem-input') || 
                 input.classList.contains('destino-input') ||
                 input.hasAttribute('data-new-autocomplete')) {
-                console.log(`Pulando inicialização do formTrip.js para ${field.id} - novo sistema já ativo`);
                 return;
             }
             
@@ -58,14 +57,14 @@ function initPlacesAutocompleteStrict() {
 
 // Callback global do Google Maps - definido imediatamente
 window.initTripFormMap = function() {
-    console.log('Google Maps API carregada, inicializando autocomplete...');
+
     initPlacesAutocompleteStrict();
 };
 
 // Garantir que a função está disponível globalmente
 if (typeof window.initTripFormMap !== 'function') {
     window.initTripFormMap = function() {
-        console.log('Fallback: Google Maps API carregada');
+
         if (typeof initPlacesAutocompleteStrict === 'function') {
             initPlacesAutocompleteStrict();
         }
@@ -241,17 +240,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const reviewList = document.getElementById('reviewList');
         if (!reviewList) return;
 
-        console.log('🔍 Iniciando coleta de dados para revisão...');
+
 
         // Pegar nome da viagem
         const nomeViagemInput = document.getElementById('nome_viagem');
         const nomeViagem = nomeViagemInput ? nomeViagemInput.value.trim() : '';
-        console.log('📝 Nome da viagem:', nomeViagem);
+
 
         // Pegar origem
         const origemInput = document.getElementById('origem');
         const origem = origemInput ? origemInput.value.trim() : '';
-        console.log('📍 Origem:', origem);
+
 
         // Pegar destinos preenchidos
         const destinosInputs = document.querySelectorAll('.destino-input');
@@ -260,7 +259,7 @@ document.addEventListener('DOMContentLoaded', function() {
         destinosInputs.forEach((input, index) => {
             if (input.value.trim()) {
                 destinosValidos.push(input.value.trim());
-                console.log(`🎯 Destino ${index + 1}:`, input.value.trim());
+
             }
         });
         
@@ -269,12 +268,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Pegar dados básicos do step 1
         const numPessoasSelect = document.getElementById('num_pessoas');
         const numPessoas = numPessoasSelect ? numPessoasSelect.value : '';
-        console.log('👥 Número de pessoas:', numPessoas);
+
         
         // Pegar idades dos viajantes
         const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
         const idades = Array.from(idadeInputs).map(input => input.value).filter(value => value !== '');
-        console.log('👶 Idades:', idades);
+
         
         // Pegar datas dos destinos
         const dataInicioInputs = document.querySelectorAll('input[name="destino_data_inicio[]"]');
@@ -288,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (dataInicio && dataFim) {
                 datasInfo.push(`<span class="text-blue-100">${destinoCorrespondente}:</span> ${formatarDataBR(dataInicio)} a ${formatarDataBR(dataFim)}`);
-                console.log(`📅 Datas ${destinoCorrespondente}:`, dataInicio, 'a', dataFim);
+
             }
         }
         
@@ -310,11 +309,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Pegar dados do step 2 (detalhes da viagem)
         const orcamentoInput = document.getElementById('orcamento');
         const orcamento = orcamentoInput ? orcamentoInput.value : '';
-        console.log('💰 Orçamento:', orcamento);
+
         
         const meioSelect = document.querySelectorAll('.form-step')[1]?.querySelector('select');
         const meio = meioSelect ? meioSelect.value : '';
-        console.log('🚗 Meio de locomoção:', meio);
+
         
         // Dados de aeroportos (se aplicável)
         let aeroportosInfo = '';
@@ -323,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const arrIataInput = document.getElementById('arr_iata');
             const depIata = depIataInput ? depIataInput.value.trim() : '';
             const arrIata = arrIataInput ? arrIataInput.value.trim() : '';
-            console.log('✈️ Aeroportos:', depIata, '→', arrIata);
+
             
             if (depIata || arrIata) {
                 aeroportosInfo = `<li><b>Aeroportos:</b> ${depIata || 'Não informado'} → ${arrIata || 'Não informado'}</li>`;
@@ -338,14 +337,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const nomeSeguro = sessionStorage.getItem('selectedSeguroName') || '';
             const destinoSeguroSelect = document.getElementById('MainContent_Cotador_selContinente');
             const destinoSeguro = destinoSeguroSelect ? destinoSeguroSelect.options[destinoSeguroSelect.selectedIndex]?.text || '' : '';
-            console.log('🛡️ Seguro:', nomeSeguro, 'para', destinoSeguro);
+
             
             seguroInfo = `<li><b>Seguro de viagem:</b> ${seguro}`;
             if (nomeSeguro) seguroInfo += ` - ${nomeSeguro}`;
             if (destinoSeguro) seguroInfo += ` (${destinoSeguro})`;
             seguroInfo += `</li>`;
         } else {
-            console.log('🛡️ Seguro:', seguro);
+
             seguroInfo = `<li><b>Seguro de viagem:</b> ${seguro}</li>`;
         }
 
@@ -355,7 +354,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (preferencesInput && preferencesInput.value) {
             preferences = preferencesInput.value.split(',').map(p => p.trim()).filter(p => p.length > 0);
         }
-        console.log('❤️ Preferências:', preferences);
+
 
         // Dados de voo do step 5
         let vooInfoHtml = '';
@@ -367,7 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const flight = flightData.flights[0];
                     const airline = flight.airline || 'Não selecionada';
                     const price = flightData.price || 'Não informado';
-                    console.log('✈️ Voo selecionado:', airline, '-', price);
+
                     vooInfoHtml = `<li><b>Voo selecionado:</b> ${airline} - R$ ${price}</li>`;
                 }
             } catch (e) {
@@ -375,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 vooInfoHtml = `<li><b>Voo:</b> Dados não disponíveis</li>`;
             }
         } else if (meio === 'Avião') {
-            console.log('✈️ Nenhum voo selecionado para meio de locomoção: Avião');
+
             vooInfoHtml = `<li><b>Voo:</b> Nenhum voo selecionado</li>`;
         }
 
@@ -396,16 +395,16 @@ document.addEventListener('DOMContentLoaded', function() {
             <li><b>❤️ Preferências:</b> ${preferences.length > 0 ? preferences.join(', ') : 'Nenhuma'}</li>
         `;
 
-        console.log('✅ Dados coletados com sucesso!');
+
         reviewList.innerHTML = reviewHtml;
     }
 
     // -------------------- Eventos dos botões de navegação --------------------
     nextBtns.forEach((btn, idx) => {
         btn.addEventListener('click', async function() {
-            console.log('validarStep', currentStep);
+
             if (!validarStep(currentStep)) {
-                console.log('validarStep retornou false no step', currentStep);
+
                 return;
             }
             console.log('Avançando step', currentStep);
@@ -470,12 +469,6 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.insurance-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
-        });
-    });
-
-    document.querySelectorAll('.pref-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            btn.classList.toggle('selected');
         });
     });
 
@@ -780,24 +773,37 @@ function validarStep(idx) {
 
 // -------------------- Formatação data picker --------------------
 document.addEventListener('DOMContentLoaded', function() {
+    // Verificar se estamos na página de criação de viagem
+    if (!window.location.pathname.includes('formTrip') && !document.getElementById('date_departure')) {
+        return;
+    }
+
     const today = new Date().toISOString().split('T')[0];
     const dateDeparture = document.getElementById('date_departure');
     const dateReturn = document.getElementById('date_return');
 
-    dateDeparture.min = today;
-    dateReturn.min = dateDeparture.value || today;
-
-    dateDeparture.addEventListener('change', function() {
-        dateReturn.min = this.value;
-        if (dateReturn.value < this.value){}
-    });
+    if (dateDeparture) {
+        dateDeparture.min = today;
+    }
+    
+    if (dateReturn && dateDeparture) {
+        dateReturn.min = dateDeparture.value || today;
+        
+        dateDeparture.addEventListener('change', function() {
+            dateReturn.min = this.value;
+            if (dateReturn.value < this.value) {
+                dateReturn.value = '';
+            }
+        });
+    }
 });
 
 // -------------------- Mostrar/Ocultar detalhes do voo --------------------
 document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('ver-detalhes-btn') || e.target.closest('.ver-detalhes-btn')) {
-            const btn = e.target.closest('.ver-detalhes-btn');
+        const btn = e.target.closest('.ver-detalhes-btn');
+        if (btn) {
+            e.preventDefault(); // <-- Adicione isto!
             const targetId = btn.getAttribute('data-target');
             const detalhes = document.getElementById(targetId);
             if (detalhes) {
@@ -809,22 +815,100 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // -------------------- Seleção de preferências (step 3) --------------------
 document.addEventListener('DOMContentLoaded', function() {
-    const prefBtns = document.querySelectorAll('.pref-btn');
-    const preferencesInput = document.getElementById('preferences');
+    console.log('🎯 Iniciando sistema de seleção de preferências...');
+    
+    // Esperar um pouco para garantir que o DOM esteja totalmente carregado
+    setTimeout(() => {
+        const prefBtns = document.querySelectorAll('.pref-btn');
+        const preferencesInput = document.getElementById('preferences');
 
-    let selectedPrefs = [];
+        console.log(`📋 Encontrados ${prefBtns.length} botões de preferência`);
+        console.log(`💾 Input de preferências:`, preferencesInput);
 
-    prefBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const pref = btn.querySelector('span.text-gray-700').innerText;
-            btn.classList.toggle('bg-blue-100');
-            if (selectedPrefs.includes(pref)) {
-                selectedPrefs = selectedPrefs.filter(p => p !== pref);
-            } else {
-                selectedPrefs.push(pref);
+        if (!prefBtns.length) {
+            console.warn('⚠️ Nenhum botão de preferência encontrado');
+            return;
+        }
+
+        if (!preferencesInput) {
+            console.warn('⚠️ Input de preferências não encontrado');
+            return;
+        }
+
+        let selectedPrefs = [];
+
+        prefBtns.forEach((btn, index) => {
+            console.log(`🔗 Configurando listener para botão ${index + 1}`);
+            
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const prefText = btn.getAttribute('data-preference') || btn.querySelector('span').innerText;
+                console.log(`🎯 Clicado em: "${prefText}"`);
+                
+                // Toggle da classe selected com efeito visual imediato
+                const wasSelected = btn.classList.contains('selected');
+                btn.classList.toggle('selected');
+                
+                // Feedback visual imediato
+                if (btn.classList.contains('selected')) {
+                    btn.style.borderColor = '#22c55e';
+                    btn.style.background = 'linear-gradient(135deg, #dcfce7, #bbf7d0)';
+                    btn.style.transform = 'scale(1.05)';
+                    console.log(`✅ "${prefText}" SELECIONADO`);
+                } else {
+                    btn.style.borderColor = '#e5e7eb';
+                    btn.style.background = '#f9fafb';
+                    btn.style.transform = 'scale(1)';
+                    console.log(`❌ "${prefText}" DESELECIONADO`);
+                }
+                
+                // Atualizar array
+                if (wasSelected) {
+                    selectedPrefs = selectedPrefs.filter(p => p !== prefText);
+                } else {
+                    selectedPrefs.push(prefText);
+                }
+                
+                // Atualizar input hidden
+                preferencesInput.value = selectedPrefs.join(',');
+                
+                console.log('📋 Preferências atuais:', selectedPrefs);
+                console.log('💾 Valor do input:', preferencesInput.value);
+                
+                // Mostrar feedback visual temporário
+                const span = btn.querySelector('span');
+                const originalText = span.innerText;
+                if (!wasSelected) {
+                    span.innerText = '✓ ' + originalText;
+                    setTimeout(() => {
+                        if (btn.classList.contains('selected')) {
+                            span.innerText = originalText;
+                        }
+                    }, 1000);
+                }
+            });
+        });
+        
+        console.log('✅ Sistema de seleção de preferências configurado!');
+    }, 100);
+});
+
+// -------------------- Loader global --------------------
+document.addEventListener("DOMContentLoaded", function() {
+    const loader = document.getElementById("global-loader");
+    if (loader) {
+        loader.classList.add("hidden");
+    }
+
+    document.querySelectorAll("a").forEach(link => {
+        link.addEventListener("click", e => {
+            // Não mostra loader se for botão de detalhes do voo
+            if (link.classList.contains('ver-detalhes-btn')) return;
+            if (link.href && link.href.startsWith(window.location.origin)) {
+                loader.classList.remove("hidden");
             }
-            // Atualiza o input hidden com todas as preferências selecionadas
-            preferencesInput.value = selectedPrefs.join(',');
         });
     });
 });

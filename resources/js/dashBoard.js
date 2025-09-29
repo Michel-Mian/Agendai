@@ -2,9 +2,20 @@ document.addEventListener('DOMContentLoaded', function() {
     let graficoCriado = false;
     let chartInstance = null;
 
-    document.getElementById('modal-currency').onclick = function() {
-        document.getElementById('currency-modal').classList.remove('hidden');
-        const dias = document.getElementById('conversion-period').value || 60;
+    // Verificar se estamos no dashboard antes de executar
+    const modalCurrency = document.getElementById('modal-currency');
+    if (!modalCurrency) {
+        return; // Não estamos no dashboard
+    }
+
+    modalCurrency.onclick = function() {
+        const currencyModal = document.getElementById('currency-modal');
+        if (currencyModal) {
+            currencyModal.classList.remove('hidden');
+        }
+        
+        const conversionPeriod = document.getElementById('conversion-period');
+        const dias = (conversionPeriod ? conversionPeriod.value : null) || 60;
 
         if (chartInstance) {
             chartInstance.destroy();

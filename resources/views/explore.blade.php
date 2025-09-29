@@ -43,6 +43,29 @@
                             </button>
                         </div>
 
+                        <!-- Seletor de Destinos -->
+                        @if($hasTrip && $destinos && $destinos->count() > 0)
+                        <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center gap-2 mb-2">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                <label class="text-sm font-medium text-gray-700">Destino Atual:</label>
+                            </div>
+                            <select id="destinoSelect" 
+                                    class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm"
+                                    onchange="handleDestinoChange(this.value)">
+                                @foreach($destinos as $destino)
+                                    <option value="{{ $destino->pk_id_destino }}" 
+                                            {{ $destinoAtual && $destinoAtual->pk_id_destino == $destino->pk_id_destino ? 'selected' : '' }}>
+                                        {{ $destino->nome_destino }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @endif
+
                         <div class="flex flex-wrap justify-center items-center">
                             @include('components.explore.filter-modal')
                             @if($hasTrip)
@@ -195,10 +218,12 @@ let places = [];
 let infoWindow;
 let currentDate = null;
 let itinerary = {}; // Agora é um mapa de datas
-window.hasTrip = @json($hasTrip); // Corrigido para usar a variável PHP correta
+window.hasTrip = @json($hasTrip);
 window.dataInicioViagem = @json($dataInicio);
 window.dataFimViagem = @json($dataFim);
-window.destinoViagem = @json($destino);
+window.destinosViagem = @json($destinos);
+window.destinoAtual = @json($destinoAtual);
+window.nomeViagem = @json($nomeViagem ?? null);
 window.origemViagem = @json($origem);
 
 // Verificar se há filtros de objetivo vindos da URL
@@ -222,6 +247,118 @@ document.addEventListener('DOMContentLoaded', function() {
 @endif
 // Variável para cache dos pontos do banco
 let pontosCache = [];
+
+// Função para lidar com mudança de destino
+async function handleDestinoChange(destinoId) {
+    if (!destinoId) return;
+    
+    try {
+        const response = await fetch('/explore/change-destination', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ destino_id: destinoId })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Atualizar destino atual
+            window.destinoAtual = data.destino;
+            
+            // Centralizar mapa no novo destino
+            const newCoords = { lat: data.coordinates.lat, lng: data.coordinates.lng };
+            if (map) {
+                map.setCenter(newCoords);
+                map.setZoom(13);
+                
+                // Recarregar lugares próximos
+                searchNearbyPlaces(newCoords);
+            }
+            
+            showNotification(`Mapa centralizado em: ${data.destino.nome_destino}`, 'success');
+        } else {
+            showNotification('Erro ao trocar destino: ' + (data.error || 'Erro desconhecido'), 'error');
+        }
+    } catch (error) {
+        console.error('Erro ao trocar destino:', error);
+        showNotification('Erro ao trocar destino', 'error');
+    }
+}
+
+// Função para buscar lugares próximos em uma nova localização
+function searchNearbyPlaces(coordinates) {
+    if (!map || !google.maps || !google.maps.places) {
+        console.error('Google Maps ou Places API não disponível');
+        return;
+    }
+    
+    const service = new google.maps.places.PlacesService(map);
+    
+    // Limpar markers existentes
+    markers.forEach(marker => marker.setMap(null));
+    markers = [];
+    places = [];
+    
+    // Verificar se deve aplicar filtros automáticos
+    if (window.shouldApplyObjectiveFilters && window.autoApplyFilters && window.autoApplyFilters.length > 0) {
+        // Aplicar filtros de objetivo
+        console.log('🎯 Aplicando filtros de objetivo na nova localização...');
+        window.autoApplyFilters.forEach(filterType => {
+            service.nearbySearch({
+                location: coordinates,
+                radius: 10000,
+                type: filterType
+            }, (results, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+                    processPlacesResults(results);
+                }
+            });
+        });
+    } else {
+        // Busca padrão
+        const searchTypes = ['tourist_attraction', 'restaurant', 'lodging'];
+        
+        searchTypes.forEach(type => {
+            service.nearbySearch({
+                location: coordinates,
+                radius: 10000,
+                type: type
+            }, (results, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+                    processPlacesResults(results);
+                }
+            });
+        });
+    }
+}
+
+// Função para processar resultados de lugares
+function processPlacesResults(results) {
+    results.forEach(place => {
+        // Evitar duplicatas
+        if (!places.find(p => p.place_id === place.place_id)) {
+            places.push({
+                id: place.place_id,
+                place_id: place.place_id,
+                name: place.name,
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng(),
+                type: getPlaceType(place.types),
+                rating: place.rating || 4.0,
+                address: place.vicinity,
+                description: place.name,
+                photos: place.photos ? [place.photos[0].getUrl({ maxWidth: 150, maxHeight: 100 })] : []
+            });
+        }
+    });
+    
+    // Atualizar markers e sugestões
+    addMarkersToMap();
+    updateSuggestions();
+}
 
 // Helper functions
 function getPlaceType(types) {
@@ -481,7 +618,7 @@ function initMap() {
                 if (typeof window.applyMapFilters === 'function') {
                     const filters = {
                         places: window.autoApplyFilters,
-                        location: window.destinoViagem || '',
+                        location: window.destinoAtual ? window.destinoAtual.nome_destino : (window.origemViagem || ''),
                         radius: '10000',
                         objective: window.objectiveName
                     };
@@ -536,18 +673,21 @@ function initMap() {
         initPlacesAutocomplete();
     }
 
-    // Busca coordenadas do destino da viagem, se houver
-    if (window.destinoViagem && typeof getCoordinatesFromAddress === 'function') {
-        getCoordinatesFromAddress(window.destinoViagem)
+    // Busca coordenadas do destino atual da viagem, se houver
+    if (window.destinoAtual && window.destinoAtual.nome_destino && typeof getCoordinatesFromAddress === 'function') {
+        getCoordinatesFromAddress(window.destinoAtual.nome_destino)
             .then(coords => {
+                console.log('🎯 Coordenadas do destino atual obtidas:', coords);
                 startMapWithCoords(coords);
             })
-            .catch(() => {
-                // Fallback para coordenadas padrão da origem da viagem
+            .catch(error => {
+                console.warn('⚠️ Erro ao obter coordenadas do destino atual:', error);
+                console.log('🔄 Tentando com origem da viagem...');
                 startMapWithOrigemCoords();
             });
     } else {
-        startMapWithCoords({ lat: -10.8263593, lng: -42.7335083 });
+        console.log('🏠 Usando origem da viagem ou coordenadas padrão...');
+        startMapWithOrigemCoords();
     }
 }
 
@@ -573,16 +713,21 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function startMapWithOrigemCoords() {
-         if (window.origemViagem && typeof getCoordinatesFromAddress === 'function') {
-            getCoordinatesFromAddress(window.origemViagem)
-                .then(coords => {
-                    startMapWithCoords(coords);
-                    console.log('Mapa iniciado com coordenadas da origem da viagem:', coords);
-                })
-                .catch(() => {
-                    // Fallback para coordenadas padrão (Xique-Xique, Bahia)
-                    startMapWithCoords({ lat: -10.8263593, lng: -42.7335083 });
-                });
+    if (window.origemViagem && typeof getCoordinatesFromAddress === 'function') {
+        getCoordinatesFromAddress(window.origemViagem)
+            .then(coords => {
+                console.log('🏠 Coordenadas da origem obtidas:', coords);
+                startMapWithCoords(coords);
+            })
+            .catch(() => {
+                console.log('🗺️ Fallback para coordenadas padrão');
+                // Fallback para coordenadas padrão (Xique-Xique, Bahia)
+                startMapWithCoords({ lat: -10.8263593, lng: -42.7335083 });
+            });
+    } else {
+        console.log('🗺️ Usando coordenadas padrão - nenhuma origem definida');
+        // Fallback para coordenadas padrão quando não há origem
+        startMapWithCoords({ lat: -10.8263593, lng: -42.7335083 });
     }
 }
 

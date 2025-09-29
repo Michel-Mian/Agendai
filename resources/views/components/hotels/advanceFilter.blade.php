@@ -1,9 +1,8 @@
 <div class="mt-4 md:mt-0">
     <button id="open-filters-btn" type="button" 
             onclick="openFiltersModal()" 
-            class="w-full bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md transition duration-200 flex items-center justify-center shadow-sm hover:shadow-md">
-        <i class="fa-solid fa-filter mr-2"></i>
-        Filtros Avançados
+            class="cursor-pointer bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold px-5 py-4 rounded-xl shadow hover:from-blue-700 hover:to-blue-600 transition flex items-center gap-2 text-base">
+        <i class="fa-solid fa-filter"></i>
     </button>
 </div>
 

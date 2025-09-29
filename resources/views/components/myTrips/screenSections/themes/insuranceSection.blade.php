@@ -94,6 +94,7 @@
                 <h3 class="text-lg font-semibold text-gray-800 mb-1">Nenhum seguro adicionado</h3>
                 <p class="text-gray-500 mb-6 max-w-xs mx-auto">Adicione um seguro para manter os detalhes importantes da sua viagem organizados.</p>
                 <button type="button" id="open-add-insurance-modal-btn-empty" class="bg-gray-800 hover:bg-gray-700 text-white px-5 py-2.5 rounded-lg transition-colors font-semibold" onclick="openAddInsuranceModal()">
+                    <i class="fas fa-plus mr-2"></i>
                     Adicionar seguro
                 </button>
             </div>

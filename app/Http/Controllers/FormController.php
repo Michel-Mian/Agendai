@@ -27,7 +27,7 @@ class FormController extends Controller
 
     public function store(Request $request)
     {
-        \Log::info('FormController@store - Iniciando processo de criação da viagem', $request->all());
+
         
         // Validação dos dados
         $validatedData = $request->validate([
@@ -46,7 +46,7 @@ class FormController extends Controller
             'preferences' => 'nullable',
         ]);
 
-        \Log::info('Validação concluída com sucesso');
+
 
         // Verificar autenticação
         if (!auth()->check()) {
@@ -75,10 +75,7 @@ class FormController extends Controller
             $dataInicioViagem = $datasInicio[0];
             $dataFimViagem = end($datasFim);
 
-            \Log::info('Criando viagem principal', [
-                'nome' => $validatedData['nome_viagem'],
-                'periodo' => $dataInicioViagem . ' a ' . $dataFimViagem
-            ]);
+
 
             // 1. Criar viagem principal
             $viagem = \App\Models\Viagens::create([
@@ -90,7 +87,7 @@ class FormController extends Controller
                 'fk_id_usuario' => auth()->id(),
             ]);
 
-            \Log::info('Viagem principal criada', ['id' => $viagem->pk_id_viagem]);
+
 
             // 2. Criar destinos
             foreach ($destinos as $index => $nomeDestino) {
@@ -104,7 +101,7 @@ class FormController extends Controller
                     ]);
                 }
             }
-            \Log::info('Destinos criados', ['total' => count($destinos)]);
+
 
             // 3. Criar voo se houver dados
             if ($request->filled('selected_flight_data')) {
@@ -113,22 +110,32 @@ class FormController extends Controller
                     $primeiroVoo = $flightData['flights'][0];
                     $ultimoVoo = end($flightData['flights']);
                     
-                    \App\Models\Voos::create([
+                    // Log dos dados do voo para debug
+                    $vooData = [
                         'fk_id_viagem' => $viagem->pk_id_viagem,
-                        'desc_aeronave_voo' => $primeiroVoo['airplane'] ?? '',
-                        'origem_voo' => $primeiroVoo['departure_airport']['id'] ?? '',
-                        'origem_nome_voo' => $primeiroVoo['departure_airport']['name'] ?? '',
-                        'destino_voo' => $ultimoVoo['arrival_airport']['id'] ?? '',
-                        'destino_nome_voo' => $ultimoVoo['arrival_airport']['name'] ?? '',
+                        'desc_aeronave_voo' => !empty($primeiroVoo['airplane']) ? $primeiroVoo['airplane'] : 'Não especificado',
+                        'origem_voo' => !empty($primeiroVoo['departure_airport']['id']) ? $primeiroVoo['departure_airport']['id'] : 'N/A',
+                        'origem_nome_voo' => !empty($primeiroVoo['departure_airport']['name']) ? $primeiroVoo['departure_airport']['name'] : 'Aeroporto de origem',
+                        'destino_voo' => !empty($ultimoVoo['arrival_airport']['id']) ? $ultimoVoo['arrival_airport']['id'] : 'N/A',
+                        'destino_nome_voo' => !empty($ultimoVoo['arrival_airport']['name']) ? $ultimoVoo['arrival_airport']['name'] : 'Aeroporto de destino',
                         'data_hora_partida' => isset($primeiroVoo['departure_airport']['time']) 
                             ? date('Y-m-d H:i:s', strtotime($primeiroVoo['departure_airport']['time']))
                             : $dataInicioViagem . ' 00:00:00',
                         'data_hora_chegada' => isset($ultimoVoo['arrival_airport']['time'])
                             ? date('Y-m-d H:i:s', strtotime($ultimoVoo['arrival_airport']['time']))
                             : $dataFimViagem . ' 23:59:59',
-                        'companhia_voo' => $primeiroVoo['airline'] ?? '',
-                    ]);
-                    \Log::info('Voo criado com sucesso');
+                        'companhia_voo' => !empty($primeiroVoo['airline']) ? $primeiroVoo['airline'] : 'Companhia não especificada',
+                        'classe_voo' => !empty($primeiroVoo['travel_class']) ? $primeiroVoo['travel_class'] : 'Economy',
+                        'conexao_voo' => isset($flightData['layovers'][0]['id']) ? $flightData['layovers'][0]['id'] : null,
+                        'conexao_nome_voo' => isset($flightData['layovers'][0]['name']) ? $flightData['layovers'][0]['name'] : null,
+                        'preco_voo' => isset($flightData['price']) ? (float)$flightData['price'] : 0.00,
+                        'numero_voo' => isset($primeiroVoo['flight_number']) ? $primeiroVoo['flight_number'] : null,
+                    ];
+                    
+
+                    
+                    \App\Models\Voos::create($vooData);
+
                 }
             }
 
@@ -157,7 +164,7 @@ class FormController extends Controller
                         'is_selected' => true,
                     ]);
                     $seguroId = $seguro->pk_id_seguro;
-                    \Log::info('Seguro criado', ['id' => $seguroId]);
+
                 }
             }
 
@@ -172,7 +179,7 @@ class FormController extends Controller
                         ]);
                     }
                 }
-                \Log::info('Viajantes criados', ['total' => count($validatedData['idades'])]);
+
             }
 
             // 6. Criar objetivos/preferências
@@ -191,7 +198,7 @@ class FormController extends Controller
                         ]);
                     }
                 }
-                \Log::info('Objetivos criados', ['total' => count($prefs)]);
+
             }
 
             // 7. Atualizar viagem com seguro se houver
@@ -201,12 +208,6 @@ class FormController extends Controller
 
             // 8. Salvar na sessão
             session(['trip_id' => $viagem->pk_id_viagem]);
-
-            \Log::info('Viagem completa criada com sucesso!', [
-                'viagem_id' => $viagem->pk_id_viagem,
-                'nome' => $viagem->nome_viagem,
-                'destinos_count' => count($destinos)
-            ]);
 
             return redirect()->route('explore')->with('success', 'Viagem criada com sucesso!');
 
