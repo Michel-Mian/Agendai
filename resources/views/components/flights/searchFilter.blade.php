@@ -75,7 +75,7 @@
                 <!-- Datas -->
                 <div class="flex flex-1 flex-col xs:flex-row bg-blue-50 rounded-xl border border-blue-200 overflow-hidden shadow-inner">
                     <div class="flex items-center px-4 py-3 gap-2 w-full xs:w-1/2 border-b xs:border-b-0 xs:border-r border-blue-200">
-                        <i class="fa-regular fa-calendar text-blue-600"></i>
+                        
                         <input 
                             type="date" 
                             name="date_departure" 
