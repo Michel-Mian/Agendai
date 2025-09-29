@@ -1,9 +1,15 @@
 document.addEventListener('DOMContentLoaded', function() {
-        const typeTrip = document.getElementById('type_trip');
-        const dateReturn = document.getElementById('date_return');
+    // Verificar se estamos na página de busca de voos
+    if (!window.location.pathname.includes('flight') && !document.getElementById('type_trip')) {
+        return;
+    }
 
-        // essa função torna obsoleto o campo de data de retorno quando a viagem for só de ida
-        function toggleDateReturn() {
+    const typeTrip = document.getElementById('type_trip');
+    const dateReturn = document.getElementById('date_return');
+
+    // essa função torna obsoleto o campo de data de retorno quando a viagem for só de ida
+    function toggleDateReturn() {
+        if (typeTrip && dateReturn) {
             if (typeTrip.value == '2') { 
                 dateReturn.disabled = true;
                 dateReturn.value = '';
@@ -11,12 +17,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 dateReturn.disabled = false;
             }
         }
+    }
 
-        const typeTrip2 = document.getElementById('type-trip');
-        const dateReturn2 = document.getElementById('date-return');
+    const typeTrip2 = document.getElementById('type-trip');
+    const dateReturn2 = document.getElementById('date-return');
 
-        // essa função torna obsoleto o campo de data de retorno quando a viagem for só de ida
-        function toggleDateReturn2() {
+    // essa função torna obsoleto o campo de data de retorno quando a viagem for só de ida
+    function toggleDateReturn2() {
+        if (typeTrip2 && dateReturn2) {
             if (typeTrip2.value == '2') { 
                 dateReturn2.disabled = true;
                 dateReturn2.value = '';
@@ -24,12 +32,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 dateReturn2.disabled = false;
             }
         }
+    }
 
+    if (typeTrip) {
         typeTrip.addEventListener('change', toggleDateReturn);
         toggleDateReturn();
-        
+    }
+    
+    if (typeTrip2) {
         typeTrip2.addEventListener('change', toggleDateReturn2);
         toggleDateReturn2();
+    }
 
         document.getElementById('open-filter-modal').onclick = function() {
             document.getElementById('filter-modal').classList.remove('hidden');
@@ -186,11 +199,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const dateDeparture = document.getElementById('date_departure');
     const dateReturn = document.getElementById('date_return');
 
-    dateDeparture.min = today;
-    dateReturn.min = dateDeparture.value || today;
+    if (dateDeparture) {
+        dateDeparture.min = today;
+    }
+    
+    if (dateReturn) {
+        dateReturn.min = dateDeparture && dateDeparture.value ? dateDeparture.value : today;
+    }
 
-    dateDeparture.addEventListener('change', function() {
-        dateReturn.min = this.value;
-        if (dateReturn.value < this.value){}
-    });
+    if (dateDeparture && dateReturn) {
+        dateDeparture.addEventListener('change', function() {
+            dateReturn.min = this.value;
+            if (dateReturn.value < this.value) {
+                dateReturn.value = '';
+            }
+        });
+    }
 });
