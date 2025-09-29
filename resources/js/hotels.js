@@ -44,13 +44,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const trips = window.userTrips || []
 
   const today = new Date().toISOString().split("T")[0]
-  document.getElementById("check-in-date").setAttribute("min", today)
-  document.getElementById("check-out-date").setAttribute("min", today)
+  const checkinInput = document.getElementById("check-in-date")
+  const checkoutInput = document.getElementById("check-out-date")
+  
+  if (checkinInput) {
+    checkinInput.setAttribute("min", today)
+  }
+  
+  if (checkoutInput) {
+    checkoutInput.setAttribute("min", today)
+  }
 
-  document.getElementById("check-in-date").addEventListener("change", function () {
-    const checkInDate = this.value
-    document.getElementById("check-out-date").setAttribute("min", checkInDate)
-  })
+  if (checkinInput) {
+    checkinInput.addEventListener("change", function () {
+      const checkInDate = this.value
+      if (checkoutInput) {
+        checkoutInput.setAttribute("min", checkInDate)
+      }
+    })
+  }
 
   // Listeners para filtros básicos
   const hotelClassFilter = document.getElementById("hotel-class-filter")
