@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\PontoInteresse;
 use App\Models\Hotel;
+use App\Models\Viagens;
+use App\Models\Destinos;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use App\Models\Viagens;
 
 class ExploreController extends Controller
 {
@@ -21,8 +22,10 @@ class ExploreController extends Controller
         $dataFim = null;
         $filtrosObjetivo = null;
         $nomeObjetivo = null;
-        $destino = null;
         $origem = null;
+        $destinos = collect();
+        $destinoAtual = null;
+        $nomeViagem = null;
         
         if (session()->has('trip_id')) {
             $tripId = session('trip_id');
@@ -31,7 +34,10 @@ class ExploreController extends Controller
             $dataFim = $viagem->data_final_viagem;
             $origem = $viagem->origem_viagem;
             $nomeViagem = $viagem->nome_viagem; 
-            $destinos = $viagem->destinos->pluck('nome_destino')->toArray();
+            $destinos = $viagem->destinos;
+            $destinoAtual = $request->get('destino_id') ? 
+                $destinos->find($request->get('destino_id')) : 
+                $destinos->first();
         }
         // Verificar se há filtros de objetivo na URL
         if ($request->has('filters')) {
@@ -53,7 +59,9 @@ class ExploreController extends Controller
             'trip_id' => session('trip_id'),
             'data_inicio' => $dataInicio,
             'data_fim' => $dataFim,
-            'destino' => $destino,
+            'destinos_count' => $destinos->count(),
+            'destino_atual' => $destinoAtual ? $destinoAtual->nome_destino : null,
+            'nome_viagem' => $nomeViagem,
             'origem' => $origem,
             'filtros_objetivo' => $filtrosObjetivo,
             'nome_objetivo' => $nomeObjetivo
@@ -64,7 +72,9 @@ class ExploreController extends Controller
             'dataInicio' => $dataInicio,
             'dataFim' => $dataFim,
             'hasTrip' => session()->has('trip_id'),
-            'destino' => $destino,
+            'destinos' => $destinos,
+            'destinoAtual' => $destinoAtual,
+            'nomeViagem' => $nomeViagem,
             'origem' => $origem,
             'filtrosObjetivo' => $filtrosObjetivo,
             'nomeObjetivo' => $nomeObjetivo,
@@ -454,5 +464,70 @@ class ExploreController extends Controller
         }
         
         return redirect()->route('explore');
+    }
+
+    public function changeDestination(Request $request)
+    {
+        $tripId = session('trip_id');
+        if (!$tripId) {
+            return response()->json(['error' => 'Nenhuma viagem ativa'], 400);
+        }
+
+        $destinoId = $request->get('destino_id');
+        
+        // Buscar o destino e verificar se pertence à viagem atual
+        $viagem = Viagens::with('destinos')->findOrFail($tripId);
+        $destino = $viagem->destinos->find($destinoId);
+        
+        if (!$destino) {
+            return response()->json(['error' => 'Destino não encontrado'], 404);
+        }
+
+        // Usar geocoding do Google para obter coordenadas
+        try {
+            $coordinates = $this->getCoordinatesFromName($destino->nome_destino);
+            
+            return response()->json([
+                'success' => true,
+                'destino' => $destino,
+                'coordinates' => $coordinates
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao obter coordenadas do destino:', [
+                'destino' => $destino->nome_destino,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'error' => 'Não foi possível obter coordenadas do destino'
+            ], 500);
+        }
+    }
+
+    private function getCoordinatesFromName($locationName)
+    {
+        $apiKey = env('GOOGLE_MAPS_API_KEY');
+        
+        if (!$apiKey) {
+            throw new \Exception('Google Maps API key não configurada');
+        }
+
+        $response = Http::get('https://maps.googleapis.com/maps/api/geocode/json', [
+            'address' => $locationName,
+            'key' => $apiKey
+        ]);
+
+        $data = $response->json();
+
+        if ($data['status'] !== 'OK' || empty($data['results'])) {
+            throw new \Exception('Localização não encontrada');
+        }
+
+        $location = $data['results'][0]['geometry']['location'];
+        
+        return [
+            'lat' => $location['lat'],
+            'lng' => $location['lng']
+        ];
     }
 }

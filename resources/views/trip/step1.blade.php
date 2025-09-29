@@ -570,7 +570,7 @@ window.initializeDestinationAutocomplete = function(index) {
     
     // Limpar qualquer autocomplete anterior do Google Places
     if (input._autocompleteInitialized) {
-        console.log(`Removendo autocomplete anterior do destino ${index}`);
+
         input._autocompleteInitialized = false;
     }
     
@@ -792,7 +792,7 @@ window.initializeDestinationAutocomplete = function(index) {
         }
     });
     
-    console.log(`Autocomplete inicializado para input ${index}`);
+
 };
 
 // Expor funções de erro globalmente
@@ -825,7 +825,7 @@ window.initializeOriginAutocomplete = function() {
     
     // Limpar qualquer autocomplete anterior do Google Places
     if (input._autocompleteInitialized) {
-        console.log('Removendo autocomplete anterior da origem');
+
         input._autocompleteInitialized = false;
         // Limpar eventos anteriores se existirem
         const newInput = input.cloneNode(true);
@@ -1030,11 +1030,11 @@ window.initializeOriginAutocomplete = function() {
         }
     });
     
-    console.log('Autocomplete da origem inicializado');
+
 };
 
 function initStepFormMap() {
-    console.log('Google Maps carregado para step1 - inicializando autocompletes');
+
     // Inicializar autocomplete para o primeiro destino
     window.initializeDestinationAutocomplete(0);
     // Inicializar autocomplete para a origem
@@ -1043,7 +1043,7 @@ function initStepFormMap() {
 
 // Fallback caso o Google Maps já esteja carregado
 if (window.google && window.google.maps) {
-    console.log('Google Maps já carregado - inicializando autocompletes imediatamente');
+
     document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             window.initializeDestinationAutocomplete(0);
@@ -1055,7 +1055,7 @@ if (window.google && window.google.maps) {
     document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             if (window.google && window.google.maps) {
-                console.log('Google Maps carregado após delay - inicializando autocompletes');
+
                 window.initializeDestinationAutocomplete(0);
                 window.initializeOriginAutocomplete();
             }
