@@ -79,6 +79,10 @@
             <div id="profile-dropdown" class="absolute bottom-full left-1 min-w-[200px] w-[260px] mb-2 bg-white rounded-lg shadow-lg border border-gray-200 hidden z-50">
                 <div class="py-2">
                     @if(Auth::check())
+                    <div class="theme-toggle-container cursor-pointer px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" id="themeToggleContainer">
+  <i id="themeToggle" class="fa-solid fa-toggle-on"></i>
+  <span class="ml-2">Modo</span>
+</div>
                         <a href="/myProfile/{{  Auth::user()->id }}/edit" class="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
