@@ -132,13 +132,13 @@
 
 /* Mantém a barra de progresso sempre escura no modo noturno */
 .night-mode .h-2.bg-gradient-to-r {
-    background: linear-gradient(to right, #161b22, #21262d) !important;
+    background: linear-gradient(to right, #161b22, #161b22) !important;
     border: none !important;
 }
 
 /* Impede que o hover mude o background */
 .night-mode .h-2.bg-gradient-to-r:hover {
-    background: linear-gradient(to right, #161b22, #21262d) !important;
+    background: linear-gradient(to right, #161b22, #161b22) !important;
     border: none !important;
 }
 
@@ -534,7 +534,6 @@
 .night-mode input[type="submit"],
 .night-mode input[type="button"],
 .night-mode a {
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease !important;
 }
 
 /* === ESPECÍFICOS PARA FUNDOS AZUIS === */
@@ -724,8 +723,8 @@
 
 /* Removendo hover do card de review com gradiente azul */
 .night-mode .bg-gradient-to-r.from-blue-600.to-blue-500:hover {
-  background: linear-gradient(to right, #161b22, #21262d) !important; /* Mantém gradiente escuro */
-  color: #f0f6fc !important; /* Mantém texto branco */
+  background: linear-gradient(to right, #f0f6fc, #f0f6fc) !important; /* Mantém gradiente escuro */
+  color: #0d1117 !important; /* Mantém texto branco */
 }
 
 /* Botões com gradiente azul ficam com fundo branco inteiro no hover */
@@ -1279,8 +1278,8 @@
 }
 
 .night-mode .bg-gradient-to-r.from-blue-600.to-blue-500:hover {
-    background: linear-gradient(to right, #0d1117, #0d1117) !important; /* mantém a cor original */
-    color: #ffffff !important; /* mantém o texto branco */
+    background: linear-gradient(to right, #f0f6fc, #f0f6fc) !important; /* mantém a cor original */
+    color: #0d1117 !important; /* mantém o texto branco */
 }
 
 /* Botão Voltar igual ao Próximo */
@@ -1353,10 +1352,7 @@
 /* Seleciona especificamente o card que contém esse texto */
 .night-mode .bg-white.rounded-xl.shadow.p-4.md\:p-6.flex.flex-col.justify-between.h-full:hover,
 .night-mode .bg-white.rounded-xl.shadow.p-4.md\:p-6.flex.flex-col.justify-between.h-full *:hover {
-    background-color: #21262d  !important;
-    color: inherit !important;
-    box-shadow: none !important;
-    pointer-events: none; /* impede qualquer reação ao hover */
+
 }
 
 a[href="/myProfile/1/edit"]:hover {
@@ -1700,11 +1696,10 @@ a[href^="http://127.0.0.1:8000/viagens/"]:hover svg {
 
 .night-mode a:hover {
   /* Fundo e Borda: Branco */
-  background-color: inherit !important;
-  border-color: #ffffff !important;
+  background-color: #f0f6fc !important;
+  border-color: #f0f6fc !important;
   /* Fonte: #0d1117 (cor principal do fundo do night mode) */
-  color: inherit !important;
-  text-decoration: none;
+  color: #0d1117 !important;
 }
 
 /* Garante que os ícones (<i> ou SVG) no hover sigam a cor escura */
@@ -1770,7 +1765,7 @@ a[href^="http://127.0.0.1:8000/viagens/"]:hover svg {
 
 /* Fundo escuro (#0d1117) no hover, especificamente para o botão de Criar Conta */
 .night-mode button.hover\:bg-emerald-700 {
-    background-color: #161b22 !important; 
+    background-color: #0d1117 !important; 
 }
 
 /* Fundo escuro (#0d1117) no hover, especificamente para o botão de Criar Conta */
@@ -1783,8 +1778,8 @@ a[href^="http://127.0.0.1:8000/viagens/"]:hover svg {
 
 /* Fundo escuro (#0d1117) especificamente para o link de Fazer Login */
 .night-mode a.text-emerald-600:not(.hover\:bg-emerald-700) {
-    background-color: #0d1117 !important;
-    border-color: #0d1117 !important;
+    background-color: #161b22 !important;
+    border-color: #161b22 !important;
 }
 
 /* Opcional: Garante que a fonte fique branca no modo normal, pois o fundo é escuro */
@@ -2491,7 +2486,8 @@ a[href^="http://127.0.0.1:8000/viagens/"]:hover svg {
 /* Garante que a cor de fundo não mude muito no hover (Mantendo o look escuro) */
 .night-mode #open-add-insurance-modal-btn:hover {
     /* Mantém o fundo escuro, com um leve escurecimento ou clareamento para feedback */
-    background-color: #161b22 !important; 
+    background-color: #f0f6fc !important;
+    color: #0d1117 !important; 
 }
 
 /* Força a cor branca nos ícones dentro de todos os botões/links principais do Night Mode */
@@ -2588,10 +2584,431 @@ a[href^="http://127.0.0.1:8000/viagens/"]:hover svg {
 /* Aplica a borda fina e sutil do Night Mode ao botão Pesquisar */
 .night-mode #search-btn {
     /* Força a borda fina solicitada */
-    border: 1px solid #30363d !important;
+    border: 1px solid #0d1117 !important;
+    background-color: #0d1117 !important; /* Mantém o fundo escuro */
 }
 
 /* Opcional: Garante que a borda não mude de cor no hover, mantendo a consistência do Night Mode */
 .night-mode #search-btn:hover {
     border-color: #30363d !important; 
+    background-color: #ffffff !important; /* Mantém o fundo branco no hover */
+}
+
+/* 1. Garante que o texto do link seja branco no hover, para o SVG herdar a cor correta */
+.night-mode a.text-blue-600:hover {
+    color: #f0f6fc !important;
+}
+
+/* 2. Força a cor do traço da seta (path) para branco suave, como uma camada de segurança */
+.night-mode a.text-blue-600:hover svg path {
+    stroke: #f0f6fc !important; 
+}
+
+/* Garante que o texto de descrição ("Descubra novos lugares") fique preto/cinza escuro NO HOVER do card */
+.night-mode .bg-white.rounded-xl.shadow.p-4.md\:p-6.flex.items-center:hover .text-gray-500 {
+    color: #0d1117 !important; /* Força a cor da fonte para o preto/cinza escuro (#0d1117) */
+}
+
+/* Opcional: Garante que o ícone mantenha a cor escura no hover */
+.night-mode a.bg-blue-500:hover i.fa-plane {
+    color: #0d1117 !important;
+}
+
+/* Garante o fundo branco e texto escuro no HOVER */
+.night-mode button.bg-gradient-to-r.from-blue-500.to-purple-500:hover {
+    background-color: #f0f6fc !important; /* Mantém o fundo branco */
+    background-image: none !important;
+    color: #0d1117 !important;            /* Mantém o texto escuro */
+}
+
+.night-mode .gm-style-iw-d a:hover,
+.night-mode .view-link a:hover,
+.night-mode .view-link a:hover span {
+    background-color: transparent !important;
+    border-color: transparent !important;
+    color: #f0f6fc !important; /* Mantém o texto branco suave */
+    
+}
+
+/* Regra de segurança para a tag <span> interna */
+.night-mode .gm-style-iw-d a:hover span,
+.night-mode .view-link a:hover span {
+    color: #f0f6fc !important;
+    background-color: transparent !important;
+}
+
+/*
+  Anula a regra genérica '.night-mode a:hover' para o link "Ver detalhes no site" 
+  (text-xs text-blue-600 hover:underline), mantendo a transparência e a cor do texto.
+*/
+.night-mode a.text-blue-600.hover\:underline:hover {
+    /* Remove o fundo branco e a borda branca aplicados pela regra genérica */
+    background-color: transparent !important;
+    border-color: transparent !important;
+    
+    /* Mantém a cor do texto (geralmente branco suave ou azul claro no Night Mode), anulando o preto */
+    color: #f0f6fc !important; 
+}
+
+/* Remove o fundo branco e a borda no hover para o link "Ver Detalhes" */
+.night-mode a.text-blue-600.font-medium:hover {
+    background-color: transparent !important;
+    border-color: transparent !important;
+    
+    /* Garante que o texto e a seta (que usa currentColor) permaneçam brancos,
+       anulando o 'color: #0d1117' da regra genérica. */
+    color: #f0f6fc !important;
+}
+
+/*
+  Remove o hover do span de status "Próxima", garantindo que a cor de fundo 
+  e a cor de texto (ajustadas para o Night Mode) permaneçam estáticas.
+*/
+.night-mode span.bg-green-100.text-green-700:hover {
+    /* Fundo (deve ser o fundo escuro do badge no Night Mode) */
+    background-color: #0d1117 !important; 
+    
+    /* Texto (deve ser a cor verde clara no Night Mode) */
+    color: #f0f6fc !important; 
+    
+    /* Garante que o cursor não mude, se for um link/botão */
+    cursor: default !important;
+}
+
+/* Opcional: Garante que o status no estado NORMAL use as cores do Night Mode */
+.night-mode span.bg-green-100.text-green-700 {
+    background-color: #0d1117 !important;
+    color: #f0f6fc !important;
+}
+
+/* Remove a mudança de fundo no hover do card de Moeda (Euro) */
+.night-mode div.bg-white.rounded-xl.shadow.p-4.md\:p-6.flex.flex-col.justify-between.h-full:hover {
+    /* Força o fundo a ser a cor de card do Night Mode (anulando o hover) */
+    background-color: #21262d !important; 
+    
+    /* Opcional: Mantém a cor do texto e impede que mude no hover */
+    color: inherit !important; 
+}
+
+/* Remove a mudança de fundo no hover do card de Viagem (Albânia) */
+.night-mode div.bg-white.rounded-xl.shadow.flex.flex-col.h-full:hover {
+    /* Força o fundo a ser a cor de card do Night Mode (anulando o hover) */
+    background-color: #21262d !important; 
+    
+    /* Garante que o texto principal permaneça branco (ou a cor padrão do card) */
+    color: inherit !important; 
+}
+
+/* Remove qualquer hover do ponto de status (w-3 h-3 bg-green-400) */
+.night-mode .w-3.h-3.bg-green-400.rounded-full.mr-3.animate-pulse:hover {
+    /* Garante que o fundo não mude (mantendo a cor verde) */
+    background-color: #4cd964 !important; 
+    
+    /* Garante que o cursor não mude */
+    cursor: default !important;
+}
+
+/* Remove qualquer hover do ícone de relógio (fa-clock) */
+.night-mode i.fa-clock.text-xs:hover {
+    /* Força a cor do texto a permanecer na cor secundária do Night Mode */
+    color: #7d8590 !important; 
+    
+    /* Garante que não haja fundo */
+    background-color: transparent !important; 
+    
+    /* Garante que o cursor não mude */
+    cursor: default !important;
+}
+
+/*
+  1. ESTADO NORMAL: Garante que o círculo de fundo seja a cor escura do Night Mode 
+     e que o ícone seja branco no estado normal.
+*/
+.night-mode div.bg-green-100.rounded-full.p-2.mr-3 {
+    background-color: #0d1117 !important; /* Fundo de card escuro */
+}
+
+.night-mode div.bg-green-100.rounded-full.p-2.mr-3 i.fa-calendar {
+    color: #f0f6fc !important; /* Cor de ícone branca suave (solicitada) */
+}
+
+
+/*
+  2. REMOÇÃO DO HOVER: Anula qualquer mudança de fundo ou cor no hover.
+*/
+.night-mode div.bg-green-100.rounded-full.p-2.mr-3:hover {
+    background-color: #0d1117 !important; /* Mantém o fundo escuro estático */
+    cursor: default !important;
+}
+
+.night-mode div.bg-green-100.rounded-full.p-2.mr-3:hover i.fa-calendar {
+    color: #f0f6fc !important; /* Mantém o ícone branco estático */
+}
+
+/*
+  Aplica o fundo de destaque escuro do Night Mode (#21262d) ao círculo do ícone de mapa
+  (substituindo o bg-blue-100).
+*/
+.night-mode div.w-8.h-8.bg-blue-100.rounded-full.flex.items-center.justify-center.mr-3 {
+    background-color: #0d1117 !important;
+}
+
+/* Opcional: Garante que o ícone interno (fa-map-marker-alt) fique branco para contraste */
+.night-mode div.w-8.h-8.bg-blue-100.rounded-full.flex.items-center.justify-center.mr-3 i.fa-map-marker-alt {
+    color: #f0f6fc !important;
+}
+
+/* Força este elemento específico a se estender verticalmente (stretch) */
+.night-mode div.w-full.bg-gray-50.py-6.px-2:hover, 
+.night-mode div.w-full.bg-gray-50.py-6.px-2 {
+    /* Define a altura mínima como 100% da altura da viewport */
+    min-height: 100vh !important;
+}
+
+.night-mode .step-indicator.active {
+    background-color: #f0f6fc !important; /* Fundo branco suave */
+    color: #f0f6fc !important;            /* Texto escuro */
+    border-color: #f0f6fc !important;     /* Borda escura */
+    background: linear-gradient(135deg, #22c55e 60%, #22c55e 100%);
+    box-shadow: 0 4px 16px #0d1117 !important;
+}
+
+/*
+  Remove a mudança de cor de fonte no hover para o bloco de resumo de dados,
+  garantindo que o texto e os negritos permaneçam brancos.
+*/
+.night-mode div.bg-gradient-to-r.from-blue-600.to-blue-500.rounded-xl.p-6.text-white:hover * {
+    /* Força a cor do texto para branco suave do Night Mode */
+    color: #f0f6fc !important; 
+    
+    /* Garante que o cursor não mude, se por acaso estiver agindo como um link */
+    cursor: default !important;
+}
+
+/* Regra extra para o elemento <b> específico dentro da UL que tem estilo inline */
+.night-mode div.bg-gradient-to-r.from-blue-600.to-blue-500.rounded-xl.p-6.text-white:hover ul#reviewList li b {
+    color: #f0f6fc !important;
+}
+
+/* Opcional: Garante que o texto já seja branco, caso não esteja herdando corretamente */
+.night-mode div.bg-gradient-to-r.from-blue-600.to-blue-500.rounded-xl.p-6.text-white * {
+    color: #f0f6fc !important;
+}
+
+/* Remove a mudança de fundo no hover para o link "Ver detalhes completos" (details-link) */
+.night-mode a.details-link:hover {
+    /* Remove o fundo que o hover genérico pode estar aplicando */
+    background-color: transparent !important;
+    
+    /* Garante que o texto permaneça na cor de link do Night Mode */
+    color: #f0f6fc !important; 
+    
+    /* Opcional: Garante que a borda não mude de cor */
+    border-color: transparent !important;
+}
+
+/*
+  Regra sem o prefixo .night-mode para garantir que no modo CLARO/PADRÃO 
+  o botão "Carregar Mais Resultados" tenha um fundo branco no hover.
+*/
+.night-mode #load-more:hover {
+    /* Força o fundo branco e anula o gradiente original */
+    background-image: none !important;
+    background-color: white !important; 
+    
+    /* Define a cor da fonte como um tom escuro do tema (cor de fundo do night-mode) */
+    color: #0d1117 !important;
+    
+    /* Adiciona uma borda escura para destaque */
+    border-color: #0d1117 !important;
+}
+
+/* Garante que o ícone FontAwesome dentro do botão também fique escuro no hover */
+.night-mode #load-more:hover i {
+    color: #0d1117 !important;
+}
+
+/* 1. Anula qualquer alteração de estilo no hover do bloco principal */
+.night-mode div.bg-gradient-to-br.from-blue-900.to-blue-800:hover {
+    /* Força o fundo a permanecer o mesmo, anulando qualquer mudança potencial */
+    /* Ou simplesmente defina as cores originais do seu CSS/Tailwind: */
+    /* background-color: #1e3a8a !important; */
+    
+    /* Anula transformações ou sombras que possam aparecer */
+    color: white !important; 
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* 2. Anula mudanças de cor de texto no hover para todo o conteúdo interno */
+.night-mode div.bg-gradient-to-br.from-blue-900.to-blue-800:hover * {
+    /* Força o texto interno a permanecer branco */
+    color: white !important; 
+}
+
+/* Seleciona o ícone (i) dentro de um link (a) com as classes especificadas 
+   quando o link está no estado de hover.
+*/
+.night-mode a.w-full.bg-blue-900:hover i.fas.fa-edit {
+    /* Força a cor #0d1117 no ícone. */
+    color: #0d1117 !important; 
+}
+
+/* Se o elemento for filho de outro elemento com hover, esta regra é ainda mais segura: */
+.night-mode :hover span.text-xs {
+    color: #7d8590 !important; /* Anula o hover vindo de um elemento pai */
+}
+
+/* Seleciona o parágrafo de status dentro do bloco do Mapa de Rotas */
+.night-mode div.bg-gradient-to-br.from-blue-900.to-blue-800 p.text-blue-200 {
+    color: white !important; /* Força a cor branca */
+}
+
+/* Seleciona o botão pelo ID e garante que o fundo seja #0d1117 no estado normal */
+.night-mode #open-add-objetivo-modal-btn-empty {
+    background-color: #0d1117 !important;
+    background-image: none !important; /* Anula qualquer gradiente que possa estar aplicado */
+}
+
+/* Anula o hover do Tailwind CSS (hover:bg-purple-700) e mantém a cor de fundo #0d1117 */
+.night-mode #open-add-objetivo-modal-btn-empty:hover {
+    background-color: #ffffff !important;
+    background-image: none !important;
+}
+
+/*
+  Seleciona o ícone SVG (a seta) dentro do link de paginação (rel="next")
+  e força a cor branca no estado normal.
+*/
+.night-mode a[rel="next"] svg {
+    fill: white !important;
+}
+
+/*
+  Seleciona o ícone SVG (a seta) dentro do link de paginação (rel="prev")
+  e força a cor branca no estado normal.
+*/
+.night-mode a[rel="prev"] svg {
+    fill: white !important;
+}
+
+.night-mode span[aria-hidden="true"] svg {
+    fill: gray !important;
+}
+
+.night-mode #arr_iata:focus,
+.night-mode #dep_iata:focus,
+.night-mode #date_departure:focus,
+.night-mode #date_return:focus {
+    /*
+      Anula a borda de foco (focus ring ou focus border) que está sendo aplicada.
+      O 'box-shadow' é frequentemente usado para criar esse efeito de anel.
+    */
+    box-shadow: none !important;
+    border-color: transparent !important; /* Garante que a borda permaneça transparente ou 0 */
+}
+
+/* Seleciona o item de autocompletar e todos os seus elementos filhos no estado de hover */
+.night-mode .autocomplete-item:hover,
+/* Adicional: Garante que a cor seja preta mesmo se o item estiver 'selecionado' via teclado */
+.night-mode .autocomplete-item.selected {
+    /* Força a cor preta em todos os textos (nome da cidade e detalhe) */
+    color: #0d1117 !important;
+}
+
+/* Regra de apoio, caso a anterior não consiga sobrescrever o texto mais escuro (.text-gray-800) */
+.night-mode .autocomplete-item:hover *,
+.night-mode .autocomplete-item.selected * {
+    color: #0d1117 !important;
+}
+
+/* Seleciona ambos os botões pelos seus IDs */
+.night-mode #selectAll, 
+.night-mode #deselectAll {
+    /* Fundo preto no estado normal */
+    background-color: #0d1117 !important;
+}
+
+.night-mode #selectAll:hover, 
+.night-mode #deselectAll:hover {
+    /* Mantém o fundo preto no hover */
+    background-color: #ffffff !important; 
+}
+
+/*
+  Seleciona o botão especificamente pelo seu ID no estado de hover.
+*/
+.night-mode #add-destino-btn:hover {
+    /* 1. Remove a mudança de cor da fonte, forçando-a a usar o valor normal (text-blue-600).
+       O text-blue-600 do Tailwind geralmente corresponde a #2563eb. */
+    color: #ffffff !important; 
+    
+    /* 2. Anula quaisquer outras propriedades de transição no hover, como background-color */
+    background-color: transparent !important; 
+    
+    /* 3. Remove a transição (transition-colors), garantindo que a mudança seja instantânea
+       caso alguma propriedade ainda mude. */
+    transition: none !important;
+    
+    /* 4. Garante que o cursor permaneça o padrão para texto/elemento clicável e não mude. */
+    cursor: pointer !important; 
+}
+
+/* Regra de apoio para garantir que o ícone também não mude de cor */
+.night-mode #add-destino-btn:hover i {
+    color: #ffffff !important;
+}
+
+/*
+  Seleciona o SPAN com todas as classes visuais do contador
+  e força a cor do texto para branco.
+*/
+.night-mode span.w-6.h-6.bg-blue-500.text-white.rounded-full.flex.items-center.justify-center.text-xs.font-bold {
+    color: white !important;
+}
+
+/*
+  Seleciona o link externo (target="_blank") que tem a cor vermelha
+  e remove a mudança de cor da fonte no hover.
+*/
+.night-mode a[target="_blank"].text-red-600:hover {
+    /* Força a cor do texto a permanecer na cor normal (text-red-600, geralmente #dc2626) */
+    background-color: #0d1117 !important;
+    color: #ffffff !important;
+}
+
+/* Garante que o ícone interno (a seta) também não mude de cor no hover */
+.night-mode a[target="_blank"].text-red-600:hover i {
+    background-color: #0d1117 !important;
+    color: #ffffff !important;
+}
+
+/* Seleciona o card pelo seu conjunto de classes */
+.night-mode div.bg-red-50.rounded-2xl.p-6.mb-6.border.border-red-200 {
+    /* Fundo Preto Consistente com o Night Mode */
+    background-color: #0d1117 !important;
+    background-image: none !important;
+
+    /* Altera a cor da borda de vermelho-claro para a cor de borda do Night Mode */
+    border-color: #30363d !important;
+}
+
+/* Garante que o texto dentro do card fique branco para legibilidade, 
+   exceto onde já houver classes de cor específicas (como o DESTAQUE). */
+.night-mode div.bg-red-50.rounded-2xl.p-6.mb-6.border.border-red-200 * {
+    /* Texto principal branco suave */
+    background-color: #0d1117 !important;
+    color: #f0f6fc !important;
+}
+
+/* Regra de exceção: Corrige as cores que devem se manter */
+
+/* Título e Texto: Revertidos para branco pelo seletor acima. OK. */
+
+/* Link "Ler mais": Garante que o fundo dele permaneça vermelho (ou mude para a cor desejada) 
+   e o texto fique branco. */
+
+.night-mode div.bg-red-50.rounded-2xl.p-6.mb-6.border.border-red-200 a.bg-red-600 {
+    color: white !important; /* Texto: Branco */
+    background-color: #dc2626 !important; /* Fundo: Vermelho-600 */
 }
