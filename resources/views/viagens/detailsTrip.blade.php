@@ -459,11 +459,6 @@
                                 'hotel' => $hotel ?? collect()
                             ])
                             {{-- Add flights section here if not already included --}}
-                            {{-- Add insurance section below flights section --}}
-                            @include('components/myTrips/screenSections/themes/insuranceSection', [
-                                'seguros' => $seguros ?? collect(),
-                                'viagem' => $viagem
-                            ])
                         </div>
                         <div id="content-rotas-mapa" class="tab-panel hidden">
                             @include('components/myTrips/screenSections/rotasMapa', ['viagem' => $viagem])
@@ -548,6 +543,9 @@
 
     <!-- Modal de Viajantes -->
     @include('components.myTrips.modals.viajantesModal')
+
+    <!-- Modal de Detalhes dos Viajantes -->
+    @include('components.myTrips.modals.viajantesDetailsModal')
 
     <!-- Modal de Objetivos -->
     @include('components.myTrips.modals.objetivosModal')

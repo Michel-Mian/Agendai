@@ -17,6 +17,7 @@ return new class extends Migration
             $table->tinyinteger('idade')->nullable(false);
             $table->unsignedBigInteger('responsavel_viajante_id')->nullable(true);
             $table->unsignedBigInteger('fk_id_viagem')->nullable(false);
+            $table->text('observacoes')->nullable();
             $table->timestamps();
             $table->foreign('fk_id_viagem')->references('pk_id_viagem')->on('viagens')->onDelete('cascade');
         });

@@ -13,6 +13,8 @@
                 <form id="multiStepForm" method="POST" action="{{ route('formTrip.store') }}">
                     @csrf
                     <input type="hidden" name="seguroSelecionadoData" id="seguroSelecionadoData">
+                    <input type="hidden" name="viajantesData" id="viajantesData">
+                    <input type="hidden" name="segurosViajantesData" id="segurosViajantesData">
                     <!-- Passo 1 -->
                     @include('trip.step1')
 
