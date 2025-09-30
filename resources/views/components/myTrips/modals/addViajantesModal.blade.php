@@ -87,6 +87,33 @@
                         <span>Idade entre 0 e 127 anos</span>
                     </p>
                 </div>
+
+                <div class="space-y-3">
+                    <label for="observacoes" class="flex items-center space-x-3 text-base font-semibold text-gray-700">
+                        <i class="fas fa-sticky-note text-green-500 text-xl"></i>
+                        <span>Observações</span>
+                        <span class="text-sm font-normal text-gray-500">(opcional)</span>
+                    </label>
+                    <div class="relative">
+                        <textarea 
+                            id="observacoes" 
+                            name="observacoes" 
+                            rows="4"
+                            maxlength="1000"
+                            class="w-full border-2 border-gray-200 rounded-xl px-5 py-4 focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-200 bg-gray-50 focus:bg-white text-base resize-none"
+                            placeholder="Digite observações importantes sobre o viajante..."
+                        ></textarea>
+                        <div class="absolute bottom-3 right-3">
+                            <span class="text-sm text-gray-400 bg-white px-2 py-1 rounded-full border">
+                                <span id="observacoes_count">0</span>/1000
+                            </span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500 flex items-center space-x-2">
+                        <i class="fas fa-info-circle text-base"></i>
+                        <span>Informações adicionais como restrições alimentares, medicamentos, contatos de emergência, etc.</span>
+                    </p>
+                </div>
                 
                 <div class="flex space-x-4 pt-6">
                     <button 
@@ -139,6 +166,7 @@
             document.body.style.overflow = '';
             document.getElementById('add-viajante-form').reset();
             document.getElementById('nome_viajante_count').textContent = '0';
+            document.getElementById('observacoes_count').textContent = '0';
             const underageContainer = document.getElementById('underage-options-container');
             if (underageContainer) {
                 underageContainer.remove();
@@ -173,6 +201,25 @@
             }
         });
         nomeViajanteCount.textContent = nomeViajanteInput.value.length;
+    }
+
+    // Contador de caracteres para observações
+    const observacoesInput = document.getElementById('observacoes');
+    const observacoesCount = document.getElementById('observacoes_count');
+    if (observacoesInput && observacoesCount) {
+        observacoesInput.addEventListener('input', function() {
+            const count = this.value.length;
+            observacoesCount.textContent = count;
+            
+            if (count > 800) {
+                observacoesCount.parentElement.classList.add('text-red-500');
+                observacoesCount.parentElement.classList.remove('text-gray-400');
+            } else {
+                observacoesCount.parentElement.classList.remove('text-red-500');
+                observacoesCount.parentElement.classList.add('text-gray-400');
+            }
+        });
+        observacoesCount.textContent = observacoesInput.value.length;
     }
 
     // Escape fecha o modal

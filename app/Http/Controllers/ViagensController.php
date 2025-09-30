@@ -51,8 +51,7 @@ class ViagensController extends Controller
                 'pontosInteresse' => function($query) {
                     $query->orderBy('data_ponto_interesse', 'asc')
                           ->orderBy('hora_ponto_interesse', 'asc');
-                },
-                'seguroSelecionado'
+                }
             ])->findOrFail($id);
             
             // Verificar permissões
@@ -78,7 +77,6 @@ class ViagensController extends Controller
 
             // Adicionar seguros
             $seguros = $viagem->seguros;
-            $seguroSelecionado = $viagem->seguroSelecionado;
 
             // Inicializar eventos/notícias vazios (serão carregados via AJAX)
             $eventos = collect();
@@ -119,7 +117,6 @@ class ViagensController extends Controller
                 'voos',
                 'hotel',
                 'seguros',
-                'seguroSelecionado',
                 'eventos',
                 'estatisticas'
             ));
@@ -187,6 +184,7 @@ class ViagensController extends Controller
             'nome_viajante' => 'required|string|max:100',
             'idade_viajante' => 'required|integer|min:0|max:127',
             'viagem_id' => 'required|integer|exists:viagens,pk_id_viagem',
+            'observacoes' => 'nullable|string|max:1000',
         ];
 
         // Adiciona a regra de validação para 'responsavel_legal' (que é o ID do responsável)
@@ -202,6 +200,7 @@ class ViagensController extends Controller
         $viajante->nome = $validated['nome_viajante'];
         $viajante->idade = $validated['idade_viajante'];
         $viajante->fk_id_viagem = $validated['viagem_id'];
+        $viajante->observacoes = $validated['observacoes'] ?? null;
 
         // Se o viajante for menor de 18, atribui o ID do responsável legal
         if ($viajante->idade < 18) {

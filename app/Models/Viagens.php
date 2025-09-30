@@ -18,8 +18,7 @@ class Viagens extends Model
         'data_inicio_viagem',
         'data_final_viagem',
         'orcamento_viagem',
-        'fk_id_usuario',
-        'fk_id_seguro_selecionado'
+        'fk_id_usuario'
     ];
     
     // Relação com  usuário (User)
@@ -57,16 +56,10 @@ class Viagens extends Model
         return $this->hasMany(Hotel::class, 'fk_id_viagem', 'pk_id_viagem');
     }
 
-    // Relação com os seguros (Seguros)
+    // Relação com os seguros (Seguros) - através dos viajantes
     public function seguros()
     {
-        return $this->hasMany(Seguros::class, 'fk_id_viagem', 'pk_id_viagem');
-    }
-
-    // Relação com o seguro selecionado
-    public function seguroSelecionado()
-    {
-        return $this->belongsTo(Seguros::class, 'fk_id_seguro_selecionado', 'pk_id_seguro');
+        return $this->hasManyThrough(Seguros::class, Viajantes::class, 'fk_id_viagem', 'fk_id_viajante', 'pk_id_viagem', 'pk_id_viajante');
     }
 
     public function destinos(): HasMany

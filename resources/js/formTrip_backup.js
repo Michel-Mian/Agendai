@@ -641,8 +641,7 @@ if (multiStepForm) {
         
         // Permitir o envio normal do formulário para o servidor
         // O formulário será enviado via POST para a rota definida
-    });
-}
+});
 
 // -------------------- Função para preparar dados dos viajantes --------------------
 function prepararDadosViajantes() {

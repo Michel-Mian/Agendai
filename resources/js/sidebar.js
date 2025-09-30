@@ -7,6 +7,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const profileDropdown = document.getElementById('profile-dropdown');
     const logo = document.getElementById('logo');
 
+    // Verificar se os elementos necessários existem
+    if (!sidebar || !toggleSidebarButton) {
+        console.log('Sidebar: elementos não encontrados, pulando inicialização');
+        return;
+    }
+
     toggleSidebarButton.addEventListener('click', function () {
         const isCollapsed = sidebar.classList.contains('collapsed');
         if (isCollapsed) {
@@ -22,21 +28,23 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    profileButton.addEventListener('click', function (e) {
-        e.stopPropagation();
-        // Se a sidebar estiver fechada, abra antes de mostrar o dropdown
-        if (sidebar.classList.contains('collapsed')) {
-            sidebar.classList.remove('collapsed');
-            if (logo) logo.classList.remove('hidden');
-            localStorage.setItem('sidebar-collapsed', false);
-            // Aguarda animação antes de mostrar o dropdown 
-            setTimeout(function() {
+    if (profileButton && profileDropdown) {
+        profileButton.addEventListener('click', function (e) {
+            e.stopPropagation();
+            // Se a sidebar estiver fechada, abra antes de mostrar o dropdown
+            if (sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
+                if (logo) logo.classList.remove('hidden');
+                localStorage.setItem('sidebar-collapsed', false);
+                // Aguarda animação antes de mostrar o dropdown 
+                setTimeout(function() {
+                    profileDropdown.classList.toggle('hidden');
+                }, 400); // tempo igual ao transition do CSS
+            } else {
                 profileDropdown.classList.toggle('hidden');
-            }, 400); // tempo igual ao transition do CSS
-        } else {
-            profileDropdown.classList.toggle('hidden');
-        }
-    });
+            }
+        });
+    }
 
     document.addEventListener('click', function () {
         if (!profileDropdown.classList.contains('hidden')) {

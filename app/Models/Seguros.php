@@ -25,6 +25,7 @@ class Seguros extends Model
         'preco_pix',
         'preco_cartao',
         'parcelamento_cartao',
+        'fk_id_viajante',
         'is_selected',
     ];
 
@@ -32,5 +33,11 @@ class Seguros extends Model
     public function viagem()
     {
         return $this->belongsTo(Viagens::class, 'fk_id_viagem', 'pk_id_viagem');
+    }
+
+    // Relacionamento com viajante
+    public function viajante()
+    {
+        return $this->belongsTo(Viajantes::class, 'fk_id_viajante', 'pk_id_viajante');
     }
 }

@@ -44,6 +44,10 @@ class FormController extends Controller
             'idades' => 'nullable|array',
             'idades.*' => 'nullable|integer|min:1|max:120',
             'preferences' => 'nullable',
+            // Novos campos para viajantes e seguros
+            'viajantesData' => 'nullable|string',
+            'segurosViajantesData' => 'nullable|string',
+            'seguroSelecionadoData' => 'nullable|string',
         ]);
 
 
@@ -139,47 +143,124 @@ class FormController extends Controller
                 }
             }
 
-            // 4. Criar seguro se houver dados
-            $seguroId = null;
-            if ($request->filled('seguroSelecionadoData')) {
-                $seguroData = json_decode($request->seguroSelecionadoData, true);
-                if ($seguroData) {
-                    $extractNumeric = function ($price) {
-                        if (!$price) return null;
-                        $cleaned = preg_replace('/[^\d,]/', '', $price);
-                        return is_numeric(str_replace(',', '.', $cleaned)) ? (float) str_replace(',', '.', $cleaned) : null;
-                    };
-
-                    $seguro = \App\Models\Seguros::create([
-                        'fk_id_viagem' => $viagem->pk_id_viagem,
-                        'seguradora' => $seguroData['seguradora'] ?? 'N/A',
-                        'plano' => $seguroData['plano'] ?? 'N/A',
-                        'detalhes_etarios' => $seguroData['detalhes_etarios'] ?? null,
-                        'link' => $seguroData['link'] ?? null,
-                        'cobertura_medica' => $seguroData['coberturas']['medica'] ?? null,
-                        'cobertura_bagagem' => $seguroData['coberturas']['bagagem'] ?? null,
-                        'preco_pix' => $extractNumeric($seguroData['precos']['pix'] ?? null),
-                        'preco_cartao' => $extractNumeric($seguroData['precos']['cartao'] ?? null),
-                        'parcelamento_cartao' => $seguroData['precos']['parcelas'] ?? null,
-                        'is_selected' => true,
-                    ]);
-                    $seguroId = $seguro->pk_id_seguro;
-
+            // 4. Processar dados dos viajantes (novo sistema)
+            $viajantesData = [];
+            if (!empty($validatedData['viajantesData'])) {
+                try {
+                    $viajantesData = json_decode($validatedData['viajantesData'], true);
+                    \Log::info('Dados dos viajantes recebidos:', $viajantesData);
+                } catch (\Exception $e) {
+                    \Log::error('Erro ao decodificar dados dos viajantes:', ['error' => $e->getMessage()]);
                 }
             }
 
-            // 5. Criar viajantes
-            if (isset($validatedData['idades']) && is_array($validatedData['idades'])) {
-                foreach ($validatedData['idades'] as $idade) {
-                    if (!empty($idade)) {
-                        \App\Models\Viajantes::create([
-                            'fk_id_viagem' => $viagem->pk_id_viagem,
-                            'idade' => (int)$idade,
-                            'nome' => 'Viajante ' . $idade . ' anos',
-                        ]);
+            // 5. Criar viajantes (novo sistema com nomes personalizados)
+            $viajantesIds = [];
+            if (!empty($viajantesData)) {
+                foreach ($viajantesData as $viaganteInfo) {
+                    // Usar nome personalizado se existir, senão usar o nome padrão
+                    $nomeViajante = !empty($viaganteInfo['nome_personalizado']) 
+                        ? $viaganteInfo['nome_personalizado'] 
+                        : ($viaganteInfo['nome'] ?? "Viajante {$viaganteInfo['index']}");
+                    
+                    $viajante = \App\Models\Viajantes::create([
+                        'fk_id_viagem' => $viagem->pk_id_viagem,
+                        'nome' => $nomeViajante,
+                        'idade' => $viaganteInfo['idade'] ?? 25,
+                        'observacoes' => null, // Removemos a lógica de colocar nome nas observações
+                    ]);
+                    $viajantesIds[$viaganteInfo['index']] = $viajante->pk_id_viajante;
+                }
+            } else {
+                // Fallback para sistema antigo
+                if (isset($validatedData['idades']) && is_array($validatedData['idades'])) {
+                    foreach ($validatedData['idades'] as $index => $idade) {
+                        if (!empty($idade)) {
+                            $viajante = \App\Models\Viajantes::create([
+                                'fk_id_viagem' => $viagem->pk_id_viagem,
+                                'nome' => 'Viajante ' . ($index + 1),
+                                'idade' => (int)$idade,
+                            ]);
+                            $viajantesIds[$index] = $viajante->pk_id_viajante;
+                        }
                     }
                 }
+            }
 
+            // 5.1. Processar seguros por viajante (novo sistema)
+            $segurosViajantesData = [];
+            if (!empty($validatedData['segurosViajantesData'])) {
+                try {
+                    $segurosViajantesData = json_decode($validatedData['segurosViajantesData'], true);
+                    \Log::info('Dados dos seguros por viajante recebidos:', $segurosViajantesData);
+                } catch (\Exception $e) {
+                    \Log::error('Erro ao decodificar dados dos seguros:', ['error' => $e->getMessage()]);
+                }
+            }
+
+            // 5.2. Criar seguros para cada viajante
+            $seguroId = null; // Para compatibilidade
+            if (!empty($segurosViajantesData)) {
+                $extractNumeric = function($value) {
+                    if (!$value) return null;
+                    $cleaned = preg_replace('/[^\d,.]/', '', $value);
+                    return is_numeric(str_replace(',', '.', $cleaned)) ? (float) str_replace(',', '.', $cleaned) : null;
+                };
+
+                foreach ($segurosViajantesData as $seguroInfo) {
+                    $viaganteIndex = $seguroInfo['viajante_index'];
+                    $viaganteId = $viajantesIds[$viaganteIndex] ?? null;
+                    $seguroData = $seguroInfo['insurance_data'];
+
+                    if ($viaganteId && $seguroData) {
+                        $seguro = \App\Models\Seguros::create([
+                            'fk_id_viagem' => $viagem->pk_id_viagem,
+                            'fk_id_viajante' => $viaganteId,
+                            'seguradora' => $seguroData['seguradora'] ?? 'N/A',
+                            'plano' => $seguroData['plano'] ?? 'N/A',
+                            'detalhes_etarios' => $seguroData['detalhes_etarios'] ?? null,
+                            'link' => $seguroData['link'] ?? null,
+                            'cobertura_medica' => $seguroData['coberturas']['medica'] ?? null,
+                            'cobertura_bagagem' => $seguroData['coberturas']['bagagem'] ?? null,
+                            'preco_pix' => $extractNumeric($seguroData['precos']['pix'] ?? null),
+                            'preco_cartao' => $extractNumeric($seguroData['precos']['cartao'] ?? null),
+                            'parcelamento_cartao' => $seguroData['precos']['parcelas'] ?? null,
+                            'is_selected' => true,
+                        ]);
+                        
+                        // Salvar o primeiro seguro para compatibilidade
+                        if ($seguroId === null) {
+                            $seguroId = $seguro->pk_id_seguro;
+                        }
+                    }
+                }
+            } else {
+                // Fallback para sistema antigo de seguro único
+                if ($request->filled('seguroSelecionadoData')) {
+                    $seguroData = json_decode($request->seguroSelecionadoData, true);
+                    if ($seguroData) {
+                        $extractNumeric = function ($price) {
+                            if (!$price) return null;
+                            $cleaned = preg_replace('/[^\d,]/', '', $price);
+                            return is_numeric(str_replace(',', '.', $cleaned)) ? (float) str_replace(',', '.', $cleaned) : null;
+                        };
+
+                        $seguro = \App\Models\Seguros::create([
+                            'fk_id_viagem' => $viagem->pk_id_viagem,
+                            'seguradora' => $seguroData['seguradora'] ?? 'N/A',
+                            'plano' => $seguroData['plano'] ?? 'N/A',
+                            'detalhes_etarios' => $seguroData['detalhes_etarios'] ?? null,
+                            'link' => $seguroData['link'] ?? null,
+                            'cobertura_medica' => $seguroData['coberturas']['medica'] ?? null,
+                            'cobertura_bagagem' => $seguroData['coberturas']['bagagem'] ?? null,
+                            'preco_pix' => $extractNumeric($seguroData['precos']['pix'] ?? null),
+                            'preco_cartao' => $extractNumeric($seguroData['precos']['cartao'] ?? null),
+                            'parcelamento_cartao' => $seguroData['precos']['parcelas'] ?? null,
+                            'is_selected' => true,
+                        ]);
+                        $seguroId = $seguro->pk_id_seguro;
+                    }
+                }
             }
 
             // 6. Criar objetivos/preferências
@@ -201,9 +282,12 @@ class FormController extends Controller
 
             }
 
-            // 7. Atualizar viagem com seguro se houver
+            // 7. Atualizar viagem com seguro se houver (manter compatibilidade)
+            // Nota: Com o novo sistema, seguros são vinculados aos viajantes individuais
+            // mas mantemos esta linha para compatibilidade com visualizações existentes
             if ($seguroId) {
-                $viagem->update(['fk_id_seguro_selecionado' => $seguroId]);
+                // $viagem->update(['fk_id_seguro_selecionado' => $seguroId]);
+                // Campo removido do model Viagens - seguros agora são por viajante
             }
 
             // 8. Salvar na sessão

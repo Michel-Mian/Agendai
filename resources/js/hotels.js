@@ -5,6 +5,14 @@ function showOnMap(lat, lng, hotelName) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Verificar se estamos na página de hotéis
+  const isHotelsPage = document.getElementById("hotel-search-form") !== null;
+  
+  if (!isHotelsPage) {
+    console.log('hotels.js: Não é uma página de hotéis, pulando inicialização');
+    return;
+  }
+
   const form = document.getElementById("hotel-search-form")
   const searchBtn = document.getElementById("search-btn")
   const resultsContainer = document.getElementById("hotel-results")

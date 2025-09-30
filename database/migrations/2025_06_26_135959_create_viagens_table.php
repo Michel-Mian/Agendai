@@ -20,8 +20,6 @@ return new class extends Migration
             $table->decimal('orcamento_viagem', 10, 2)->nullable();
             $table->unsignedBigInteger('fk_id_usuario');
             $table->foreign('fk_id_usuario')->references('id')->on('users')->onDelete('cascade');
-            $table->unsignedBigInteger('fk_id_seguro_selecionado')->nullable();
-            //$table->foreign('fk_id_seguro_selecionado')->references('pk_id_seguro')->on('seguros')->nullOnDelete();
             $table->timestamps();
         });
     }
