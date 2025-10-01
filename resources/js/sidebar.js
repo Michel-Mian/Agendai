@@ -1,6 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('Sidebar JS carregado');
-
     const sidebar = document.getElementById('sidebar');
     const toggleSidebarButton = document.getElementById('toggle-sidebar');
     const profileButton = document.getElementById('profile-button');
@@ -9,7 +7,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Verificar se os elementos necessários existem
     if (!sidebar || !toggleSidebarButton) {
-        console.log('Sidebar: elementos não encontrados, pulando inicialização');
         return;
     }
 

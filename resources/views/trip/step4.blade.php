@@ -391,10 +391,6 @@
             
             if (!tabsNavigation || !tabsContent) return;
             
-            // Verificar se seguro foi selecionado como "Não" no step 2
-            const seguroSelect = document.getElementById('seguroViagem');
-            const naoDesejaSeguro = seguroSelect ? seguroSelect.value === 'Não' : false;
-            
             tabsNavigation.innerHTML = '';
             tabsContent.innerHTML = '';
             
@@ -430,9 +426,6 @@
                 const tabContent = document.createElement('div');
                 tabContent.className = `tab-content ${isActive ? 'active' : ''}`;
                 tabContent.id = `tab-content-${i}`;
-                // Verificar se seguro foi selecionado como "Não" no step 2
-                const seguroSelect = document.getElementById('seguroViagem');
-                const naoDesejaSeguro = seguroSelect ? seguroSelect.value === 'Não' : false;
                 
                 tabContent.innerHTML = `
                     <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
@@ -450,16 +443,6 @@
                             oninput="updateTabTitle(${i}, this.value)"
                         >
                         <p class="text-xs text-gray-500 mt-1">Deixe em branco para usar "Viajante ${i + 1}"</p>
-                        ${naoDesejaSeguro ? `
-                        <button 
-                            type="button" 
-                            class="mt-3 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                            onclick="procurarSeguroViajante(${i})"
-                        >
-                            <i class="fas fa-shield-alt mr-2"></i>
-                            Procurar Seguro
-                        </button>
-                        ` : ''}
                     </div>
                     <div class="flex flex-col gap-6"></div>
                 `;
@@ -479,7 +462,6 @@
                 content.classList.toggle('active', index === tabIndex);
             });
             
-            console.log(`Switched to tab ${tabIndex + 1}`);
             return false; // Previne qualquer navegação
         }
 
@@ -558,12 +540,6 @@
                 </div>
             `;
         }
-
-        // Função placeholder para procurar seguro específico de um viajante
-        window.procurarSeguroViajante = function(viaganteIndex) {
-            console.log(`Procurar seguro para viajante ${viaganteIndex + 1}`);
-            // TODO: Implementar lógica específica para buscar seguro individual
-        };
 
         function showNoInsuranceMessage() {
             document.getElementById('tabs-seguros-container').style.display = 'none';
@@ -748,8 +724,6 @@
                 }
                 sessionStorage.setItem('selectedSeguroName', fullInsuranceName);
             }
-
-            console.log(`Seguro selecionado para ${nomeViajante}:`, fullInsuranceName);
         };
 
         const step4Observer = new IntersectionObserver((entries) => {
@@ -767,7 +741,7 @@
                         restartSearch();
                     }
                 } else {
-                    // Se escolheu "Não": mostrar tabs dos viajantes com botões de procurar seguro
+                    // Se escolheu "Não": mostrar tabs dos viajantes para preenchimento de nomes
                     showTravelerTabsOnly();
                 }
             }
