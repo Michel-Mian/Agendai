@@ -1,72 +1,97 @@
 // -------------------- Autocomplete Google Places (Destino) --------------------
 function initPlacesAutocompleteStrict() {
-    const fields = [
-        { id: 'tripDestination' },
-        { id: 'origem' }
-    ];
-
-    fields.forEach(field => {
-        const input = document.getElementById(field.id);
-        if (input && typeof google !== 'undefined' && google.maps && google.maps.places) {
-            // Verificar se já existe nosso novo sistema de autocomplete (step1)
-            if (input.classList.contains('origem-input') || 
-                input.classList.contains('destino-input') ||
-                input.hasAttribute('data-new-autocomplete')) {
-                return;
-            }
-            
-            if (!input._autocompleteInitialized) {
-                const autocomplete = new google.maps.places.Autocomplete(input, {
-                    types: ['(regions)'],
-                });
-                input._autocompleteInitialized = true;
-
-                // Armazena se o usuário selecionou uma sugestão válida
-                input._placeSelected = false;
-
-                autocomplete.addListener('place_changed', function() {
-                    const place = autocomplete.getPlace();
-                    if (place && place.place_id) {
-                        input._placeSelected = true;
-                        input.classList.remove('border-red-500');
-                    } else {
-                        input._placeSelected = false;
-                        input.classList.add('border-red-500');
-                    }
-                });
-
-                // Ao digitar, reseta o status de seleção
-                input.addEventListener('input', function() {
-                    input._placeSelected = false;
-                    input.classList.remove('border-red-500');
-                });
-
-                // Ao sair do campo, verifica se selecionou uma sugestão
-                input.addEventListener('blur', function(e) {
-                    setTimeout(() => {
-                        if (!input._placeSelected) {
-                            input.classList.add('border-red-500');
-                            input.focus();
-                        }
-                    }, 200);
-                });
-            }
+    try {
+        console.log('Iniciando configuração de autocomplete...');
+        
+        // Verificar se a API do Google Maps está disponível
+        if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+            console.warn('Google Maps API não está disponível ainda');
+            return;
         }
-    });
+
+        const fields = [
+            { id: 'tripDestination' },
+            { id: 'origem' }
+        ];
+
+        fields.forEach(field => {
+            const input = document.getElementById(field.id);
+            if (input) {
+                console.log(`Configurando autocomplete para: ${field.id}`);
+                
+                // Verificar se já existe nosso novo sistema de autocomplete (step1)
+                if (input.classList.contains('origem-input') || 
+                    input.classList.contains('destino-input') ||
+                    input.hasAttribute('data-new-autocomplete')) {
+                    return;
+                }
+                
+                if (!input._autocompleteInitialized) {
+                    try {
+                        const autocomplete = new google.maps.places.Autocomplete(input, {
+                            types: ['(regions)'],
+                        });
+                        input._autocompleteInitialized = true;
+
+                        // Armazena se o usuário selecionou uma sugestão válida
+                        input._placeSelected = false;
+
+                        autocomplete.addListener('place_changed', function() {
+                            const place = autocomplete.getPlace();
+                            if (place && place.place_id) {
+                                input._placeSelected = true;
+                                input.classList.remove('border-red-500');
+                            } else {
+                                input._placeSelected = false;
+                                input.classList.add('border-red-500');
+                            }
+                        });
+
+                        // Ao digitar, reseta o status de seleção
+                        input.addEventListener('input', function() {
+                            input._placeSelected = false;
+                            input.classList.remove('border-red-500');
+                        });
+
+                        // Ao sair do campo, verifica se selecionou uma sugestão
+                        input.addEventListener('blur', function(e) {
+                            setTimeout(() => {
+                                if (!input._placeSelected) {
+                                    input.classList.add('border-red-500');
+                                    input.focus();
+                                }
+                            }, 200);
+                        });
+                    } catch (error) {
+                        console.error(`Erro ao configurar autocomplete para ${field.id}:`, error);
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Erro geral na configuração do autocomplete:', error);
+    }
 }
 
 // Callback global do Google Maps - definido imediatamente
 window.initTripFormMap = function() {
-
-    initPlacesAutocompleteStrict();
+    try {
+        console.log('Google Maps API callback iniciado');
+        initPlacesAutocompleteStrict();
+    } catch (error) {
+        console.error('Erro no callback do Google Maps:', error);
+    }
 };
 
 // Garantir que a função está disponível globalmente
 if (typeof window.initTripFormMap !== 'function') {
     window.initTripFormMap = function() {
-
-        if (typeof initPlacesAutocompleteStrict === 'function') {
-            initPlacesAutocompleteStrict();
+        try {
+            if (typeof initPlacesAutocompleteStrict === 'function') {
+                initPlacesAutocompleteStrict();
+            }
+        } catch (error) {
+            console.error('Erro no fallback do Google Maps:', error);
         }
     };
 }
@@ -76,12 +101,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Verificar se estamos na página do formulário
     const isFormPage = document.getElementById('multiStepForm') !== null;
     
-    if (!isFormTripPage) {
+    if (!isFormPage) {
         return;
     }
 
     if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+        console.log('Google Maps API disponível, iniciando autocomplete...');
         initPlacesAutocompleteStrict();
+    } else {
+        console.log('Google Maps API ainda não disponível, aguardando callback...');
+        // A API será inicializada pelo callback initTripFormMap quando carregada
     }
 
     // -------------------- Variáveis Globais e Steps --------------------
@@ -477,20 +506,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (currentStep === 2) {
                 currentStep++
             } else if (currentStep === 3) {
-                // Do step 3, decidir para onde ir baseado em meio de locomoção e seguro
-                if (seguro && seguro.value === 'Não') {
-                    // Se não quer seguro, pular step 4 (seguros)
-                    if (meioLocomocao === 'Avião') {
-                        currentStep += 2; // Pula step 4, vai para step 5 (voos)
-                        flightSearchInitiated = true;
-                        searchFlights();
-                    } else {
-                        currentStep += 3; // Pula steps 4 e 5, vai para step 6 (revisão)
-                    }
-                } else {
-                    // Se quer seguro, ir para step 4 (seguros)
-                    currentStep++;
-                }
+                currentStep++;
             } else if (currentStep === 4) {
                 // Do step 4 (seguros), decidir para onde ir baseado em meio de locomoção
                 if (meioLocomocao === 'Avião') {
@@ -534,12 +550,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             } else if (currentStep === 5) {
-                // Do step 5 (voos), voltar baseado na configuração
-                if (seguro && seguro.value === 'Não') {
-                    currentStep -= 2; // Volta para step 3 (preferências)
-                } else {
-                    currentStep -= 1; // Volta para step 4 (seguros)
-                }
+                currentStep -= 1;
             } else {
                 // Navegação normal (voltar 1 step)
                 currentStep--;
