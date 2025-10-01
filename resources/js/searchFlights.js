@@ -132,14 +132,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('confirm-preco').textContent = `O preço do voo é ${precoSelecionado.toFixed(2)}`;
 
                 // Pegue a data do voo (do voo selecionado)
-                console.log('dataInicioViagem:', dataInicioViagem);
-                console.log('vooSelecionado:', vooSelecionado);
                 const dataVoo = vooSelecionado?.flights?.[0]?.departure_airport?.time?.split(' ')[0];
                 let avisoData = '';
                     const dtViagem = new Date(dataInicioViagem);
                     const dtVoo = new Date(dataVoo);
                     const diffDias = Math.abs((dtVoo - dtViagem) / (1000 * 60 * 60 * 24));
-                    console.log('diffDias:', diffDias);
                     if (diffDias > 7 || diffDias < 0) {
                         avisoData = `Atenção: a data do voo (${dataVoo}) está mais de 7 dias distante da data de início da viagem (${dataInicioViagem})!`;
                     }

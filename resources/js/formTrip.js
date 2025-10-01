@@ -76,8 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Verificar se estamos na página do formulário
     const isFormPage = document.getElementById('multiStepForm') !== null;
     
-    if (!isFormPage) {
-        console.log('formTrip.js: Não é uma página de formulário, pulando inicialização');
+    if (!isFormTripPage) {
         return;
     }
 
@@ -469,7 +468,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 return;
             }
-            console.log('Avançando step', currentStep);
 
             const seguro = document.getElementById('seguroViagem');
             const meioSelect = document.querySelectorAll('.form-step')[1].querySelector('select');
@@ -699,8 +697,6 @@ document.addEventListener('DOMContentLoaded', function() {
 const multiStepForm = document.getElementById('multiStepForm');
 if (multiStepForm) {
     multiStepForm.addEventListener('submit', function (e) {
-        console.log('Formulário sendo enviado!');
-        
         // Coletar dados dos viajantes e seguros antes do envio
         prepararDadosViajantes();
         
@@ -751,9 +747,6 @@ function prepararDadosViajantes() {
     // Salvar nos inputs hidden
     document.getElementById('viajantesData').value = JSON.stringify(viajantesData);
     document.getElementById('segurosViajantesData').value = JSON.stringify(segurosViajantesData);
-    
-    console.log('Dados dos viajantes preparados:', viajantesData);
-    console.log('Dados dos seguros preparados:', segurosViajantesData);
 }
 
 // -------------------- Tratamento de erros e mensagens de feedback --------------------
@@ -981,15 +974,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // -------------------- Seleção de preferências (step 3) --------------------
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎯 Iniciando sistema de seleção de preferências...');
-    
     // Esperar um pouco para garantir que o DOM esteja totalmente carregado
     setTimeout(() => {
         const prefBtns = document.querySelectorAll('.pref-btn');
         const preferencesInput = document.getElementById('preferences');
-
-        console.log(`📋 Encontrados ${prefBtns.length} botões de preferência`);
-        console.log(`💾 Input de preferências:`, preferencesInput);
 
         if (!prefBtns.length) {
             console.warn('⚠️ Nenhum botão de preferência encontrado');
@@ -1004,14 +992,11 @@ document.addEventListener('DOMContentLoaded', function() {
         let selectedPrefs = [];
 
         prefBtns.forEach((btn, index) => {
-            console.log(`🔗 Configurando listener para botão ${index + 1}`);
-            
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 
                 const prefText = btn.getAttribute('data-preference') || btn.querySelector('span').innerText;
-                console.log(`🎯 Clicado em: "${prefText}"`);
                 
                 // Toggle da classe selected com efeito visual imediato
                 const wasSelected = btn.classList.contains('selected');
@@ -1022,12 +1007,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     btn.style.borderColor = '#22c55e';
                     btn.style.background = 'linear-gradient(135deg, #dcfce7, #bbf7d0)';
                     btn.style.transform = 'scale(1.05)';
-                    console.log(`✅ "${prefText}" SELECIONADO`);
                 } else {
                     btn.style.borderColor = '#e5e7eb';
                     btn.style.background = '#f9fafb';
                     btn.style.transform = 'scale(1)';
-                    console.log(`❌ "${prefText}" DESELECIONADO`);
                 }
                 
                 // Atualizar array
@@ -1039,9 +1022,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Atualizar input hidden
                 preferencesInput.value = selectedPrefs.join(',');
-                
-                console.log('📋 Preferências atuais:', selectedPrefs);
-                console.log('💾 Valor do input:', preferencesInput.value);
                 
                 // Mostrar feedback visual temporário
                 const span = btn.querySelector('span');
@@ -1056,8 +1036,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
-        
-        console.log('✅ Sistema de seleção de preferências configurado!');
     }, 100);
 });
 

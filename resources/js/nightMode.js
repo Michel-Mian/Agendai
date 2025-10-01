@@ -7,11 +7,9 @@ window.nightMode = {
     if (theme === "night" || theme === "dark") {
       body.classList.add("night-mode")
       html.classList.add("night-mode")
-      console.log("[v0] Modo noturno ativado")
     } else {
       body.classList.remove("night-mode")
       html.classList.remove("night-mode")
-      console.log("[v0] Modo claro ativado")
     }
 
     // Salva a preferência no localStorage

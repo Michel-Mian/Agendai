@@ -9,7 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const isHotelsPage = document.getElementById("hotel-search-form") !== null;
   
   if (!isHotelsPage) {
-    console.log('hotels.js: Não é uma página de hotéis, pulando inicialização');
     return;
   }
 
