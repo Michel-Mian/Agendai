@@ -391,6 +391,10 @@
             
             if (!tabsNavigation || !tabsContent) return;
             
+            // Verificar se seguro foi selecionado como "Não" no step 2
+            const seguroSelect = document.getElementById('seguroViagem');
+            const naoDesejaSeguro = seguroSelect ? seguroSelect.value === 'Não' : false;
+            
             tabsNavigation.innerHTML = '';
             tabsContent.innerHTML = '';
             
@@ -426,6 +430,10 @@
                 const tabContent = document.createElement('div');
                 tabContent.className = `tab-content ${isActive ? 'active' : ''}`;
                 tabContent.id = `tab-content-${i}`;
+                // Verificar se seguro foi selecionado como "Não" no step 2
+                const seguroSelect = document.getElementById('seguroViagem');
+                const naoDesejaSeguro = seguroSelect ? seguroSelect.value === 'Não' : false;
+                
                 tabContent.innerHTML = `
                     <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                         <label for="viajante-nome-${i}" class="block text-sm font-semibold text-gray-700 mb-2">
@@ -442,6 +450,16 @@
                             oninput="updateTabTitle(${i}, this.value)"
                         >
                         <p class="text-xs text-gray-500 mt-1">Deixe em branco para usar "Viajante ${i + 1}"</p>
+                        ${naoDesejaSeguro ? `
+                        <button 
+                            type="button" 
+                            class="mt-3 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                            onclick="procurarSeguroViajante(${i})"
+                        >
+                            <i class="fas fa-shield-alt mr-2"></i>
+                            Procurar Seguro
+                        </button>
+                        ` : ''}
                     </div>
                     <div class="flex flex-col gap-6"></div>
                 `;
@@ -507,6 +525,45 @@
                     showErrorMessage(err.message);
                 });
         }
+
+        function showTravelerTabsOnly() {
+            // Ocultar loading e container de seguros
+            document.getElementById('loading-seguros').style.display = 'none';
+            document.getElementById('seguros-container').style.display = 'none';
+            
+            // Mostrar container de tabs
+            document.getElementById('tabs-seguros-container').style.display = 'block';
+            
+            // Obter informações dos viajantes e criar apenas as tabs (sem seguros)
+            const viajantesInfo = getViajantesInfo();
+            createTabs(viajantesInfo);
+        }
+
+        // Tornar as funções globais para que possam ser chamadas de outros scripts
+        window.showTravelerTabsOnly = showTravelerTabsOnly;
+
+        function showNoInsuranceNeeded() {
+            document.getElementById('loading-seguros').style.display = 'none';
+            document.getElementById('tabs-seguros-container').style.display = 'none';
+            document.getElementById('seguros-container').style.display = 'block';
+            document.getElementById('seguros-container').innerHTML = `
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+                    <div class="text-blue-800 font-semibold mb-2">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Seguro não selecionado
+                    </div>
+                    <div class="text-blue-700 text-sm">
+                        Você optou por não contratar seguro para esta viagem. Você pode continuar para o próximo passo.
+                    </div>
+                </div>
+            `;
+        }
+
+        // Função placeholder para procurar seguro específico de um viajante
+        window.procurarSeguroViajante = function(viaganteIndex) {
+            console.log(`Procurar seguro para viajante ${viaganteIndex + 1}`);
+            // TODO: Implementar lógica específica para buscar seguro individual
+        };
 
         function showNoInsuranceMessage() {
             document.getElementById('tabs-seguros-container').style.display = 'none';
@@ -697,12 +754,21 @@
 
         const step4Observer = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting) {
-                // Verificar se já existem seguros carregados (tanto no formato antigo quanto no novo)
-                const hasOldFormat = document.querySelector('.seguro-card');
-                const hasNewFormat = document.querySelector('#tabs-seguros-container .seguro-card');
+                // Verificar se seguro foi selecionado como "Sim" ou "Não" no step 2
+                const seguroSelect = document.getElementById('seguroViagem');
+                const desejaSeguro = seguroSelect ? seguroSelect.value === 'Sim' : false;
                 
-                if (!hasOldFormat && !hasNewFormat) {
-                    restartSearch();
+                if (desejaSeguro) {
+                    // Se escolheu "Sim": fazer busca normal de seguros
+                    const hasOldFormat = document.querySelector('.seguro-card');
+                    const hasNewFormat = document.querySelector('#tabs-seguros-container .seguro-card');
+                    
+                    if (!hasOldFormat && !hasNewFormat) {
+                        restartSearch();
+                    }
+                } else {
+                    // Se escolheu "Não": mostrar tabs dos viajantes com botões de procurar seguro
+                    showTravelerTabsOnly();
                 }
             }
         }, { threshold: 0.1 });

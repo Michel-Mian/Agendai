@@ -251,6 +251,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const reviewList = document.getElementById('reviewList');
         if (!reviewList) return;
 
+        // Preparar dados dos viajantes para garantir que estejam atualizados
+        prepararDadosViajantes();
+
 
 
         // Pegar nome da viagem
@@ -284,6 +287,17 @@ document.addEventListener('DOMContentLoaded', function() {
         // Pegar idades dos viajantes
         const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
         const idades = Array.from(idadeInputs).map(input => input.value).filter(value => value !== '');
+
+        // Coletar nomes dos viajantes
+        const nomesViajantes = [];
+        const numPessoasInt = parseInt(numPessoas) || 1;
+        for (let i = 0; i < numPessoasInt; i++) {
+            const nomeInput = document.getElementById(`viajante-nome-${i}`);
+            const nomePersonalizado = nomeInput ? nomeInput.value.trim() : '';
+            const nomeViajante = nomePersonalizado || `Viajante ${i + 1}`;
+            const idade = idades[i] || 'Não informada';
+            nomesViajantes.push(`${nomeViajante} (${idade} anos)`);
+        }
 
         
         // Pegar datas dos destinos
@@ -431,6 +445,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ${origem ? `<li><b>🏠 Origem:</b> ${origem}</li>` : ''}
             <li><b>🎯 Destinos:</b> ${destino || 'Nenhum destino informado'}</li>
             <li><b>👥 Número de pessoas:</b> ${numPessoas}</li>
+            ${nomesViajantes.length > 0 ? `<li><b>👤 Viajantes:</b> ${nomesViajantes.join(', ')}</li>` : ''}
             ${idades.length > 0 ? `<li><b>👶 Idades dos viajantes:</b> ${idades.join(', ')} anos</li>` : ''}
             ${primeiraDataInicio && ultimaDataFim ? `<li><b>📅 Período da viagem:</b> ${formatarDataBR(primeiraDataInicio)} a ${formatarDataBR(ultimaDataFim)}</li>` : ''}
             ${datasInfo.length > 0 ? `<li><b>📅 Datas por destino:</b><br>${datasInfo.join('<br>')}</li>` : ''}
@@ -462,23 +477,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Lógica de navegação entre os passos
             if (currentStep === 2) {
-                if (seguro && seguro.value === 'Não' && meioLocomocao !== 'Avião') {
-                    currentStep += 3;
-                } else if (seguro && seguro.value === 'Não' && meioLocomocao === 'Avião') {
-                    currentStep += 2;
-                    flightSearchInitiated = true;
-                    searchFlights(); // Remover await para não bloquear
-                } else if (seguro && seguro.value === 'Sim') {
-                    currentStep++;
-                    // Usuário pode clicar manualmente no botão "Buscar Seguros" no step 4
-                }
+                currentStep++
             } else if (currentStep === 3) {
-                if (meioLocomocao !== 'Avião') {
-                    currentStep += 2;
+                // Do step 3, decidir para onde ir baseado em meio de locomoção e seguro
+                if (seguro && seguro.value === 'Não') {
+                    // Se não quer seguro, pular step 4 (seguros)
+                    if (meioLocomocao === 'Avião') {
+                        currentStep += 2; // Pula step 4, vai para step 5 (voos)
+                        flightSearchInitiated = true;
+                        searchFlights();
+                    } else {
+                        currentStep += 3; // Pula steps 4 e 5, vai para step 6 (revisão)
+                    }
                 } else {
+                    // Se quer seguro, ir para step 4 (seguros)
                     currentStep++;
+                }
+            } else if (currentStep === 4) {
+                // Do step 4 (seguros), decidir para onde ir baseado em meio de locomoção
+                if (meioLocomocao === 'Avião') {
+                    currentStep++; // Vai para step 5 (voos)
                     flightSearchInitiated = true;
-                    searchFlights(); // Remover await para não bloquear
+                    searchFlights();
+                } else {
+                    currentStep += 2; // Pula step 5, vai para step 6 (revisão)
                 }
             } else {
                 currentStep++;
@@ -495,17 +517,36 @@ document.addEventListener('DOMContentLoaded', function() {
             const meioSelect = document.querySelectorAll('.form-step')[1].querySelector('select');
             meioLocomocao = meioSelect.value;
 
-            // Se está no passo 5 ou 6 e seguro é "Não", pule a etapa de seguros ao voltar
-            if (
-                (currentStep === 5 && seguro && seguro.value === 'Não' && meioLocomocao !== 'Avião') ||
-                (currentStep === 6 && seguro && seguro.value === 'Não' && meioLocomocao === 'Avião')
-            ) {
-                currentStep -= 3;
-            } else if (currentStep === 4 && meioLocomocao === 'Avião' && seguro && seguro.value === 'Não') {
-                currentStep -= 2;
+            // Lógica corrigida para voltar corretamente
+            if (currentStep === 6) {
+                // Do step 6, voltar baseado na configuração
+                if (seguro && seguro.value === 'Não') {
+                    // Se não quer seguro
+                    if (meioLocomocao === 'Avião') {
+                        currentStep -= 1; // Volta para step 5 (voos)
+                    } else {
+                        currentStep -= 3; // Volta para step 3 (preferências)
+                    }
+                } else {
+                    // Se quer seguro
+                    if (meioLocomocao === 'Avião') {
+                        currentStep -= 1; // Volta para step 5 (voos)
+                    } else {
+                        currentStep -= 2; // Volta para step 4 (seguros)
+                    }
+                }
+            } else if (currentStep === 5) {
+                // Do step 5 (voos), voltar baseado na configuração
+                if (seguro && seguro.value === 'Não') {
+                    currentStep -= 2; // Volta para step 3 (preferências)
+                } else {
+                    currentStep -= 1; // Volta para step 4 (seguros)
+                }
             } else {
+                // Navegação normal (voltar 1 step)
                 currentStep--;
             }
+            
             if (currentStep < 0) currentStep = 0;
             showStep(currentStep);
         });
@@ -580,6 +621,30 @@ document.addEventListener('DOMContentLoaded', function() {
             insuranceOptions.classList.remove('hidden');
         } else {
             insuranceOptions.classList.add('hidden');
+        }
+        
+        // Atualizar a visualização do step 4 de seguros se estivermos nele
+        const currentStepElement = document.querySelector('.form-step.active');
+        if (currentStepElement && currentStepElement.querySelector('#seguros-container')) {
+            // Resetar a visualização do step 4
+            document.getElementById('loading-seguros').style.display = 'none';
+            document.getElementById('tabs-seguros-container').style.display = 'none';
+            document.getElementById('seguros-container').style.display = 'none';
+            
+            // Trigger a re-evaluation of insurance display based on new selection
+            setTimeout(() => {
+                if (this.value === 'Sim') {
+                    // Se mudou para "Sim", fazer busca de seguros
+                    if (typeof window.restartSearch === 'function') {
+                        window.restartSearch();
+                    }
+                } else {
+                    // Se mudou para "Não", mostrar apenas as tabs dos viajantes
+                    if (typeof window.showTravelerTabsOnly === 'function') {
+                        window.showTravelerTabsOnly();
+                    }
+                }
+            }, 100);
         }
     });
 
