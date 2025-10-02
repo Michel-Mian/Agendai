@@ -3012,3 +3012,25 @@ a[href^="http://127.0.0.1:8000/viagens/"]:hover svg {
     color: white !important; /* Texto: Branco */
     background-color: #dc2626 !important; /* Fundo: Vermelho-600 */
 }
+
+
+.night-mode #dep_iata_suggestions > div.px-2.py-1.hover\:bg-gray-100.cursor-pointer {
+  color: #ffffff !important;              /* fonte branca */
+}
+
+
+.night-mode #dep_iata_suggestions > div.px-2.py-1.hover\:bg-gray-100.cursor-pointer:hover {
+  color: #0d1117 !important;
+}
+
+
+.night-mode #dep_iata_suggestions > div.px-2.py-1.hover\:bg-gray-100.cursor-pointer,
+.night-mode #arr_iata_suggestions > div.px-2.py-1.hover\:bg-gray-100.cursor-pointer {
+  color: #ffffff !important;              /* texto branco */
+}
+
+
+.night-mode #dep_iata_suggestions > div.px-2.py-1.hover\:bg-gray-100.cursor-pointer:hover,
+.night-mode #arr_iata_suggestions > div.px-2.py-1.hover\:bg-gray-100.cursor-pointer:hover {
+  color: #0d1117 !important;
+}
