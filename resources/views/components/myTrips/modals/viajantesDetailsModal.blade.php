@@ -96,18 +96,45 @@
                                 <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 mb-6 border border-green-200">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center space-x-4">
-                                            <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-2xl">
+                                            <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-2xl viajante-avatar">
                                                 {{ strtoupper(substr($viajante->nome, 0, 1)) }}
                                             </div>
-                                            <div>
-                                                <h2 class="text-2xl font-bold text-gray-900">{{ $viajante->nome }}</h2>
-                                                <p class="text-green-600 font-medium">{{ $viajante->idade }} anos</p>
+                                            <div class="min-w-0">
+                                                <h2 class="text-2xl font-bold text-gray-900 viajante-nome-display">{{ $viajante->nome }}</h2>
+                                                <p class="text-green-600 font-medium viajante-idade-display">{{ $viajante->idade }} anos</p>
+
+                                                <!-- Hidden editable fields (shown when editing) -->
+                                                <div class="viajante-edit-fields hidden mt-2">
+                                                    <input type="text" name="nome" class="nome-input w-full border border-gray-300 rounded px-3 py-2 mb-2" value="{{ $viajante->nome }}">
+                                                    <div class="flex items-center space-x-3">
+                                                        <input type="number" name="idade" class="idade-input w-32 border border-gray-300 rounded px-3 py-2" value="{{ $viajante->idade }}" min="0" max="127">
+                                                        <div class="responsavel-container hidden">
+                                                            <select class="responsavel-select border border-gray-300 rounded px-3 py-2" name="responsavel_viajante_id">
+                                                                <option value="">Selecione o responsável</option>
+                                                                @foreach($viajantes as $resp)
+                                                                    @if($resp->pk_id_viajante != $viajante->pk_id_viajante)
+                                                                        <option value="{{ $resp->pk_id_viajante }}">{{ $resp->nome }} ({{ $resp->idade }} anos)</option>
+                                                                    @endif
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <p class="text-xs text-gray-500 mt-1 responsavel-help hidden">Viajante menor de 18 anos precisa de um responsável da mesma viagem.</p>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="flex space-x-2">
-                                            <button class="edit-viajante-btn bg-blue-100 hover:bg-blue-200 text-blue-600 p-3 rounded-lg transition-colors" title="Editar viajante" data-viajante-id="{{ $viajante->pk_id_viajante }}">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
+                                            <div class="flex items-center space-x-2">
+                                                <button class="edit-viajante-btn bg-blue-100 hover:bg-blue-200 text-blue-600 p-3 rounded-lg transition-colors" title="Editar viajante" data-viajante-id="{{ $viajante->pk_id_viajante }}">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="save-viajante-btn bg-green-100 hover:bg-green-200 text-green-600 p-3 rounded-lg transition-colors hidden" data-viajante-id="{{ $viajante->pk_id_viajante }}" title="Salvar alterações">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="cancel-viajante-btn bg-gray-100 hover:bg-gray-200 text-gray-600 p-3 rounded-lg transition-colors hidden" data-viajante-id="{{ $viajante->pk_id_viajante }}" title="Cancelar edição">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
                                             <form action="{{ route('viajantes.destroy', ['id' => $viajante->pk_id_viajante]) }}" method="POST" class="inline">
                                                 @csrf
                                                 @method('DELETE')
@@ -130,12 +157,25 @@
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                                 <span class="text-gray-600">Nome completo:</span>
-                                                <span class="font-medium text-gray-900">{{ $viajante->nome }}</span>
+                                                <span class="font-medium text-gray-900 viajante-nome-field">{{ $viajante->nome }}</span>
                                             </div>
                                             <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                                 <span class="text-gray-600">Idade:</span>
-                                                <span class="font-medium text-gray-900">{{ $viajante->idade }} anos</span>
+                                                <span class="font-medium text-gray-900 viajante-idade-field">{{ $viajante->idade }} anos</span>
                                             </div>
+                                            @if($viajante->idade < 18)
+                                                @php
+                                                    $responsavel = $viajantes->firstWhere('pk_id_viajante', $viajante->responsavel_viajante_id);
+                                                @endphp
+                                                <div class="flex justify-between items-center py-2">
+                                                    <span class="text-gray-600">Responsável:</span>
+                                                    @if($responsavel)
+                                                        <span class="font-medium text-gray-900">{{ $responsavel->nome }} ({{ $responsavel->idade }} anos)</span>
+                                                    @else
+                                                        <span class="font-medium italic text-gray-600">Não definido</span>
+                                                    @endif
+                                                </div>
+                                            @endif
                                             <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                                 <span class="text-gray-600">Data de cadastro:</span>
                                                 <span class="font-medium text-gray-900">{{ $viajante->created_at ? $viajante->created_at->format('d/m/Y') : 'N/A' }}</span>
@@ -167,10 +207,19 @@
                                         $seguroViajante = $viajante->seguros->first();
                                     @endphp
                                     <div class="bg-white rounded-xl border border-gray-200 p-6">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                                            <i class="fas fa-shield-halved text-green-500 mr-2"></i>
-                                            Seguro Viagem
-                                        </h3>
+                                        <div class="flex items-center justify-between mb-4">
+                                            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                                                <i class="fas fa-shield-halved text-green-500 mr-2"></i>
+                                                Seguro Viagem
+                                            </h3>
+                                            @if($seguroViajante)
+                                                <div class="ml-4">
+                                                    <button type="button" data-viajante-id="{{ $viajante->pk_id_viajante }}" class="js-open-insurance-modal bg-white border border-green-600 hover:bg-green-50 text-green-600 px-3 py-1 rounded text-sm transition-colors">
+                                                        Alterar Seguro
+                                                    </button>
+                                                </div>
+                                            @endif
+                                        </div>
                                         @if($seguroViajante)
                                             <div class="border-l-4 border-green-500 pl-4 py-3 bg-green-50 rounded-r-lg">
                                                 <div class="space-y-3">
@@ -226,6 +275,11 @@
                                                 <i class="fas fa-shield-exclamation text-gray-400 text-2xl mb-2"></i>
                                                 <p class="text-gray-600 italic">Nenhum seguro contratado para este viajante.</p>
                                                 <p class="text-xs text-gray-500 mt-1">Considere contratar um seguro para maior segurança na viagem.</p>
+                                                <div class="mt-3">
+                                                    <button type="button" data-viajante-id="{{ $viajante->pk_id_viajante }}" class="js-open-insurance-modal bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm transition-colors inline-flex items-center mx-auto">
+                                                        Procurar Seguro
+                                                    </button>
+                                                </div>
                                             </div>
                                         @endif
                                     </div>
@@ -255,6 +309,9 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // ===================================================================
+    // PASSO 1: DECLARAÇÃO DE TODAS AS VARIÁVEIS E CONSTANTES
+    // ===================================================================
     const openViajantesDetailsModalBtn = document.getElementById('open-viajantes-details-modal-btn');
     const closeViajantesDetailsModalBtn = document.getElementById('close-viajantes-details-modal-btn');
     const addViajanteFromDetailsBtn = document.getElementById('add-viajante-from-details');
@@ -267,9 +324,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const viajanteDetailsContents = document.querySelectorAll('.viajante-details-content');
     const searchResultsCountDetails = document.getElementById('search-results-count-details');
     const noResultsMessageDetails = document.getElementById('no-results-message-details');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : null;
 
-    // Função para abrir o modal de detalhes
+    // Variáveis de dados vindas do Blade
+    const viagemData = @json($viagem);
+    const todosOsViajantes = @json($viajantes->values());
+    const viajantesMapeadosPorId = @json($viajantes->keyBy('pk_id_viajante'));
+
+    // ===================================================================
+    // PASSO 2: DEFINIÇÃO DE TODAS AS FUNÇÕES
+    // ===================================================================
+
     const openViajantesDetailsModal = () => {
+        if (!viajantesDetailsModal) return;
         viajantesDetailsModal.classList.remove('hidden');
         viajantesDetailsModal.classList.add('flex');
         document.body.style.overflow = 'hidden';
@@ -279,7 +346,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 10);
     };
 
-    // Função para fechar o modal de detalhes
     const closeViajantesDetailsModal = () => {
         if (!viajantesDetailsModalPanel) return;
         viajantesDetailsModalPanel.classList.remove('scale-100', 'opacity-100');
@@ -291,109 +357,250 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 300);
     };
 
-    // Função para selecionar um viajante
     const selectViajante = (viajanteId) => {
-        // Remove seleção de todos os itens
         viajanteSidebarItems.forEach(item => {
             item.classList.remove('bg-green-100', 'border-green-300');
             item.classList.add('bg-white', 'border-gray-200');
         });
-
-        // Oculta todos os conteúdos
-        viajanteDetailsContents.forEach(content => {
-            content.classList.add('hidden');
-        });
-
-        // Seleciona o item clicado
-        const selectedItem = document.querySelector(`[data-viajante-id="${viajanteId}"]`);
+        viajanteDetailsContents.forEach(content => content.classList.add('hidden'));
+        const selectedItem = document.querySelector(`.viajante-sidebar-item[data-viajante-id="${viajanteId}"]`);
         if (selectedItem) {
             selectedItem.classList.remove('bg-white', 'border-gray-200');
             selectedItem.classList.add('bg-green-100', 'border-green-300');
         }
-
-        // Mostra o conteúdo correspondente
         const selectedContent = document.getElementById(`viajante-details-${viajanteId}`);
         if (selectedContent) {
             selectedContent.classList.remove('hidden');
         }
     };
 
-    // Event listeners
-    if (openViajantesDetailsModalBtn) {
-        openViajantesDetailsModalBtn.addEventListener('click', openViajantesDetailsModal);
+    function toggleEditMode(viajanteId, editing) {
+        const content = document.getElementById(`viajante-details-${viajanteId}`);
+        if (!content) return;
+        content.querySelector('.viajante-edit-fields')?.classList.toggle('hidden', !editing);
+        content.querySelector('.viajante-nome-display')?.classList.toggle('hidden', editing);
+        content.querySelector('.viajante-idade-display')?.classList.toggle('hidden', editing);
+        document.querySelector(`.edit-viajante-btn[data-viajante-id="${viajanteId}"]`)?.classList.toggle('hidden', editing);
+        document.querySelector(`.save-viajante-btn[data-viajante-id="${viajanteId}"]`)?.classList.toggle('hidden', !editing);
+        document.querySelector(`.cancel-viajante-btn[data-viajante-id="${viajanteId}"]`)?.classList.toggle('hidden', !editing);
     }
 
-    if (closeViajantesDetailsModalBtn) {
-        closeViajantesDetailsModalBtn.addEventListener('click', closeViajantesDetailsModal);
+    function handleIdadeInputChange(content) {
+        const idadeInput = content.querySelector('.idade-input');
+        const responsavelContainer = content.querySelector('.responsavel-container');
+        const responsavelHelp = content.querySelector('.responsavel-help');
+        if (!idadeInput || !responsavelContainer) return;
+        const val = parseInt(idadeInput.value);
+        if (!isNaN(val) && val < 18) {
+            responsavelContainer.classList.remove('hidden');
+            if (responsavelHelp) responsavelHelp.classList.remove('hidden');
+        } else {
+            responsavelContainer.classList.add('hidden');
+            if (responsavelHelp) responsavelHelp.classList.add('hidden');
+        }
     }
+    
+    // ===================================================================
+    // PASSO 3: ANEXAR TODOS OS EVENT LISTENERS
+    // ===================================================================
 
-    if (viajantesDetailsModalOverlay) {
-        viajantesDetailsModalOverlay.addEventListener('click', closeViajantesDetailsModal);
-    }
-
-    // Fechar modal com ESC
-    document.addEventListener('keydown', function(event) {
+    // Listeners do Modal de Detalhes
+    if (openViajantesDetailsModalBtn) openViajantesDetailsModalBtn.addEventListener('click', openViajantesDetailsModal);
+    if (closeViajantesDetailsModalBtn) closeViajantesDetailsModalBtn.addEventListener('click', closeViajantesDetailsModal);
+    if (viajantesDetailsModalOverlay) viajantesDetailsModalOverlay.addEventListener('click', closeViajantesDetailsModal);
+    document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && viajantesDetailsModal && !viajantesDetailsModal.classList.contains('hidden')) {
             closeViajantesDetailsModal();
         }
     });
 
-    // Event listeners para seleção de viajantes
+    // Listener para abrir o Modal de Seguros (usando event delegation)
+    if (viajantesDetailsModalPanel) {
+        viajantesDetailsModalPanel.addEventListener('click', function(event) {
+            const insuranceButton = event.target.closest('.js-open-insurance-modal');
+            if (!insuranceButton) return;
+            
+            event.preventDefault();
+
+            if (typeof window.openInsuranceModal === 'function') {
+                const viajanteId = parseInt(insuranceButton.dataset.viajanteId, 10);
+                const viajanteEspecifico = viajantesMapeadosPorId[viajanteId];
+
+                if (viajanteEspecifico) {
+                    window.openInsuranceModal({
+                        viagem: viagemData,
+                        viajante: viajanteEspecifico
+                    });
+                } else {
+                    console.error('Viajante com ID ' + viajanteId + ' não encontrado.');
+                }
+            } else {
+                alert('Erro: A função para abrir o modal de seguros (openInsuranceModal) não foi encontrada.');
+                console.error('Verifique se o script "insurance-modal.js" está sendo carregado corretamente.');
+            }
+        });
+    }
+
+    // Listeners da Sidebar de Viajantes
     viajanteSidebarItems.forEach(item => {
         item.addEventListener('click', function() {
-            const viajanteId = this.dataset.viajanteId;
-            selectViajante(viajanteId);
+            selectViajante(this.dataset.viajanteId);
         });
     });
 
-    // Botões para adicionar viajante
-    if (addViajanteFromDetailsBtn) {
-        addViajanteFromDetailsBtn.addEventListener('click', function() {
-            closeViajantesDetailsModal();
-            setTimeout(() => {
-                const addBtn = document.querySelector('[id*="open-add-viajante-modal-btn"]:not([id$="-empty"])');
-                if (addBtn) addBtn.click();
-            }, 300);
-        });
+    // Listeners dos botões de adicionar viajante
+    function handleAddViajanteClick() {
+        closeViajantesDetailsModal();
+        setTimeout(() => {
+            const addBtn = document.querySelector('[id*="open-add-viajante-modal-btn"]:not([id$="-empty"])');
+            if (addBtn) addBtn.click();
+        }, 300);
     }
+    if (addViajanteFromDetailsBtn) addViajanteFromDetailsBtn.addEventListener('click', handleAddViajanteClick);
+    if (addFirstViajanteBtn) addFirstViajanteBtn.addEventListener('click', handleAddViajanteClick);
 
-    if (addFirstViajanteBtn) {
-        addFirstViajanteBtn.addEventListener('click', function() {
-            closeViajantesDetailsModal();
-            setTimeout(() => {
-                const addBtn = document.querySelector('[id*="open-add-viajante-modal-btn"]:not([id$="-empty"])');
-                if (addBtn) addBtn.click();
-            }, 300);
-        });
-    }
-
-    // Funcionalidade de busca
+    // Listener do campo de busca
     if (viajanteDetailsSearchInput) {
         viajanteDetailsSearchInput.addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase().trim();
             let visibleCount = 0;
-            
-            viajanteSidebarItems.forEach(function(item) {
-                const nomeViajante = item.dataset.nome;
-                const isVisible = nomeViajante.includes(searchTerm);
+            viajanteSidebarItems.forEach(item => {
+                const isVisible = item.dataset.nome.includes(searchTerm);
                 item.style.display = isVisible ? 'block' : 'none';
                 if (isVisible) visibleCount++;
             });
-            
-            // Atualizar contador de resultados
-            if (searchResultsCountDetails) {
-                searchResultsCountDetails.textContent = `${visibleCount} resultado${visibleCount !== 1 ? 's' : ''}`;
-            }
-            
-            // Mostrar/ocultar mensagem de "nenhum resultado"
-            if (noResultsMessageDetails) {
-                if (visibleCount === 0 && searchTerm !== '') {
-                    noResultsMessageDetails.classList.remove('hidden');
-                } else {
-                    noResultsMessageDetails.classList.add('hidden');
-                }
-            }
+            if (searchResultsCountDetails) searchResultsCountDetails.textContent = `${visibleCount} resultado${visibleCount !== 1 ? 's' : ''}`;
+            if (noResultsMessageDetails) noResultsMessageDetails.classList.toggle('hidden', !(visibleCount === 0 && searchTerm !== ''));
         });
     }
+
+    // Listener geral para botões de Editar/Salvar/Cancelar
+    document.addEventListener('click', function (e) {
+        const editBtn = e.target.closest('.edit-viajante-btn');
+        if (editBtn) {
+            const id = editBtn.dataset.viajanteId;
+            toggleEditMode(id, true);
+            const content = document.getElementById(`viajante-details-${id}`);
+            if (content) {
+                const idadeInput = content.querySelector('.idade-input');
+                if (idadeInput) {
+                    handleIdadeInputChange(content);
+                    idadeInput.addEventListener('input', () => handleIdadeInputChange(content));
+                }
+            }
+            return;
+        }
+
+        const cancelBtn = e.target.closest('.cancel-viajante-btn');
+        if (cancelBtn) {
+            const id = cancelBtn.dataset.viajanteId;
+            const content = document.getElementById(`viajante-details-${id}`);
+            if (content) {
+                const nomeInput = content.querySelector('.nome-input');
+                const idadeInput = content.querySelector('.idade-input');
+                const nomeField = content.querySelector('.viajante-nome-field');
+                const idadeField = content.querySelector('.viajante-idade-field');
+                if (nomeInput && nomeField) nomeInput.value = nomeField.textContent.trim();
+                if (idadeInput && idadeField) idadeInput.value = parseInt(idadeField.textContent) || idadeInput.value;
+            }
+            toggleEditMode(id, false);
+            return;
+        }
+
+        const saveBtn = e.target.closest('.save-viajante-btn');
+        if (saveBtn) {
+            const id = saveBtn.dataset.viajanteId;
+            const content = document.getElementById(`viajante-details-${id}`);
+            if (!content) return;
+
+            const nome = content.querySelector('.nome-input').value.trim();
+            const idade = parseInt(content.querySelector('.idade-input').value);
+            const responsavelId = content.querySelector('.responsavel-select')?.value || null;
+
+            if (!nome || idade === null || isNaN(idade) || idade < 0) {
+                alert('Por favor, informe um nome e idade válidos.');
+                return;
+            }
+
+            const body = { nome, idade };
+            if (idade < 18 && responsavelId) {
+                body.responsavel_viajante_id = responsavelId;
+            }
+
+            fetch(`/viajantes/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    ...(csrfToken ? {'X-CSRF-TOKEN': csrfToken} : {})
+                },
+                body: JSON.stringify(body)
+            }).then(response => response.json()).then(data => {
+                if (data.success) {
+                    // Update UI fields
+                    const sidebarItem = document.querySelector(`.viajante-sidebar-item[data-viajante-id="${id}"]`);
+                    content.querySelector('.viajante-nome-display').textContent = nome;
+                    content.querySelector('.viajante-idade-display').textContent = `${idade} anos`;
+                    content.querySelector('.viajante-nome-field').textContent = nome;
+                    content.querySelector('.viajante-idade-field').textContent = `${idade} anos`;
+                    content.querySelector('.viajante-avatar').textContent = nome.charAt(0).toUpperCase();
+                    if(sidebarItem) {
+                        sidebarItem.querySelector('h4').textContent = nome;
+                        sidebarItem.querySelector('p').textContent = `${idade} anos`;
+                        sidebarItem.dataset.nome = nome.toLowerCase();
+                    }
+                    toggleEditMode(id, false);
+                } else {
+                    alert(data.message || 'Erro ao atualizar viajante.');
+                }
+            }).catch(err => {
+                console.error('Erro ao salvar viajante:', err);
+                alert('Erro de comunicação ao salvar. Verifique o console.');
+            });
+        }
+    });
+    
+    // Listener para atualização dinâmica do seguro
+    window.addEventListener('insuranceUpdated', function(event) {
+        const { viajanteId, seguro } = event.detail;
+        const viajanteContent = document.getElementById(`viajante-details-${viajanteId}`);
+        if (!viajanteContent) return;
+
+        const insuranceSection = viajanteContent.querySelector('.bg-white.rounded-xl.border.border-gray-200:has(.fa-shield-halved)');
+        if (!insuranceSection) return;
+
+        const newInsuranceHTML = `
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <i class="fas fa-shield-halved text-green-500 mr-2"></i> Seguro Viagem
+                </h3>
+                <div>
+                    <button type="button" data-viajante-id="${viajanteId}" class="js-open-insurance-modal bg-white border border-green-600 hover:bg-green-50 text-green-600 px-3 py-1 rounded text-sm transition-colors">Alterar Seguro</button>
+                </div>
+            </div>
+            <div class="border-l-4 border-green-500 pl-4 py-3 bg-green-50 rounded-r-lg">
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-800">${seguro.seguradora}</p>
+                        <p class="text-sm text-gray-600">${seguro.plano}</p>
+                        ${seguro.detalhes_etarios ? `<p class="text-xs text-gray-500 mt-1">${seguro.detalhes_etarios}</p>` : ''}
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${seguro.cobertura_medica ? `<div class="flex items-center space-x-2"><i class="fas fa-user-doctor text-green-600 text-sm"></i><span class="text-sm text-gray-700">${seguro.cobertura_medica}</span></div>` : ''}
+                        ${seguro.cobertura_bagagem ? `<div class="flex items-center space-x-2"><i class="fas fa-suitcase-rolling text-green-600 text-sm"></i><span class="text-sm text-gray-700">${seguro.cobertura_bagagem}</span></div>` : ''}
+                    </div>
+                    <div class="flex items-center justify-between pt-2 border-t border-green-200">
+                        <div class="flex space-x-4">
+                            ${seguro.preco_pix ? `<div class="text-sm"><span class="text-gray-600">PIX:</span><span class="font-semibold text-green-700">${seguro.preco_pix}</span></div>` : ''}
+                            ${seguro.preco_cartao ? `<div class="text-sm"><span class="text-gray-600">Cartão:</span><span class="font-semibold text-gray-700">${seguro.preco_cartao}</span></div>` : ''}
+                        </div>
+                        ${seguro.link ? `<a href="${seguro.link}" target="_blank" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm transition-colors"><i class="fas fa-external-link-alt mr-1"></i> Ver Plano</a>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        insuranceSection.innerHTML = newInsuranceHTML;
+    });
+
 });
 </script>
