@@ -11,7 +11,7 @@
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        @vite(['resources/css/app.css', 'resources/css/explore.css', 'resources/css/nightMode.css', 'resources/js/app.js', 'resources/js/dashBoard.js', 'resources/js/searchFlights.js', 'resources/js/formTrip.js' , 'resources/js/hotels.js', 'resources/js/nightMode.js'])
+        @vite(['resources/css/app.css', 'resources/css/explore.css', 'resources/css/nightMode.css', 'resources/js/app.js', 'resources/js/dashBoard.js', 'resources/js/searchFlights.js', 'resources/js/formTrip.js' , 'resources/js/hotels.js', 'resources/js/nightMode.js', 'resources/js/insurance-modal.js'])
         <style>
             /* ===== Loader ===== */
             /* Loader base */
