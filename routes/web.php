@@ -59,6 +59,7 @@ Route::middleware(['auth'])->group(function (){
 
     Route::delete('/viajantes/{id}', [ViagensController::class, 'destroy'])->name('viajantes.destroy');
     Route::post('/viajantes', [ViagensController::class, 'addViajante'])->name('viajantes.store');
+    Route::patch('/viajantes/{id}', [ViagensController::class, 'updateViajante'])->name('viajantes.update');
 
     Route::get('/explore', [ExploreController::class, 'index'])->name('explore');
     Route::post('/explore', [ExploreController::class, 'store'])->name('explore.store');
@@ -87,6 +88,7 @@ Route::middleware(['auth'])->group(function (){
     Route::post('/hotels/{id}', [HotelsController::class, 'addToTrip'])->name('hotels.addToTrip');
     Route::get('/trip/insurances', [TripController::class, 'getInsurancesAjax']);
     Route::post('/trip/update-insurance', [TripController::class, 'updateInsuranceAjax']);
+    Route::post('/trip/save-traveler-insurance', [TripController::class, 'saveInsuranceForTraveler'])->name('trip.save.traveler.insurance');
 
     // NOVAS ROTAS PARA ESTATÍSTICAS POR DESTINO
     Route::get('/viagens/{viagem}/weather/{destino}', [ViagensController::class, 'getWeatherDataForDestination'])->name('viagens.weather.destino');
