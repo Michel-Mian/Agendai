@@ -562,6 +562,13 @@
     @include('components.myTrips.modals.addInsurance')
     @include('components.myTrips.modals.insuranceModal')
 
+    <script>
+        window.APP_ROUTES = {
+            searchInsurance: "{{ route('run.Scraping.ajax') }}",
+            saveTravelerInsurance: "{{ route('trip.save.traveler.insurance') }}"
+        };
+    </script>
+
     <!-- Scripts externos -->
     <script src="{{ asset('js/inlineEditManager.js') }}"></script>
     <script src="{{ asset('js/lazyLoader.js') }}"></script>

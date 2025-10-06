@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 
 class TripController extends Controller
 {
@@ -289,6 +290,24 @@ class TripController extends Controller
         return $structuredData;
     }
 
+    private function formatPriceForDatabase($priceString)
+    {
+        if (is_null($priceString)) {
+            return null;
+        }
+
+        // 1. Remove tudo que não for dígito, vírgula ou ponto, similar à sua regex.
+        $numericPart = preg_replace('/[^\d,.]/', '', $priceString);
+        
+        // 2. Remove o separador de milhar (ponto) e troca a vírgula decimal por ponto.
+        //    Isso lida corretamente com formatos como "1.234,56".
+        $cleaned = str_replace('.', '', $numericPart);
+        $decimal = str_replace(',', '.', $cleaned);
+
+        // 3. Retorna o valor como float, pronto para o banco de dados.
+        return (float) $decimal;
+    }
+
     private function extrairValorNumerico($texto)
     {
         if (preg_match('/((US\$|USD|R\$|€|U\$)?\s*)?([d\.,]+)/i', $texto, $matches)) {
@@ -402,5 +421,71 @@ class TripController extends Controller
             'is_windows' => $isWindows,
             'cache_table' => \DB::table('seguros_cache')->count()
         ]);
+    }
+
+    public function saveInsuranceForTraveler(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'fk_id_viagem'   => 'required|integer|exists:viagens,pk_id_viagem',
+                'fk_id_viajante' => 'required|integer|exists:viajantes,pk_id_viajante',
+                'seguro_data'    => 'required|array',
+                'seguro_data.seguradora'         => 'required|string|max:255',
+                'seguro_data.plano'              => 'required|string|max:255',
+                'seguro_data.link'               => 'nullable|url',
+                'seguro_data.detalhes_etarios'   => 'nullable|string',
+                'seguro_data.coberturas.medica'  => 'nullable|string',
+                'seguro_data.coberturas.bagagem' => 'nullable|string',
+                'seguro_data.precos.pix'         => 'nullable|string',
+                'seguro_data.precos.cartao'      => 'nullable|string',
+                'seguro_data.precos.parcelas'    => 'nullable|string',
+            ]);
+
+            // Validação de permissão: Apenas o dono da viagem pode adicionar seguros
+            $viagem = \App\Models\Viagens::findOrFail($validated['fk_id_viagem']);
+            if ($viagem->fk_id_usuario !== auth()->id()) {
+                return response()->json(['success' => false, 'message' => 'Acesso negado.'], 403);
+            }
+
+            $seguroData = $validated['seguro_data'];
+
+            // `updateOrCreate` é perfeito aqui: ele atualiza o seguro se o viajante já tiver um,
+            // ou cria um novo registro caso contrário. Isso evita duplicatas.
+            $seguro = Seguros::updateOrCreate(
+                [
+                    // Condições para encontrar o registro
+                    'fk_id_viagem' => $validated['fk_id_viagem'],
+                    'fk_id_viajante' => $validated['fk_id_viajante'],
+                ],
+                [
+                    // Dados para atualizar ou criar
+                    'seguradora' => $seguroData['seguradora'],
+                    'plano' => $seguroData['plano'],
+                    'link' => $seguroData['link'] ?? null,
+                    'detalhes_etarios' => $seguroData['detalhes_etarios'] ?? null,
+                    'cobertura_medica' => $seguroData['coberturas']['medica'] ?? null,
+                    'cobertura_bagagem' => $seguroData['coberturas']['bagagem'] ?? null,
+                    'preco_pix' => $this->formatPriceForDatabase($seguroData['precos']['pix'] ?? null),
+                    'preco_cartao' => $this->formatPriceForDatabase($seguroData['precos']['cartao'] ?? null),
+                    'parcelamento_cartao' => $seguroData['precos']['parcelas'] ?? null,
+                    'is_selected' => true,
+                ]
+            );
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Seguro salvo com sucesso!',
+                'seguro' => $seguro // Retornamos o seguro salvo para a UI se atualizar
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['success' => false, 'message' => 'Dados inválidos.', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Erro ao salvar seguro para viajante', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['success' => false, 'message' => 'Erro interno do servidor.'], 500);
+        }
     }
 }
