@@ -427,9 +427,23 @@ class ViagensController extends Controller
         }
 
         try {
-            $cacheKey = "weather_data_destino_{$destino->pk_id_destino}";
-            $weatherData = \Cache::remember($cacheKey, 7200, function () use ($destino) { // Cache por 2 horas
-                return $this->fetchWeatherFromAPI($destino->nome_destino);
+            $dataInicio = Carbon::parse($destino->data_chegada_destino)->startOfDay();
+            $dataFim = Carbon::parse($destino->data_partida_destino)->endOfDay();
+            $hoje = Carbon::today();
+
+            if ($hoje->lt($dataInicio)) {
+                // Antes do destino, não mostra clima
+                return response()->json(['success' => true, 'data' => null, 'message' => 'A previsão do tempo estará disponível a partir do início deste destino.']);
+            }
+            if ($hoje->gt($dataFim)) {
+                // Após o destino, não mostra clima
+                return response()->json(['success' => true, 'data' => null, 'message' => 'A previsão do tempo não está mais disponível para este destino.']);
+            }
+
+            // Durante o destino, mostra clima normalmente
+            $cacheKey = "weather_data_destino_{$destino->pk_id_destino}_{$dataInicio->format('Ymd')}_{$dataFim->format('Ymd')}";
+            $weatherData = \Cache::remember($cacheKey, 7200, function () use ($destino, $dataInicio, $dataFim) {
+                return $this->fetchWeatherFromAPIWithDates($destino->nome_destino, $dataInicio, $dataFim);
             });
 
             if (!$weatherData) {
@@ -440,6 +454,33 @@ class ViagensController extends Controller
         } catch (\Exception $e) {
             Log::error('Erro ao buscar clima para o destino', ['destino_id' => $destino->pk_id_destino, 'error' => $e->getMessage()]);
             return response()->json(['success' => false, 'message' => 'Erro ao carregar dados do clima.'], 500);
+        }
+    }
+
+    // Busca clima para um destino entre datas específicas
+    private function fetchWeatherFromAPIWithDates($destino, $dataInicio, $dataFim)
+    {
+        $coordinates = $this->getLatLngFromAddress($destino);
+        if (!$coordinates) {
+            Log::warning('Não foi possível obter coordenadas para o destino de clima.', ['destino' => $destino]);
+            return null;
+        }
+
+        $lat = $coordinates['lat'];
+        $lon = $coordinates['lng'];
+        $start = Carbon::parse($dataInicio)->format('Y-m-d');
+        $end = Carbon::parse($dataFim)->format('Y-m-d');
+        $url = "https://api.open-meteo.com/v1/forecast?latitude={$lat}&longitude={$lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,uv_index_max&timezone=auto&start_date={$start}&end_date={$end}";
+        try {
+            $response = \Http::timeout(10)->get($url);
+            if ($response->successful()) {
+                return $response->json();
+            }
+            Log::error('Falha na API Open-Meteo', ['status' => $response->status(), 'body' => $response->body()]);
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Erro ao buscar dados do clima na Open-Meteo', ['error' => $e->getMessage()]);
+            return null;
         }
     }
 
@@ -724,6 +765,56 @@ class ViagensController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             return response()->json(['success' => false, 'message' => 'Erro interno', 'error' => $e->getMessage()], 500);
+        }
+    }
+    public function getEventsDataForDestination(Viagens $viagem, Destinos $destino)
+    {
+        try {
+            // Parâmetros principais
+            $city = $destino->nome_destino;
+            $startDate = Carbon::parse($destino->data_chegada_destino)->format('Y-m-d');
+            $endDate = Carbon::parse($destino->data_partida_destino)->format('Y-m-d');
+
+            $serpApiKey = env('SERPAPI_KEY');
+            if (!$serpApiKey) {
+                return response()->json(['success' => false, 'message' => 'Chave SerpAPI não configurada.'], 500);
+            }
+
+            // Monta query para buscar eventos na cidade e período
+            $params = [
+                'engine' => 'google_events',
+                'q' => "eventos em $city",
+                'hl' => 'pt-br',
+                'gl' => 'br',
+                'api_key' => $serpApiKey,
+                'start_date' => $startDate,
+                'end_date' => $endDate
+            ];
+            $url = 'https://serpapi.com/search.json?' . http_build_query($params);
+
+            $response = Http::timeout(15)->get($url);
+            if (!$response->successful()) {
+                return response()->json(['success' => false, 'message' => 'Erro ao buscar eventos na SerpAPI.'], 500);
+            }
+            $json = $response->json();
+            $eventos = [];
+            if (isset($json['events_results'])) {
+                foreach ($json['events_results'] as $event) {
+                    $eventos[] = [
+                        'title' => $event['title'] ?? null,
+                        'date' => $event['date']['start_date'] ?? ($event['date'] ?? null),
+                        'address' => $event['address'] ?? null,
+                        'description' => $event['description'] ?? null,
+                        'link' => $event['link'] ?? null,
+                        'thumbnail' => $event['thumbnail'] ?? null,
+                        'source' => $event['source'] ?? null
+                    ];
+                }
+            }
+            return response()->json(['success' => true, 'data' => $eventos]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao buscar eventos SerpAPI', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Erro ao buscar eventos.'], 500);
         }
     }
 }
