@@ -87,7 +87,7 @@
             </div>
 
             <!-- Main Content -->
-            <div class="flex-1 flex flex-col">
+            <div id="main-content" class="flex-1 flex flex-col px-0">
                 @if($viajantes->count())
                     @foreach($viajantes as $index => $viajante)
                         <div id="viajante-details-{{ $viajante->pk_id_viajante }}" class="viajante-details-content h-full {{ $index !== 0 ? 'hidden' : '' }}">

@@ -3029,8 +3029,11 @@ a[href^="http://127.0.0.1:8000/viagens/"]:hover svg {
   color: #ffffff !important;              /* texto branco */
 }
 
-
 .night-mode #dep_iata_suggestions > div.px-2.py-1.hover\:bg-gray-100.cursor-pointer:hover,
 .night-mode #arr_iata_suggestions > div.px-2.py-1.hover\:bg-gray-100.cursor-pointer:hover {
   color: #0d1117 !important;
 }
+
+.night-mode .bg-\[var\(--color-neutral-50\)\] {
+    background-color: #161b22 !important
+} 

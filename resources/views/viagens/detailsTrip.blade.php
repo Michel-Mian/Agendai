@@ -79,7 +79,7 @@
     
     <div class="flex min-h-screen bg-gray-50">
         @include('components/layout/sidebar')
-        <div class="flex-1 flex flex-col">
+        <div id="main-content" class="flex-1 flex flex-col px-0">
             @include('components/layout/header')
             <div class="w-full px-4 py-10 md:py-16">
                 <!-- Detalhes Gerais da Viagem - Design Aprimorado -->
