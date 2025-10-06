@@ -1,4 +1,4 @@
-<div id="sidebar" class="bg-white shadow-lg min-h-screen relative flex flex-col sidebar-expanded">    <!-- Header com Logo e Toggle -->
+<div id="sidebar" class="bg-white shadow-lg h-screen fixed top-0 left-0 flex flex-col sidebar-expanded z-10">
     <div id="sidebar-header" class="flex items-center justify-between p-2 border-b border-gray-200 transition-all duration-300" style="background-color: #f7faf8;">
         <div id="logo-container" class="flex items-center justify-center w-full space-x-3">
             <div class="w-24 h-24 rounded-lg flex items-center justify-center p-0" id="logo">
@@ -14,7 +14,7 @@
 
 
     <!-- Navigation Menu -->
-    <nav class="flex-1 p-4">
+    <nav class="flex-1 p-4 overflow-y-auto"> 
         <ul class="space-y-2">
             <li>
                 <a href="/dashboard" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
@@ -114,4 +114,3 @@
         </div>
     </div>
 </div>
-

@@ -3,7 +3,7 @@
 @section('content')
 <div class="flex min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-white">
     @include('components/layout/sidebar')
-    <div class="flex-1 flex flex-col">
+        <div id="main-content" class="flex-1 flex flex-col px-0">
         @include('components/layout/header')
 
         <div class="w-full max-w-4xl mx-auto mt-12">
