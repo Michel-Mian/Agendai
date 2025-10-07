@@ -649,7 +649,11 @@
 
 /* Fontes específicas ficam brancas */
 .night-mode .text-purple-200,
-.night-mode p.text-purple-200 {
+.night-mode p.text-purple-200,
+.night-mode .text-purple-800,
+.night-mode .text-purple-600,
+.night-mode .text-orange-800,
+.night-mode .text-orange-600 {
   color: #f0f6fc !important; /* "3 objetivos" fica branco */
 }
 
@@ -3037,3 +3041,13 @@ a[href^="http://127.0.0.1:8000/viagens/"]:hover svg {
 .night-mode .bg-\[var\(--color-neutral-50\)\] {
     background-color: #161b22 !important
 } 
+
+.night-mode .flex.items-center.justify-between.bg-white\/60.rounded-lg.p-3.border-orange-200 {
+    /* 1. Fundo Preto Sólido */
+    background-color: #0d1117 !important; /* Ou use #000000 */
+}
+
+.night-mode #modal_orc:hover {
+    background-color: #0d1117 !important; 
+    color: #ffffff !important;
+}

@@ -286,7 +286,11 @@
         if (window.insuranceScriptLoaded) return;
         window.insuranceScriptLoaded = true;
 
-        // ... (todo o código de loading, polling, etc., permanece o mesmo) ...
+        // NOVO: Variável global para rastrear quantos seguros estão sendo exibidos por viajante
+        // Armazenará: { viaganteIndex: currentVisibleCount }
+        window.visibleInsuranceCount = {};
+        const INSURANCES_PER_PAGE = 6; // Constante para o número de seguros a serem exibidos
+
         let attemptsMade = 0;
         const maxAttempts = 15;
         let intervalId = null;
@@ -323,45 +327,45 @@
             document.getElementById('loading-description').textContent = messages.description;
         }
 
-    function getFormData() {
-        // Buscar todas as datas dos destinos
-        const dataInicioInputs = document.querySelectorAll('input[name="destino_data_inicio[]"]');
-        const dataFimInputs = document.querySelectorAll('input[name="destino_data_fim[]"]');
-        const destinoSelect = document.getElementById('MainContent_Cotador_selContinente');
+        function getFormData() {
+            // Buscar todas as datas dos destinos
+            const dataInicioInputs = document.querySelectorAll('input[name="destino_data_inicio[]"]');
+            const dataFimInputs = document.querySelectorAll('input[name="destino_data_fim[]"]');
+            const destinoSelect = document.getElementById('MainContent_Cotador_selContinente');
 
-        if (!destinoSelect) {
-            console.error('Campo de destino não encontrado no formulário.');
-            return { error: 'Campo de destino ausente.' };
-        }
-        
-        // Para o seguro, usar a data do primeiro destino como data de início e a data do último destino como data de fim
-        let dataIda = '';
-        let dataVolta = '';
-        
-        if (dataInicioInputs.length > 0 && dataInicioInputs[0].value) {
-            dataIda = dataInicioInputs[0].value; // Data de início do primeiro destino
-        }
-        
-        if (dataFimInputs.length > 0) {
-            // Pegar a data de fim do último destino que tenha valor
-            for (let i = dataFimInputs.length - 1; i >= 0; i--) {
-                if (dataFimInputs[i].value) {
-                    dataVolta = dataFimInputs[i].value;
-                    break;
+            if (!destinoSelect) {
+                console.error('Campo de destino não encontrado no formulário.');
+                return { error: 'Campo de destino ausente.' };
+            }
+
+            // Para o seguro, usar a data do primeiro destino como data de início e a data do último destino como data de fim
+            let dataIda = '';
+            let dataVolta = '';
+
+            if (dataInicioInputs.length > 0 && dataInicioInputs[0].value) {
+                dataIda = dataInicioInputs[0].value; // Data de início do primeiro destino
+            }
+
+            if (dataFimInputs.length > 0) {
+                // Pegar a data de fim do último destino que tenha valor
+                for (let i = dataFimInputs.length - 1; i >= 0; i--) {
+                    if (dataFimInputs[i].value) {
+                        dataVolta = dataFimInputs[i].value;
+                        break;
+                    }
                 }
             }
-        }
 
-        if (!dataIda || !dataVolta) {
-            console.error('Datas de início ou fim dos destinos não encontradas.');
-            return { error: 'Datas dos destinos não encontradas.' };
-        }
-        
-        const formData = {
-            destino: destinoSelect.value,
-            data_ida: dataIda,
-            data_volta: dataVolta
-        };
+            if (!dataIda || !dataVolta) {
+                console.error('Datas de início ou fim dos destinos não encontradas.');
+                return { error: 'Datas dos destinos não encontradas.' };
+            }
+
+            const formData = {
+                destino: destinoSelect.value,
+                data_ida: dataIda,
+                data_volta: dataVolta
+            };
 
             return formData;
         }
@@ -370,17 +374,17 @@
         function getViajantesInfo() {
             const numPessoasSelect = document.getElementById('num_pessoas');
             const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
-            
+
             const numPessoas = numPessoasSelect ? parseInt(numPessoasSelect.value) || 1 : 1;
             const idades = Array.from(idadeInputs).map(input => parseInt(input.value) || 0).filter(idade => idade > 0);
-            
+
             // Se não há idades preenchidas, usar idades padrão baseado no número de pessoas
             if (idades.length === 0) {
                 for (let i = 0; i < numPessoas; i++) {
                     idades.push(25); // Idade padrão
                 }
             }
-            
+
             return { numPessoas, idades };
         }
 
@@ -388,18 +392,18 @@
         function createTabs(viajantesInfo) {
             const tabsNavigation = document.getElementById('tabs-navigation');
             const tabsContent = document.getElementById('tabs-content');
-            
+
             if (!tabsNavigation || !tabsContent) return;
-            
+
             tabsNavigation.innerHTML = '';
             tabsContent.innerHTML = '';
-            
+
             const { numPessoas, idades } = viajantesInfo;
-            
+
             for (let i = 0; i < numPessoas; i++) {
                 const idade = idades[i] || 25;
                 const isActive = i === 0;
-                
+
                 // Criar botão da tab
                 const tabButton = document.createElement('button');
                 tabButton.type = 'button'; // Importante: evita submit do formulário
@@ -411,7 +415,7 @@
                         <span class="text-xs text-gray-500">(${idade} anos)</span>
                     </div>
                 `;
-                
+
                 // Event listener que previne comportamento padrão
                 tabButton.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -419,14 +423,15 @@
                     window.switchTab(i);
                     return false;
                 });
-                
+
                 tabsNavigation.appendChild(tabButton);
-                
+
                 // Criar conteúdo da tab
                 const tabContent = document.createElement('div');
                 tabContent.className = `tab-content ${isActive ? 'active' : ''}`;
                 tabContent.id = `tab-content-${i}`;
-                
+
+                // O container interno é onde os cards de seguro (e o botão Ver Mais) serão inseridos
                 tabContent.innerHTML = `
                     <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                         <label for="viajante-nome-${i}" class="block text-sm font-semibold text-gray-700 mb-2">
@@ -444,7 +449,8 @@
                         >
                         <p class="text-xs text-gray-500 mt-1">Deixe em branco para usar "Viajante ${i + 1}"</p>
                     </div>
-                    <div class="flex flex-col gap-6"></div>
+                    <div class="flex flex-col gap-6">
+                        </div>
                 `;
                 tabsContent.appendChild(tabContent);
             }
@@ -456,12 +462,12 @@
             document.querySelectorAll('.tab-button').forEach((btn, index) => {
                 btn.classList.toggle('active', index === tabIndex);
             });
-            
+
             // Atualizar conteúdo das tabs
             document.querySelectorAll('.tab-content').forEach((content, index) => {
                 content.classList.toggle('active', index === tabIndex);
             });
-            
+
             return false; // Previne qualquer navegação
         }
 
@@ -512,10 +518,10 @@
             // Ocultar loading e container de seguros
             document.getElementById('loading-seguros').style.display = 'none';
             document.getElementById('seguros-container').style.display = 'none';
-            
+
             // Mostrar container de tabs
             document.getElementById('tabs-seguros-container').style.display = 'block';
-            
+
             // Obter informações dos viajantes e criar apenas as tabs (sem seguros)
             const viajantesInfo = getViajantesInfo();
             createTabs(viajantesInfo);
@@ -565,25 +571,25 @@
         `;
         }
 
-        function renderInsurances(insurances) {
-            window.currentInsurances = insurances;
-            
-            // Obter informações dos viajantes
-            const viajantesInfo = getViajantesInfo();
-            
-            // Criar as tabs
-            createTabs(viajantesInfo);
-            
-            // Distribuir seguros para cada tab (cada viajante terá todos os seguros)
-            const { numPessoas } = viajantesInfo;
-            
-            for (let viaganteIndex = 0; viaganteIndex < numPessoas; viaganteIndex++) {
-                const tabContentContainer = document.querySelector(`#tab-content-${viaganteIndex} .flex.flex-col.gap-6`);
-                if (!tabContentContainer) continue;
-                
-                let html = '';
-                
-                insurances.forEach((insurance, index) => {
+        // =========================================================================
+        // Função para renderizar os seguros e aplicar a paginação (Ver Mais)
+        // =========================================================================
+        function displayInsurancesForTab(viaganteIndex, insurances, tabContentContainer) {
+            // Inicializa a contagem de visíveis para esta aba, se não existir
+            if (!window.visibleInsuranceCount[viaganteIndex]) {
+                window.visibleInsuranceCount[viaganteIndex] = INSURANCES_PER_PAGE;
+            }
+
+            const currentVisibleCount = window.visibleInsuranceCount[viaganteIndex];
+            const totalInsurances = insurances.length;
+
+            // Limpa o container
+            tabContentContainer.innerHTML = '';
+            let html = '';
+
+            // Renderiza apenas os seguros visíveis
+            insurances.forEach((insurance, index) => {
+                if (index < currentVisibleCount) {
                     // Acessa os dados pelas chaves, de forma segura e independente da ordem
                     const seguradora = insurance.seguradora || 'Seguradora N/A';
                     const plano = insurance.plano || 'Plano N/A';
@@ -595,55 +601,132 @@
                     const detalhesEtarios = insurance.detalhes_etarios || '';
                     const link = insurance.link || '#';
 
-                    // Estrutura HTML final com ícones e dados nos lugares corretos
+                    // Estrutura HTML do card de seguro
                     html += `
-                    <div class="seguro-card" data-insurance-index="${index}" data-viajante-index="${viaganteIndex}" onclick="selectInsurance(this, ${index}, ${viaganteIndex})">
-                        <div class="p-5 border-b border-gray-200">
-                            <p class="text-sm text-gray-500">${seguradora}</p>
-                            <h3 class="font-bold text-gray-800 text-lg">${plano}</h3>
-                            ${detalhesEtarios ? `<p class="text-xs text-gray-400 mt-1">${detalhesEtarios}</p>` : ''}
-                        </div>
+                        <div class="seguro-card" data-insurance-index="${index}" data-viajante-index="${viaganteIndex}" onclick="selectInsurance(this, ${index}, ${viaganteIndex})">
+                            <div class="p-5 border-b border-gray-200">
+                                <p class="text-sm text-gray-500">${seguradora}</p>
+                                <h3 class="font-bold text-gray-800 text-lg">${plano}</h3>
+                                ${detalhesEtarios ? `<p class="text-xs text-gray-400 mt-1">${detalhesEtarios}</p>` : ''}
+                            </div>
 
-                        <div class="p-5 flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="flex items-start">
-                                <i class="fa-solid fa-user-doctor text-blue-500 mr-3 mt-1 text-xl w-6 text-center"></i>
-                                <div>
-                                    <p class="text-sm text-gray-700 font-semibold">Despesa Médica</p>
-                                    <p class="text-sm text-gray-500">${coberturaMedica}</p>
+                            <div class="p-5 flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="flex items-start">
+                                    <i class="fa-solid fa-user-doctor text-blue-500 mr-3 mt-1 text-xl w-6 text-center"></i>
+                                    <div>
+                                        <p class="text-sm text-gray-700 font-semibold">Despesa Médica</p>
+                                        <p class="text-sm text-gray-500">${coberturaMedica}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <i class="fa-solid fa-suitcase-rolling text-blue-500 mr-3 mt-1 text-xl w-6 text-center"></i>
+                                    <div>
+                                        <p class="text-sm text-gray-700 font-semibold">Seguro Bagagem</p>
+                                        <p class="text-sm text-gray-500">${coberturaBagagem}</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="flex items-start">
-                                <i class="fa-solid fa-suitcase-rolling text-blue-500 mr-3 mt-1 text-xl w-6 text-center"></i>
-                                <div>
-                                    <p class="text-sm text-gray-700 font-semibold">Seguro Bagagem</p>
-                                    <p class="text-sm text-gray-500">${coberturaBagagem}</p>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="p-5 bg-gray-50 rounded-b-lg mt-auto">
-                            <div class="flex justify-between items-center mb-4">
-                                <div>
-                                    <p class="text-xs text-gray-500">No cartão</p>
-                                    <p class="text-lg font-bold text-gray-800">${precoCartao}</p>
-                                    <p class="text-xs text-gray-500">${parcelas}</p>
+                            <div class="p-5 bg-gray-50 rounded-b-lg mt-auto">
+                                <div class="flex justify-between items-center mb-4">
+                                    <div>
+                                        <p class="text-xs text-gray-500">No cartão</p>
+                                        <p class="text-lg font-bold text-gray-800">${precoCartao}</p>
+                                        <p class="text-xs text-gray-500">${parcelas}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs text-green-600 font-semibold">No PIX</p>
+                                        <p class="text-2xl font-extrabold text-green-600">${precoPix}</p>
+                                    </div>
                                 </div>
-                                <div class="text-right">
-                                    <p class="text-xs text-green-600 font-semibold">No PIX</p>
-                                    <p class="text-2xl font-extrabold text-green-600">${precoPix}</p>
-                                </div>
+                                <a href="${link}" target="_blank" class="details-link text-sm w-full text-center block" onclick="event.stopPropagation()">
+                                    Ver detalhes completos
+                                </a>
                             </div>
-                            <a href="${link}" target="_blank" class="details-link text-sm w-full text-center block" onclick="event.stopPropagation()">
-                                Ver detalhes completos
-                            </a>
                         </div>
-                    </div>
-                `;
-                });
+                    `;
+                }
+            });
+
+            // Adiciona os cards ao container
+            tabContentContainer.innerHTML = html;
+
+            // Adiciona o botão "Ver Mais" se houver seguros não exibidos
+            if (currentVisibleCount < totalInsurances) {
+                // MODIFICAÇÃO AQUI: Largura reduzida e centralizada
+                const showMoreButton = document.createElement('button');
+                showMoreButton.type = 'button';
+                showMoreButton.className = 'mx-auto w-1/6 mt-6 py-3 px-4 bg-gray-100 text-blue-600 font-semibold rounded-lg hover:bg-gray-200 transition-colors border border-gray-300';
+                showMoreButton.innerHTML = `Ver mais +`;
+                showMoreButton.onclick = (e) => {
+                    e.preventDefault();
+                    window.showMoreInsurances(viaganteIndex);
+                };
                 
-                tabContentContainer.innerHTML = html;
+                // Cria um container para centralizar o botão
+                const buttonContainer = document.createElement('div');
+                buttonContainer.className = 'flex justify-center w-full';
+                buttonContainer.appendChild(showMoreButton);
+                
+                tabContentContainer.appendChild(buttonContainer);
+            }
+            
+            // Re-aplicar a seleção se houver uma (após recarregar a lista)
+            const selectedData = window.selectedInsurancesByViajante ? window.selectedInsurancesByViajante[viaganteIndex] : null;
+            if (selectedData) {
+                const selectedCard = tabContentContainer.querySelector(`.seguro-card[data-insurance-index="${selectedData.insuranceIndex}"]`);
+                if (selectedCard) {
+                    selectedCard.classList.add('selected');
+                }
             }
         }
+
+        // =========================================================================
+        // Função para o botão "Ver Mais"
+        // =========================================================================
+        window.showMoreInsurances = function(viaganteIndex) {
+            const insurances = window.currentInsurances;
+            const currentVisible = window.visibleInsuranceCount[viaganteIndex] || INSURANCES_PER_PAGE;
+            
+            // Calcula o novo total de visíveis
+            const newVisible = currentVisible + INSURANCES_PER_PAGE;
+            window.visibleInsuranceCount[viaganteIndex] = Math.min(newVisible, insurances.length);
+            
+            // Re-renderiza a lista completa para o viajante atual
+            const tabContentContainer = document.querySelector(`#tab-content-${viaganteIndex} .flex.flex-col.gap-6`);
+            if (tabContentContainer) {
+                displayInsurancesForTab(viaganteIndex, insurances, tabContentContainer);
+            }
+        };
+
+
+        // =========================================================================
+        // MODIFICADO: renderInsurances para usar a nova lógica de paginação
+        // =========================================================================
+        function renderInsurances(insurances) {
+            window.currentInsurances = insurances;
+            
+            // Limpa o rastreamento de visíveis para uma nova busca
+            window.visibleInsuranceCount = {};
+
+            // Obter informações dos viajantes
+            const viajantesInfo = getViajantesInfo();
+            
+            // Criar as tabs (que já criam o esqueleto de conteúdo)
+            createTabs(viajantesInfo);
+            
+            // Distribuir seguros para cada tab (cada viajante terá todos os seguros)
+            const { numPessoas } = viajantesInfo;
+            
+            for (let viaganteIndex = 0; viaganteIndex < numPessoas; viaganteIndex++) {
+                const tabContentContainer = document.querySelector(`#tab-content-${viaganteIndex} .flex.flex-col.gap-6`);
+                if (!tabContentContainer) continue;
+                
+                // Chamada para a nova função de exibição com paginação
+                displayInsurancesForTab(viaganteIndex, insurances, tabContentContainer);
+            }
+        }
+
 
         window.restartSearch = function () {
             attemptsMade = 0;
@@ -670,7 +753,7 @@
                 const nomeExibir = nomeValue.trim() || `Viajante ${viaganteIndex + 1}`;
                 const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
                 const idade = idadeInputs[viaganteIndex] ? parseInt(idadeInputs[viaganteIndex].value) || 25 : 25;
-                
+
                 tabButton.innerHTML = `
                     <div class="flex items-center space-x-2">
                         <i class="fas fa-user text-sm"></i>
@@ -731,12 +814,12 @@
                 // Verificar se seguro foi selecionado como "Sim" ou "Não" no step 2
                 const seguroSelect = document.getElementById('seguroViagem');
                 const desejaSeguro = seguroSelect ? seguroSelect.value === 'Sim' : false;
-                
+
                 if (desejaSeguro) {
                     // Se escolheu "Sim": fazer busca normal de seguros
                     const hasOldFormat = document.querySelector('.seguro-card');
                     const hasNewFormat = document.querySelector('#tabs-seguros-container .seguro-card');
-                    
+
                     if (!hasOldFormat && !hasNewFormat) {
                         restartSearch();
                     }
@@ -747,7 +830,7 @@
             }
         }, { threshold: 0.1 });
 
-        const step4Element = document.querySelector('#seguros-container').closest('.form-step') || 
+        const step4Element = document.querySelector('#seguros-container').closest('.form-step') ||
                             document.querySelector('#tabs-seguros-container').closest('.form-step');
         if (step4Element) {
             step4Observer.observe(step4Element);
