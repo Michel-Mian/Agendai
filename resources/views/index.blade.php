@@ -209,8 +209,16 @@
 
                 document.querySelectorAll("a").forEach(link => {
                     link.addEventListener("click", e => {
+                        // NÃO mostra loader se for .no-loader, âncora interna, ou tab
+                        if (
+                            link.classList.contains('no-loader') ||
+                            (link.hash && link.pathname === window.location.pathname) ||
+                            link.getAttribute('href')?.startsWith('#')
+                        ) {
+                            return;
+                        }
                         if (link.href && link.href.startsWith(window.location.origin)) {
-                            loader.classList.remove("hidden");
+                            document.getElementById("loader").classList.remove("hidden");
                         }
                     });
                 });

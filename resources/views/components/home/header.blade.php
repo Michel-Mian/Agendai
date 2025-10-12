@@ -6,10 +6,10 @@
             </div>
             <div class="flex gap-2">
                 <a href="/login" class=" hover:bg-emerald-600 hover:text-white text-gray px-3 md:px-6 py-2 rounded-lg transition-colors text-sm md:text-base">
-                Sign in
+                Login
                 </a>
                 <a href="/register" class="border-1 border-gray hover:bg-emerald-600 hover:text-white text-gay px-3 md:px-6 py-2 rounded-lg transition-colors text-sm md:text-base">
-                    Register
+                    Criar conta
                 </a>
             </div>
         </div>

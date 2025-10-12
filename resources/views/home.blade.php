@@ -17,7 +17,7 @@
     @include('components.home.categories')
 
     <!-- How it Works Section -->
-    @include('components.home.how-it-works')
+    @include('components.home.about-us')
 
     <!-- CTA Section -->
     @include('components.home.cta')
