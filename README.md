@@ -112,6 +112,6 @@ Uso **acadêmico e sem fins lucrativos**.
 
 ## 📷 Capturas de Tela
 
-<img src="public/imgs/readme-agendai-1.png" alt="Home" width="500"/> <img src="public/imgs/readme-agendai-2.png" alt="EditTrip" width="500"/> <img src="public/imgs/readme-agendai-3.png" alt="FormTrip" width="500"/> <img src="public/imgs/readme-agendai-4.png" alt="Explore" width="500"/>
+<img src="public/imgs/readme/agendai-1.png" alt="Home" width="500"/> <img src="public/imgs/readme/agendai-2.png" alt="EditTrip" width="500"/> <img src="public/imgs/readme/agendai-3.png" alt="FormTrip" width="500"/> <img src="public/imgs/readme/agendai-4.png" alt="Explore" width="500"/>
 
 ---
