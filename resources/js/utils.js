@@ -60,5 +60,3 @@ window.safeInitGoogleMaps = function(callback) {
         console.warn('Google Maps não está disponível');
     }
 };
-
-console.log('🛡️ Utilitários de segurança JavaScript carregados');

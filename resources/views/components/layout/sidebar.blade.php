@@ -1,4 +1,4 @@
-<div id="sidebar" class="bg-white shadow-lg min-h-screen relative flex flex-col sidebar-expanded">    <!-- Header com Logo e Toggle -->
+<div id="sidebar" class="bg-white shadow-lg h-screen fixed top-0 left-0 flex flex-col sidebar-expanded z-10">
     <div id="sidebar-header" class="flex items-center justify-between p-2 border-b border-gray-200 transition-all duration-300" style="background-color: #f7faf8;">
         <div id="logo-container" class="flex items-center justify-center w-full space-x-3">
             <div class="w-24 h-24 rounded-lg flex items-center justify-center p-0" id="logo">
@@ -14,46 +14,46 @@
 
 
     <!-- Navigation Menu -->
-    <nav class="flex-1 p-4">
-        <ul class="space-y-2">
-            <li>
-                <a href="/dashboard" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
-                    <i class="fa-solid fa-book"></i>
-                    <span class="nav-text">Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="/myTrips" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
-                    <i class="fa-solid fa-calendar-week"></i>
-                    <span class="nav-text">Minhas Viagens</span>
-                </a>
-            </li>
-            <li>
-                <a href="/flights" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
-                    <i class="fa-solid fa-plane-departure"></i>
-                    <span class="nav-text">Voos</span>
-                </a>
-            </li>
-            <li>
-                <a href="/hotels" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
-                    <i class="fa-solid fa-hotel"></i>
-                    <span class="nav-text">Hotels</span>
-                </a>
-            </li>
-            <li>
-                <a href="/formTrip" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
-                    <i class="fa-solid fa-plus"></i>
-                    <span class="nav-text">Criar Viagem</span>
-                </a>
-            </li>
-            <li>
-                <a href="/explore" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
-                    <i class="fa-solid fa-earth-americas"></i>
-                    <span class="nav-text">Explorar</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
+<nav class="flex-1 p-4 overflow-y-auto"> 
+    <ul class="space-y-5"> 
+        <li> 
+            <a href="/dashboard" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors"> 
+                <i class="fa-solid fa-book"></i> 
+                <span class="nav-text ml-3">Dashboard</span> 
+            </a> 
+        </li> 
+        <li> 
+            <a href="/myTrips" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors"> 
+                <i class="fa-solid fa-calendar-week"></i> 
+                <span class="nav-text ml-3">Minhas Viagens</span> 
+            </a> 
+        </li> 
+        <li> 
+            <a href="/flights" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors"> 
+                <i class="fa-solid fa-plane-departure"></i> 
+                <span class="nav-text ml-3">Voos</span> 
+            </a> 
+        </li> 
+        <li> 
+            <a href="/hotels" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors"> 
+                <i class="fa-solid fa-hotel"></i> 
+                <span class="nav-text ml-3">Hotels</span> 
+            </a> 
+        </li> 
+        <li> 
+            <a href="/formTrip" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors"> 
+                <i class="fa-solid fa-plus"></i> 
+                <span class="nav-text ml-3">Criar Viagem</span> 
+            </a> 
+        </li> 
+        <li> 
+            <a href="/explore" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors"> 
+                <i class="fa-solid fa-earth-americas"></i> 
+                <span class="nav-text ml-3">Explorar</span> 
+            </a> 
+        </li> 
+    </ul> 
+</nav>
 
     <!-- User Profile Section  -->
     <div class="border-t border-gray-200 p-4">
@@ -114,4 +114,3 @@
         </div>
     </div>
 </div>
-

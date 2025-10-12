@@ -3,7 +3,7 @@
 <div class="h-screen w-screen overflow-hidden bg-gray-100 flex">
     @include('components/layout/sidebar')
 
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div id="main-content" class="flex-1 flex flex-col overflow-hidden">
         @include('components/layout/header', ['title' => 'Explore'])
 
         <div class="relative flex-1 overflow-hidden">

@@ -85,6 +85,16 @@
     transform: translateX(-17px); /* ajuste o valor conforme necessário */
 }
 
+/* Parte do seu CSS que já resolve a centralização */
+#sidebar.collapsed .nav-text,
+#sidebar.collapsed .profile-info,
+#sidebar.collapsed .profile-chevron {
+    display: none; /* ESSENCIAL: Oculta o texto para centralizar o ícone */
+}
 
+/* Esta regra irá centralizar o ícone restante */
+#sidebar.collapsed a {
+    justify-content: center;
+}
 
 

@@ -1,97 +1,72 @@
 // -------------------- Autocomplete Google Places (Destino) --------------------
 function initPlacesAutocompleteStrict() {
-    try {
-        console.log('Iniciando configuração de autocomplete...');
-        
-        // Verificar se a API do Google Maps está disponível
-        if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
-            console.warn('Google Maps API não está disponível ainda');
-            return;
-        }
+    const fields = [
+        { id: 'tripDestination' },
+        { id: 'origem' }
+    ];
 
-        const fields = [
-            { id: 'tripDestination' },
-            { id: 'origem' }
-        ];
-
-        fields.forEach(field => {
-            const input = document.getElementById(field.id);
-            if (input) {
-                console.log(`Configurando autocomplete para: ${field.id}`);
-                
-                // Verificar se já existe nosso novo sistema de autocomplete (step1)
-                if (input.classList.contains('origem-input') || 
-                    input.classList.contains('destino-input') ||
-                    input.hasAttribute('data-new-autocomplete')) {
-                    return;
-                }
-                
-                if (!input._autocompleteInitialized) {
-                    try {
-                        const autocomplete = new google.maps.places.Autocomplete(input, {
-                            types: ['(regions)'],
-                        });
-                        input._autocompleteInitialized = true;
-
-                        // Armazena se o usuário selecionou uma sugestão válida
-                        input._placeSelected = false;
-
-                        autocomplete.addListener('place_changed', function() {
-                            const place = autocomplete.getPlace();
-                            if (place && place.place_id) {
-                                input._placeSelected = true;
-                                input.classList.remove('border-red-500');
-                            } else {
-                                input._placeSelected = false;
-                                input.classList.add('border-red-500');
-                            }
-                        });
-
-                        // Ao digitar, reseta o status de seleção
-                        input.addEventListener('input', function() {
-                            input._placeSelected = false;
-                            input.classList.remove('border-red-500');
-                        });
-
-                        // Ao sair do campo, verifica se selecionou uma sugestão
-                        input.addEventListener('blur', function(e) {
-                            setTimeout(() => {
-                                if (!input._placeSelected) {
-                                    input.classList.add('border-red-500');
-                                    input.focus();
-                                }
-                            }, 200);
-                        });
-                    } catch (error) {
-                        console.error(`Erro ao configurar autocomplete para ${field.id}:`, error);
-                    }
-                }
+    fields.forEach(field => {
+        const input = document.getElementById(field.id);
+        if (input && typeof google !== 'undefined' && google.maps && google.maps.places) {
+            // Verificar se já existe nosso novo sistema de autocomplete (step1)
+            if (input.classList.contains('origem-input') || 
+                input.classList.contains('destino-input') ||
+                input.hasAttribute('data-new-autocomplete')) {
+                return;
             }
-        });
-    } catch (error) {
-        console.error('Erro geral na configuração do autocomplete:', error);
-    }
+            
+            if (!input._autocompleteInitialized) {
+                const autocomplete = new google.maps.places.Autocomplete(input, {
+                    types: ['(regions)'],
+                });
+                input._autocompleteInitialized = true;
+
+                // Armazena se o usuário selecionou uma sugestão válida
+                input._placeSelected = false;
+
+                autocomplete.addListener('place_changed', function() {
+                    const place = autocomplete.getPlace();
+                    if (place && place.place_id) {
+                        input._placeSelected = true;
+                        input.classList.remove('border-red-500');
+                    } else {
+                        input._placeSelected = false;
+                        input.classList.add('border-red-500');
+                    }
+                });
+
+                // Ao digitar, reseta o status de seleção
+                input.addEventListener('input', function() {
+                    input._placeSelected = false;
+                    input.classList.remove('border-red-500');
+                });
+
+                // Ao sair do campo, verifica se selecionou uma sugestão
+                input.addEventListener('blur', function(e) {
+                    setTimeout(() => {
+                        if (!input._placeSelected) {
+                            input.classList.add('border-red-500');
+                            input.focus();
+                        }
+                    }, 200);
+                });
+            }
+        }
+    });
 }
 
 // Callback global do Google Maps - definido imediatamente
 window.initTripFormMap = function() {
-    try {
-        console.log('Google Maps API callback iniciado');
-        initPlacesAutocompleteStrict();
-    } catch (error) {
-        console.error('Erro no callback do Google Maps:', error);
-    }
+
+    initPlacesAutocompleteStrict();
 };
 
 // Garantir que a função está disponível globalmente
 if (typeof window.initTripFormMap !== 'function') {
     window.initTripFormMap = function() {
-        try {
-            if (typeof initPlacesAutocompleteStrict === 'function') {
-                initPlacesAutocompleteStrict();
-            }
-        } catch (error) {
-            console.error('Erro no fallback do Google Maps:', error);
+
+        if (typeof initPlacesAutocompleteStrict === 'function') {
+            initPlacesAutocompleteStrict();
         }
     };
 }
@@ -102,15 +77,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const isFormPage = document.getElementById('multiStepForm') !== null;
     
     if (!isFormPage) {
+        console.log('formTrip.js: Não é uma página de formulário, pulando inicialização');
         return;
     }
 
     if (typeof google !== 'undefined' && google.maps && google.maps.places) {
-        console.log('Google Maps API disponível, iniciando autocomplete...');
         initPlacesAutocompleteStrict();
-    } else {
-        console.log('Google Maps API ainda não disponível, aguardando callback...');
-        // A API será inicializada pelo callback initTripFormMap quando carregada
     }
 
     // -------------------- Variáveis Globais e Steps --------------------
@@ -279,9 +251,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const reviewList = document.getElementById('reviewList');
         if (!reviewList) return;
 
-        // Preparar dados dos viajantes para garantir que estejam atualizados
-        prepararDadosViajantes();
-
 
 
         // Pegar nome da viagem
@@ -315,17 +284,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Pegar idades dos viajantes
         const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
         const idades = Array.from(idadeInputs).map(input => input.value).filter(value => value !== '');
-
-        // Coletar nomes dos viajantes
-        const nomesViajantes = [];
-        const numPessoasInt = parseInt(numPessoas) || 1;
-        for (let i = 0; i < numPessoasInt; i++) {
-            const nomeInput = document.getElementById(`viajante-nome-${i}`);
-            const nomePersonalizado = nomeInput ? nomeInput.value.trim() : '';
-            const nomeViajante = nomePersonalizado || `Viajante ${i + 1}`;
-            const idade = idades[i] || 'Não informada';
-            nomesViajantes.push(`${nomeViajante} (${idade} anos)`);
-        }
 
         
         // Pegar datas dos destinos
@@ -473,7 +431,6 @@ document.addEventListener('DOMContentLoaded', function() {
             ${origem ? `<li><b>🏠 Origem:</b> ${origem}</li>` : ''}
             <li><b>🎯 Destinos:</b> ${destino || 'Nenhum destino informado'}</li>
             <li><b>👥 Número de pessoas:</b> ${numPessoas}</li>
-            ${nomesViajantes.length > 0 ? `<li><b>👤 Viajantes:</b> ${nomesViajantes.join(', ')}</li>` : ''}
             ${idades.length > 0 ? `<li><b>👶 Idades dos viajantes:</b> ${idades.join(', ')} anos</li>` : ''}
             ${primeiraDataInicio && ultimaDataFim ? `<li><b>📅 Período da viagem:</b> ${formatarDataBR(primeiraDataInicio)} a ${formatarDataBR(ultimaDataFim)}</li>` : ''}
             ${datasInfo.length > 0 ? `<li><b>📅 Datas por destino:</b><br>${datasInfo.join('<br>')}</li>` : ''}
@@ -497,6 +454,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 return;
             }
+            console.log('Avançando step', currentStep);
 
             const seguro = document.getElementById('seguroViagem');
             const meioSelect = document.querySelectorAll('.form-step')[1].querySelector('select');
@@ -504,17 +462,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Lógica de navegação entre os passos
             if (currentStep === 2) {
-                currentStep++
-            } else if (currentStep === 3) {
-                currentStep++;
-            } else if (currentStep === 4) {
-                // Do step 4 (seguros), decidir para onde ir baseado em meio de locomoção
-                if (meioLocomocao === 'Avião') {
-                    currentStep++; // Vai para step 5 (voos)
+                if (seguro && seguro.value === 'Não' && meioLocomocao !== 'Avião') {
+                    currentStep += 3;
+                } else if (seguro && seguro.value === 'Não' && meioLocomocao === 'Avião') {
+                    currentStep += 2;
                     flightSearchInitiated = true;
-                    searchFlights();
+                    searchFlights(); // Remover await para não bloquear
+                } else if (seguro && seguro.value === 'Sim') {
+                    currentStep++;
+                    // Usuário pode clicar manualmente no botão "Buscar Seguros" no step 4
+                }
+            } else if (currentStep === 3) {
+                if (meioLocomocao !== 'Avião') {
+                    currentStep += 2;
                 } else {
-                    currentStep += 2; // Pula step 5, vai para step 6 (revisão)
+                    currentStep++;
+                    flightSearchInitiated = true;
+                    searchFlights(); // Remover await para não bloquear
                 }
             } else {
                 currentStep++;
@@ -531,31 +495,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const meioSelect = document.querySelectorAll('.form-step')[1].querySelector('select');
             meioLocomocao = meioSelect.value;
 
-            // Lógica corrigida para voltar corretamente
-            if (currentStep === 6) {
-                // Do step 6, voltar baseado na configuração
-                if (seguro && seguro.value === 'Não') {
-                    // Se não quer seguro
-                    if (meioLocomocao === 'Avião') {
-                        currentStep -= 1; // Volta para step 5 (voos)
-                    } else {
-                        currentStep -= 3; // Volta para step 3 (preferências)
-                    }
-                } else {
-                    // Se quer seguro
-                    if (meioLocomocao === 'Avião') {
-                        currentStep -= 1; // Volta para step 5 (voos)
-                    } else {
-                        currentStep -= 2; // Volta para step 4 (seguros)
-                    }
-                }
-            } else if (currentStep === 5) {
-                currentStep -= 1;
+            // Se está no passo 5 ou 6 e seguro é "Não", pule a etapa de seguros ao voltar
+            if (
+                (currentStep === 5 && seguro && seguro.value === 'Não' && meioLocomocao !== 'Avião') ||
+                (currentStep === 6 && seguro && seguro.value === 'Não' && meioLocomocao === 'Avião')
+            ) {
+                currentStep -= 3;
+            } else if (currentStep === 4 && meioLocomocao === 'Avião' && seguro && seguro.value === 'Não') {
+                currentStep -= 2;
             } else {
-                // Navegação normal (voltar 1 step)
                 currentStep--;
             }
-            
             if (currentStep < 0) currentStep = 0;
             showStep(currentStep);
         });
@@ -631,30 +581,6 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             insuranceOptions.classList.add('hidden');
         }
-        
-        // Atualizar a visualização do step 4 de seguros se estivermos nele
-        const currentStepElement = document.querySelector('.form-step.active');
-        if (currentStepElement && currentStepElement.querySelector('#seguros-container')) {
-            // Resetar a visualização do step 4
-            document.getElementById('loading-seguros').style.display = 'none';
-            document.getElementById('tabs-seguros-container').style.display = 'none';
-            document.getElementById('seguros-container').style.display = 'none';
-            
-            // Trigger a re-evaluation of insurance display based on new selection
-            setTimeout(() => {
-                if (this.value === 'Sim') {
-                    // Se mudou para "Sim", fazer busca de seguros
-                    if (typeof window.restartSearch === 'function') {
-                        window.restartSearch();
-                    }
-                } else {
-                    // Se mudou para "Não", mostrar apenas as tabs dos viajantes
-                    if (typeof window.showTravelerTabsOnly === 'function') {
-                        window.showTravelerTabsOnly();
-                    }
-                }
-            }, 100);
-        }
     });
 
     // Exibe campo de IATA se "Avião" vier selecionado por padrão
@@ -708,13 +634,14 @@ document.addEventListener('DOMContentLoaded', function() {
 const multiStepForm = document.getElementById('multiStepForm');
 if (multiStepForm) {
     multiStepForm.addEventListener('submit', function (e) {
+        console.log('Formulário sendo enviado!');
+        
         // Coletar dados dos viajantes e seguros antes do envio
         prepararDadosViajantes();
         
         // Permitir o envio normal do formulário para o servidor
         // O formulário será enviado via POST para a rota definida
-    });
-}
+});
 
 // -------------------- Função para preparar dados dos viajantes --------------------
 function prepararDadosViajantes() {
@@ -758,6 +685,9 @@ function prepararDadosViajantes() {
     // Salvar nos inputs hidden
     document.getElementById('viajantesData').value = JSON.stringify(viajantesData);
     document.getElementById('segurosViajantesData').value = JSON.stringify(segurosViajantesData);
+    
+    console.log('Dados dos viajantes preparados:', viajantesData);
+    console.log('Dados dos seguros preparados:', segurosViajantesData);
 }
 
 // -------------------- Tratamento de erros e mensagens de feedback --------------------
@@ -985,10 +915,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // -------------------- Seleção de preferências (step 3) --------------------
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎯 Iniciando sistema de seleção de preferências...');
+    
     // Esperar um pouco para garantir que o DOM esteja totalmente carregado
     setTimeout(() => {
         const prefBtns = document.querySelectorAll('.pref-btn');
         const preferencesInput = document.getElementById('preferences');
+
+        console.log(`📋 Encontrados ${prefBtns.length} botões de preferência`);
+        console.log(`💾 Input de preferências:`, preferencesInput);
 
         if (!prefBtns.length) {
             console.warn('⚠️ Nenhum botão de preferência encontrado');
@@ -1003,11 +938,14 @@ document.addEventListener('DOMContentLoaded', function() {
         let selectedPrefs = [];
 
         prefBtns.forEach((btn, index) => {
+            console.log(`🔗 Configurando listener para botão ${index + 1}`);
+            
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 
                 const prefText = btn.getAttribute('data-preference') || btn.querySelector('span').innerText;
+                console.log(`🎯 Clicado em: "${prefText}"`);
                 
                 // Toggle da classe selected com efeito visual imediato
                 const wasSelected = btn.classList.contains('selected');
@@ -1018,10 +956,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     btn.style.borderColor = '#22c55e';
                     btn.style.background = 'linear-gradient(135deg, #dcfce7, #bbf7d0)';
                     btn.style.transform = 'scale(1.05)';
+                    console.log(`✅ "${prefText}" SELECIONADO`);
                 } else {
                     btn.style.borderColor = '#e5e7eb';
                     btn.style.background = '#f9fafb';
                     btn.style.transform = 'scale(1)';
+                    console.log(`❌ "${prefText}" DESELECIONADO`);
                 }
                 
                 // Atualizar array
@@ -1033,6 +973,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Atualizar input hidden
                 preferencesInput.value = selectedPrefs.join(',');
+                
+                console.log('📋 Preferências atuais:', selectedPrefs);
+                console.log('💾 Valor do input:', preferencesInput.value);
                 
                 // Mostrar feedback visual temporário
                 const span = btn.querySelector('span');
@@ -1047,6 +990,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
+        
+        console.log('✅ Sistema de seleção de preferências configurado!');
     }, 100);
 });
 

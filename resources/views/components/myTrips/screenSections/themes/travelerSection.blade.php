@@ -10,9 +10,14 @@
                     <p class="text-green-600 text-sm">{{ $viajantes->count() }} {{ $viajantes->count() == 1 ? 'viajante' : 'viajantes' }}</p>
                 </div>
             </div>
-            <button type="button" id="open-add-viajante-modal-btn" class="bg-white hover:bg-green-100 cursor-pointer text-green-500 border-2 border-green-400 p-2 rounded-lg transition-colors" title="Adicionar viajante">
-                <i class="fas fa-user-plus text-lg"></i> Adicionar Viajantes
-            </button>
+            <div class="flex space-x-2">
+                <button type="button" id="open-add-viajante-modal-btn" class="bg-white hover:bg-green-100 cursor-pointer text-green-500 border-2 border-green-400 p-2 rounded-lg transition-colors" title="Adicionar viajante">
+                    <i class="fas fa-user-plus text-lg"></i>
+                </button>
+                <button type="button" id="open-viajantes-details-modal-btn" class="bg-white hover:bg-green-100 cursor-pointer text-green-500 border-2 border-green-400 p-2 rounded-lg transition-colors" title="Ver detalhes dos viajantes">
+                    <i class="fas fa-users text-lg"></i> Detalhes dos Viajantes
+                </button>
+            </div>
         </div>
     </div>
     
@@ -68,12 +73,15 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        
-        
+        // Listener para o botão de adicionar primeiro viajante quando está vazio
         const addViajanteEmptyBtn = document.getElementById('open-add-viajante-modal-btn-empty');
         if (addViajanteEmptyBtn) {
             addViajanteEmptyBtn.addEventListener('click', function() {
-                document.getElementById('open-add-viajante-modal-btn').click();
+                // Procura por qualquer botão que abra o modal de adicionar viajante
+                const addViajanteBtn = document.querySelector('[id*="open-add-viajante-modal-btn"]:not([id$="-empty"])');
+                if (addViajanteBtn) {
+                    addViajanteBtn.click();
+                }
             });
         }
     });

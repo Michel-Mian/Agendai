@@ -3,7 +3,7 @@
     @include('components/myTrips/screenSections/themes/pointSection')
 
     <!-- Container principal do mapa -->
-    <div class="flex-1 flex flex-col">
+    <div class="flex-1 flex flex-col ml-64">
         <!-- Header do mapa -->
         <div class="bg-gradient-to-br from-blue-900 to-blue-800 text-white p-5 text-center">
             <h3 class="m-0 text-xl font-semibold flex items-center justify-center gap-2 mb-3">

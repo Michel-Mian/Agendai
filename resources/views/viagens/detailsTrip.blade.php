@@ -79,7 +79,7 @@
     
     <div class="flex min-h-screen bg-gray-50">
         @include('components/layout/sidebar')
-        <div class="flex-1 flex flex-col">
+        <div id="main-content" class="flex-1 flex flex-col px-0">
             @include('components/layout/header')
             <div class="w-full px-4 py-10 md:py-16">
                 <!-- Detalhes Gerais da Viagem - Design Aprimorado -->
@@ -459,11 +459,6 @@
                                 'hotel' => $hotel ?? collect()
                             ])
                             {{-- Add flights section here if not already included --}}
-                            {{-- Add insurance section below flights section --}}
-                            @include('components/myTrips/screenSections/themes/insuranceSection', [
-                                'seguros' => $seguros ?? collect(),
-                                'viagem' => $viagem
-                            ])
                         </div>
                         <div id="content-rotas-mapa" class="tab-panel hidden">
                             @include('components/myTrips/screenSections/rotasMapa', ['viagem' => $viagem])
@@ -549,6 +544,9 @@
     <!-- Modal de Viajantes -->
     @include('components.myTrips.modals.viajantesModal')
 
+    <!-- Modal de Detalhes dos Viajantes -->
+    @include('components.myTrips.modals.viajantesDetailsModal')
+
     <!-- Modal de Objetivos -->
     @include('components.myTrips.modals.objetivosModal')
 
@@ -563,6 +561,13 @@
     <!-- Insurance modals (add and details) -->
     @include('components.myTrips.modals.addInsurance')
     @include('components.myTrips.modals.insuranceModal')
+
+    <script>
+        window.APP_ROUTES = {
+            searchInsurance: "{{ route('run.Scraping.ajax') }}",
+            saveTravelerInsurance: "{{ route('trip.save.traveler.insurance') }}"
+        };
+    </script>
 
     <!-- Scripts externos -->
     <script src="{{ asset('js/inlineEditManager.js') }}"></script>
