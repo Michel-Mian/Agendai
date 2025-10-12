@@ -51,8 +51,7 @@ class ViagensController extends Controller
                 'pontosInteresse' => function($query) {
                     $query->orderBy('data_ponto_interesse', 'asc')
                           ->orderBy('hora_ponto_interesse', 'asc');
-                },
-                'seguroSelecionado'
+                }
             ])->findOrFail($id);
             
             // Verificar permissões
@@ -78,7 +77,6 @@ class ViagensController extends Controller
 
             // Adicionar seguros
             $seguros = $viagem->seguros;
-            $seguroSelecionado = $viagem->seguroSelecionado;
 
             // Inicializar eventos/notícias vazios (serão carregados via AJAX)
             $eventos = collect();
@@ -119,7 +117,6 @@ class ViagensController extends Controller
                 'voos',
                 'hotel',
                 'seguros',
-                'seguroSelecionado',
                 'eventos',
                 'estatisticas'
             ));
@@ -187,6 +184,7 @@ class ViagensController extends Controller
             'nome_viajante' => 'required|string|max:100',
             'idade_viajante' => 'required|integer|min:0|max:127',
             'viagem_id' => 'required|integer|exists:viagens,pk_id_viagem',
+            'observacoes' => 'nullable|string|max:1000',
         ];
 
         // Adiciona a regra de validação para 'responsavel_legal' (que é o ID do responsável)
@@ -202,6 +200,7 @@ class ViagensController extends Controller
         $viajante->nome = $validated['nome_viajante'];
         $viajante->idade = $validated['idade_viajante'];
         $viajante->fk_id_viagem = $validated['viagem_id'];
+        $viajante->observacoes = $validated['observacoes'] ?? null;
 
         // Se o viajante for menor de 18, atribui o ID do responsável legal
         if ($viajante->idade < 18) {
@@ -225,6 +224,81 @@ class ViagensController extends Controller
 
         // Redireciona de volta para a página da viagem
         return redirect()->route('viagens', ['id' => $viajante->fk_id_viagem])->with('success', 'Viajante adicionado com sucesso!');
+    }
+
+    /**
+     * Atualiza um viajante (nome e idade) via requisição assíncrona
+     */
+    public function updateViajante(Request $request, $id)
+    {
+        try {
+            $viajante = Viajantes::findOrFail($id);
+
+            // Verifica permissão: apenas o dono da viagem pode editar
+            if ($viajante->fk_id_viagem) {
+                $viagem = Viagens::find($viajante->fk_id_viagem);
+                if ($viagem && $viagem->fk_id_usuario !== auth()->id()) {
+                    return response()->json(['success' => false, 'message' => 'Você não tem permissão para editar este viajante.'], 403);
+                }
+            }
+
+
+            $rules = [
+                'nome' => 'required|string|max:100',
+                'idade' => 'required|integer|min:0|max:127',
+            ];
+
+            // Se a idade enviada for menor que 18, o responsável é obrigatório
+            if ($request->has('idade') && intval($request->input('idade')) < 18) {
+                $rules['responsavel_viajante_id'] = 'required|integer|exists:viajantes,pk_id_viajante';
+            }
+
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
+            }
+
+            $viajante->nome = $request->input('nome');
+            $viajante->idade = $request->input('idade');
+
+            // Se menor de 18, atribui o responsável (verifica pertence à mesma viagem e não é ele mesmo)
+            if (intval($viajante->idade) < 18) {
+                $respId = $request->input('responsavel_viajante_id');
+                // verificar existência e pertença à mesma viagem
+                $resp = Viajantes::find($respId);
+                if (!$resp) {
+                    return response()->json(['success' => false, 'message' => 'Responsável não encontrado.'], 422);
+                }
+                if ($resp->pk_id_viajante == $viajante->pk_id_viajante) {
+                    return response()->json(['success' => false, 'message' => 'O responsável não pode ser o próprio viajante.'], 422);
+                }
+                if ($viajante->fk_id_viagem && $resp->fk_id_viagem != $viajante->fk_id_viagem) {
+                    return response()->json(['success' => false, 'message' => 'O responsável deve pertencer à mesma viagem.'], 422);
+                }
+                $viajante->responsavel_viajante_id = $respId;
+            } else {
+                // Maior ou igual a 18: remove responsável
+                $viajante->responsavel_viajante_id = null;
+            }
+
+            $viajante->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Viajante atualizado com sucesso.',
+                'viajante' => [
+                    'id' => $viajante->pk_id_viajante,
+                    'nome' => $viajante->nome,
+                    'idade' => $viajante->idade,
+                ]
+            ]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'message' => 'Viajante não encontrado.'], 404);
+        } catch (\Exception $e) {
+            Log::error('Erro ao atualizar viajante', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => 'Erro interno. Tente novamente.'], 500);
+        }
     }
 
     private function getLatLngFromAddress($address)

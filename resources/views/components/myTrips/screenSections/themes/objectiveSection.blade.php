@@ -3,10 +3,10 @@
         <div class="flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <div class="bg-white/20 rounded-lg p-2">
-                    <i class="fas fa-bullseye text-white text-xl"></i>
+                    <i class="fas fa-bullseye text-purple-600 text-xl"></i>
                 </div>
                 <div>
-                    <h2 class="text-xl font-bold text-white">Objetivos</h2>
+                    <h2 class="text-xl font-bold text-purple-800">Objetivos</h2>
                     <p class="text-purple-200 text-sm">{{ $objetivos->count() }} {{ $objetivos->count() == 1 ? 'objetivo' : 'objetivos' }}</p>
                 </div>
             </div>

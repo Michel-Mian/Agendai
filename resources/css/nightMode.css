@@ -649,7 +649,11 @@
 
 /* Fontes específicas ficam brancas */
 .night-mode .text-purple-200,
-.night-mode p.text-purple-200 {
+.night-mode p.text-purple-200,
+.night-mode .text-purple-800,
+.night-mode .text-purple-600,
+.night-mode .text-orange-800,
+.night-mode .text-orange-600 {
   color: #f0f6fc !important; /* "3 objetivos" fica branco */
 }
 
@@ -3011,4 +3015,39 @@ a[href^="http://127.0.0.1:8000/viagens/"]:hover svg {
 .night-mode div.bg-red-50.rounded-2xl.p-6.mb-6.border.border-red-200 a.bg-red-600 {
     color: white !important; /* Texto: Branco */
     background-color: #dc2626 !important; /* Fundo: Vermelho-600 */
+}
+
+
+.night-mode #dep_iata_suggestions > div.px-2.py-1.hover\:bg-gray-100.cursor-pointer {
+  color: #ffffff !important;              /* fonte branca */
+}
+
+
+.night-mode #dep_iata_suggestions > div.px-2.py-1.hover\:bg-gray-100.cursor-pointer:hover {
+  color: #0d1117 !important;
+}
+
+
+.night-mode #dep_iata_suggestions > div.px-2.py-1.hover\:bg-gray-100.cursor-pointer,
+.night-mode #arr_iata_suggestions > div.px-2.py-1.hover\:bg-gray-100.cursor-pointer {
+  color: #ffffff !important;              /* texto branco */
+}
+
+.night-mode #dep_iata_suggestions > div.px-2.py-1.hover\:bg-gray-100.cursor-pointer:hover,
+.night-mode #arr_iata_suggestions > div.px-2.py-1.hover\:bg-gray-100.cursor-pointer:hover {
+  color: #0d1117 !important;
+}
+
+.night-mode .bg-\[var\(--color-neutral-50\)\] {
+    background-color: #161b22 !important
+} 
+
+.night-mode .flex.items-center.justify-between.bg-white\/60.rounded-lg.p-3.border-orange-200 {
+    /* 1. Fundo Preto Sólido */
+    background-color: #0d1117 !important; /* Ou use #000000 */
+}
+
+.night-mode #modal_orc:hover {
+    background-color: #0d1117 !important; 
+    color: #ffffff !important;
 }

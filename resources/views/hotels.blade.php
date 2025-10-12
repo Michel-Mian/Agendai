@@ -4,9 +4,9 @@
 <style>
     #loader { display: none !important; }
 </style>
-<div class="flex min-h-[30vh] bg-gray-100">
+<div class="flex min-h-[30vh] bg-white-100">
     @include('components/layout.sidebar')
-    <div class="flex-1 flex flex-col">
+        <div id="main-content" class="flex-1 flex flex-col px-0">
         @include('components/layout/header', ['title' => 'Pesquisa de Hotéis'])
         <div class="w-full max-w-5xl rounded-3xl px-4 sm:px-10 py-8 sm:py-14 mx-auto">
         <h2 class="text-2xl font-bold mb-5 text-black-700">Pesquisa de Hotéis</h2>

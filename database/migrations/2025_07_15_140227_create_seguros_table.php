@@ -24,6 +24,9 @@ return new class extends Migration
             $table->decimal('preco_pix', 10, 2)->nullable();
             $table->decimal('preco_cartao', 10, 2)->nullable();
             $table->string('parcelamento_cartao')->nullable();
+
+            $table->unsignedBigInteger('fk_id_viajante');
+            $table->foreign('fk_id_viajante')->references('pk_id_viajante')->on('viajantes')->onDelete('cascade');
             
             $table->boolean('is_selected')->default(true);
             $table->timestamps();
