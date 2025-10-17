@@ -13,8 +13,7 @@
     </div>
 
 
-    <!-- Navigation Menu -->
-<nav class="flex-1 p-4 overflow-y-auto"> 
+    <nav class="flex-1 p-4 overflow-y-auto"> 
     <ul class="space-y-5"> 
         <li> 
             <a href="/dashboard" class="flex items-center p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors"> 
@@ -55,7 +54,6 @@
     </ul> 
 </nav>
 
-    <!-- User Profile Section  -->
     <div class="border-t border-gray-200 p-4">
         <div class="relative">
             <button id="profile-button" class="flex items-center space-x-3 w-full rounded-lg hover:bg-gray-50 transition-colors profile-toggle">
@@ -75,13 +73,41 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
             </button>
-            <!-- Dropdown Menu -->
-            <div id="profile-dropdown" class="absolute bottom-full left-1 min-w-[200px] w-[260px] mb-2 bg-white rounded-lg shadow-lg border border-gray-200 hidden z-50">
+            <div id="profile-dropdown" class="absolute bottom-full left-1 min-w-[230px] mb-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                @csrf
                 <div class="py-2">
                     @if(Auth::check())
-                    <div class="theme-toggle-container cursor-pointer px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" id="themeToggleContainer">
-  <i id="themeToggle" class="fa-solid fa-toggle-on"></i>
-  <span class="ml-2">Modo</span>
+<div class="px-4 py-2 text-gray-700 hover:bg-gray-50 w-full flex justify-center items-center" id="themeToggleContainer">
+    <button id="themeSwitch" 
+            class="relative inline-flex items-center h-6 rounded-full w-16 transition-all duration-500 ease-in-out !night-mode-ignore" 
+            style="
+                /* As cores de contorno serão definidas pelo JS no init */
+                border: 2px solid; 
+                /* O background inicial será definido pelo JS no init */
+                background-color: #e2e8f0; 
+            ">
+        
+        <span class="absolute top-0 left-0 w-full h-full rounded-full flex items-center justify-between px-1 pointer-events-none">
+            
+            <span class="text-sm leading-none" id="sun-icon">
+                <i class="fa-solid fa-sun"></i>
+            </span>
+            
+            <span class="text-sm leading-none text-gray-700" id="moon-icon">
+                <i class="fa-solid fa-moon"></i>
+            </span>
+        </span>
+
+        <span id="switch-indicator" 
+              class="inline-block w-5 h-5 bg-white rounded-full shadow-md transition-all duration-500 ease-in-out"
+              style="
+                /* Posição inicial (Claro) */
+                transform: translateX(0px); 
+                /* Contorno será definido pelo JS */
+                border: 1px solid; 
+              ">
+        </span>
+    </button>
 </div>
                         <a href="/myProfile/{{  Auth::user()->id }}/edit" class="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

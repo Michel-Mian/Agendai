@@ -35,7 +35,7 @@
 }
 
 /* Padrão para Botões e Links no nightMode */
-.night-mode button,
+.night-mode button, /* <--- ALTERAÇÃO AQUI */
 .night-mode a,
 .night-mode i,
 .night-mode .btn {
@@ -528,13 +528,6 @@
 /*.night-mode * {
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease !important;
 }*/
-
-.night-mode button,
-.night-mode .btn,
-.night-mode input[type="submit"],
-.night-mode input[type="button"],
-.night-mode a {
-}
 
 /* === ESPECÍFICOS PARA FUNDOS AZUIS === */
 .night-mode .bg-blue-50 {
@@ -3050,4 +3043,45 @@ a[href^="http://127.0.0.1:8000/viagens/"]:hover svg {
 .night-mode #modal_orc:hover {
     background-color: #0d1117 !important; 
     color: #ffffff !important;
+}
+
+/* --- LIMPEZA DE ESTILOS DO SWITCH DE TEMA --- */
+
+/* 1. Remove qualquer alteração de hover no container pai do switch (que estava ficando branco) */
+.night-mode #themeToggleContainer:hover {
+  background-color: #21262d !important; /* Cor de fundo de cards do Dark Mode */
+  color: #f0f6fc !important;
+}
+
+.night-mode #themeSwitch {
+  background-color: #ffffff !important; 
+  border-color: #ffffff !important;
+  color: inherit !important; 
+}
+
+/* 2. Anula regras globais de hover no switch, que estavam escurecendo o ícone */
+.night-mode #themeSwitch:hover {
+  background-color: #ffffff !important; 
+  border-color: #ffffff !important;
+  color: inherit !important; 
+}
+
+/* 3. Garante que os ícones do Sol/Lua não fiquem pretos no hover */
+.night-mode #themeSwitch:hover i,
+.night-mode #themeSwitch:hover svg {
+  color: inherit !important; 
+  fill: inherit !important;
+}
+
+/* Garante que o indicador do switch (a 'bolinha') tenha o fundo escuro desejado 
+   (#21262d) quando o modo noturno estiver ativo. */
+.night-mode #switch-indicator {
+    background-color: #21262d !important; /* Fundo de Botão/Card (a cor que você queria) */
+    border-color: #21262d !important; /* Mantém a borda branca de destaque */
+}
+
+/* Corrigindo a cor do ícone do sol (sol inativo) no Dark Mode */
+.night-mode #themeSwitch #sun-icon i {
+    /* Define a cor cinza específica para o ícone <i> dentro do switch */
+    color: #21262d !important;
 }

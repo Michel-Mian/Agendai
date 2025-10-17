@@ -5,114 +5,341 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Roteiro de Viagem</title>
+    <title>Roteiro de Viagem - {{ $viagem->destino_viagem ?? 'Detalhes' }}</title>
     <style>
+        /* BASE E TIPOGRAFIA */
         body {
             font-family: DejaVu Sans, sans-serif;
-            background: #f0f4f7;
-            color: #333;
+            background: #f4f7fa;
+            color: #343a40;
             margin: 0;
             padding: 0;
+            line-height: 1.6;
         }
+        .container {
+            max-width: 850px;
+            margin: -3rem auto 3rem;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            padding: 3rem;
+            border: 1px solid #e9ecef;
+        }
+
+        /* HEADER (AZUL PROFUNDO) */
         .header {
-            background-color: #34495e;
-            color: #ecf0f1;
-            padding: 3rem 0;
+            background-color: #0056b3; 
+            color: #ffffff;
+            padding: 4rem 0;
             text-align: center;
         }
         .header h1 {
-            font-size: 2.5rem;
+            font-size: 3rem;
             margin: 0;
             font-weight: 300;
         }
-        .header h1 span {
-            font-weight: 700;
-        }
         .header .sub {
-            font-size: 1rem;
+            font-size: 1.1rem;
             opacity: 0.9;
             margin-top: 5px;
         }
-        .container {
-            max-width: 800px;
-            margin: -2rem auto 2rem;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            padding: 2.5rem;
+
+        /* SEPARADORES E TÍTULOS */
+        .divider {
+            border: none;
+            border-top: 2px solid #e9ecef;
+            margin: 3rem 0;
         }
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            padding-bottom: 8px;
+            border-bottom: 3px solid; /* Linha de destaque, cor definida abaixo */
+            display: inline-block;
+        }
+        
+        /* CORES ESPECÍFICAS POR SEÇÃO */
+        /* Visão Geral (Base) */
+        .section-title.geral {
+            color: #0056b3;
+            border-bottom-color: #0056b3;
+        }
+        /* Objetivos e Foco da Viagem */
+        .section-title.objetivos {
+            color: #17a2b8; /* Ciano/Claro */
+            border-bottom-color: #17a2b8;
+        }
+        ul.objectives-list li:before {
+            color: #17a2b8; /* Cor do checkmark */
+        }
+        /* Hospedagem */
+        .section-title.hospedagem {
+            color: #e98074;
+            border-bottom-color: #e98074;
+        }
+        .hotel-card {
+            border-left: 5px solid #e98074;
+            border-radius: 10px;
+            border: 1px solid #dcdcdc;
+            margin-bottom: 2.5rem;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            page-break-inside: avoid;
+        }
+        .hotel-price, .hotel-total {
+            color: #cc0000; /* Preço mantém vermelho padrão de aviso */
+        }
+        
+        /* Seguros */
+        .section-title.seguros {
+            color: #2a9d8f;
+            border-bottom-color: #2a9d8f;
+        }
+        .seguro-card {
+            background: #e6f6f5; /* Fundo claro com a cor do seguro */
+            border-left-color: #2a9d8f;
+        }
+        .seguro-info b {
+            color: #2a9d8f;
+        }
+        .seguro-info a {
+            color: #2a9d8f;
+        }
+
+        /* Voos */
+        .section-title.voos {
+            color: #f4a261;
+            border-bottom-color: #f4a261;
+        }
+        .voo-icon {
+            background-color: #f4a261; /* Cor de destaque para voos */
+        }
+        .voo-route-info .cell.route img {
+            background: #f4a261;
+        }
+
+        /* Roteiro */
+        .section-title.roteiro {
+            color: #5e60ce;
+            border-bottom-color: #5e60ce;
+        }
+        .day-card {
+            border-left-color: #5e60ce;
+        }
+        .day-card .icon-box {
+            background-color: #5e60ce;
+        }
+        .day-header {
+            color: #5e60ce;
+        }
+        
+        /* ESTILOS COMUNS QUE DEPENDEM APENAS DA ESTRUTURA */
         .info-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
             font-size: 0.95rem;
         }
         .info-table td {
-            padding: 5px 0;
+            padding: 8px 0;
             vertical-align: top;
+            border-bottom: 1px dashed #e9ecef;
+        }
+        .info-table tr:last-child td {
+            border-bottom: none;
         }
         .info-table td.label {
-            font-weight: bold;
-            width: 130px;
-            color: #555;
+            font-weight: 700;
+            width: 150px;
+            color: #495057;
         }
-        .divider {
-            border: none;
-            border-top: 1px solid #ddd;
-            margin: 2.5rem 0;
+        .empty {
+            color: #999;
+            font-style: italic;
         }
-        .section-title {
-            font-size: 1.3rem;
+        ul.objectives-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        ul.objectives-list li {
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        ul.objectives-list li:before {
+            content: "✓"; 
             font-weight: bold;
-            color: #555;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1.5em;
+        }
+        .hotel-card .image-cell {
+            display: table-cell;
+            width: 200px;
+            background-color: #e9ecef;
+        }
+        .hotel-card .image-cell img {
+            width: 100%;
+            height: auto;
+            max-height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+        .hotel-card .details-cell {
+            padding: 1.5rem;
+            display: table-cell;
+        }
+        .hotel-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #343a40;
+            margin-bottom: 0.2rem;
+        }
+        .hotel-rating {
+            font-size: 0.95rem;
+            color: #6c757d;
             margin-bottom: 1rem;
-            padding-bottom: 5px;
-            border-bottom: 2px solid #ddd;
         }
-        .day-section {
-            page-break-inside: avoid;
-            margin-bottom: 2rem;
+        .hotel-details {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 1rem;
+            border-top: 1px dashed #e9ecef;
+            padding-top: 1rem;
         }
-        .day-card {
-            background: #f9fbfd;
+        .hotel-details .cell .label {
+            font-size: 0.8rem;
+            color: #6c757d;
+            font-weight: 600;
+        }
+        .hotel-details .cell .value {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .seguro-card {
             border-radius: 8px;
             padding: 1.5rem;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid; 
+            page-break-inside: avoid;
+        }
+        .seguro-info p {
+            margin: 0.75rem 0;
+            font-size: 0.95rem;
+        }
+        .voo-card {
+            background: #ffffff;
+            border: 1px solid #dcdcdc;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            page-break-inside: avoid;
+        }
+        .voo-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 1rem;
+        }
+        .voo-card-header-left {
+            display: flex;
+            align-items: center;
+        }
+        .voo-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-right: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .voo-details-text .line1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #343a40;
+        }
+        .voo-details-text .line2 {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        .voo-route-info {
             display: table;
             width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
         }
-        .day-card .icon-cell,
-        .day-card .content-cell {
+        .voo-route-info .cell {
             display: table-cell;
             vertical-align: top;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        .voo-route-info .cell.origin {
+            width: 40%;
+            text-align: left;
+        }
+        .voo-route-info .cell.destination {
+            width: 40%;
+            text-align: right;
+        }
+        .voo-route-info .cell .label {
+            font-size: 0.75rem;
+            color: #999;
+        }
+        .voo-route-info .cell .code {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-top: 5px;
+            color: #343a40;
+        }
+        .voo-route-info .cell.route img {
+            max-width: 100%;
+            height: 2px;
+            border-radius: 1px;
+            margin-top: 25px;
+        }
+        .day-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            border-left: 5px solid; 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            width: 100%;
         }
         .day-card .icon-cell {
-            width: 70px;
+            width: 60px;
+            flex-shrink: 0;
             text-align: center;
         }
         .day-card .icon-box {
-            background-color: #8bb7af;
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
             margin: 0 auto;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         .day-card .icon-box svg {
-            width: 30px;
-            height: 30px;
+            width: 20px;
+            height: 20px;
             fill: #fff;
         }
-        .day-content {
+        .day-card .content-cell {
             padding-left: 1.5rem;
-        }
-        .day-header {
-            font-size: 1.15rem;
-            font-weight: bold;
-            color: #444;
-            margin-bottom: 0.5rem;
+            flex-grow: 1;
         }
         .day-list {
             margin: 0;
@@ -121,246 +348,35 @@
         }
         .day-list li {
             font-size: 0.95rem;
-            margin-bottom: 0.7rem;
-            line-height: 1.4;
-        }
-        .day-list li .time {
-            font-weight: bold;
-            color: #34495e;
-        }
-        .day-list li .location {
-            color: #888;
-            font-style: italic;
-        }
-        
-        /* Estilos para a seção de voos */
-        .voo-card {
-            background: #e6f0f5;
-            border: 1px solid #cce0eb;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-        }
-        .voo-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             margin-bottom: 1rem;
+            padding-left: 10px;
+            border-left: 2px solid #e9ecef;
         }
-        .voo-card-header-left {
-            display: flex;
-            align-items: center;
-        }
-        .voo-icon {
-            background-color: #48a2d1;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-right: 15px;
-        }
-        .voo-details-text {
-            line-height: 1.2;
-        }
-        .voo-details-text .line1 {
-            font-size: 1rem;
-            font-weight: bold;
-        }
-        .voo-details-text .line2 {
-            font-size: 0.8rem;
-            color: #555;
-        }
-        .voo-card-header-right {
-            text-align: right;
-        }
-        .voo-card-header-right .date {
-            font-size: 0.9rem;
-            font-weight: bold;
-        }
-        .voo-card-header-right .time {
-            font-size: 0.8rem;
-            color: #555;
-        }
-        .voo-route-info {
-            display: table;
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .voo-route-info .cell {
-            display: table-cell;
-            vertical-align: top;
-            font-size: 0.9rem;
-        }
-        .voo-route-info .cell.origin {
-            width: 40%;
-        }
-        .voo-route-info .cell.route {
-            width: 20%;
-            text-align: center;
-        }
-        .voo-route-info .cell.destination {
-            width: 40%;
-        }
-        .voo-route-info .cell .label {
-            font-size: 0.75rem;
-            color: #888;
-        }
-        .voo-route-info .cell .code {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-top: 5px;
-        }
-        .voo-route-info .cell .airport-name {
-            font-size: 0.75rem;
-            color: #555;
-        }
-        .voo-additional-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            margin-top: 1rem;
-            border-top: 1px solid #c9d8e0;
-            padding-top: 1rem;
-        }
-        .voo-additional-info .info-item {
-            width: 30%;
-        }
-        .voo-additional-info .info-label {
-            font-weight: bold;
-            color: #555;
-        }
-
-        /* Estilos para a seção de seguros */
-        .seguro-card {
-            background: #e6f5e6;
-            border-radius: 8px;
-            padding: 1.2rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-        }
-        .seguro-info {
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
-        .seguro-info a {
-            color: #2e8b57;
-            text-decoration: none;
-            word-wrap: break-word;
-        }
-
-        /* Estilos para a seção de hotéis */
-        .hotel-card {
-            border: 1px solid #eee;
-            border-radius: 8px;
-            margin-bottom: 2rem;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            display: table;
-            width: 100%;
-        }
-        .hotel-card .image-cell {
-            display: table-cell;
-            width: 200px; /* Largura fixa da imagem */
-            background-color: #dbe4eb;
-        }
-        .hotel-card .image-cell img {
-            width: 100%;
-            height: auto;
-            max-height: 220px;
-            object-fit: cover;
-            display: block;
-        }
-        .hotel-card .details-cell {
-            display: table-cell;
-            padding: 1.5rem;
-            position: relative;
-        }
-        .hotel-name {
-            font-size: 1.0rem;
-            font-weight: bold;
-            color: #34495e;
-            margin-bottom: 0.3rem;
-        }
-        .hotel-rating {
-            font-size: 0.9rem;
-            color: #555;
-            margin-bottom: 1rem;
-        }
-        .hotel-details {
-            display: table;
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 1rem;
-        }
-        .hotel-details .cell {
-            display: table-cell;
-            vertical-align: top;
-            padding-right: 1.5rem;
-        }
-        .hotel-details .cell .label {
-            font-size: 0.8rem;
-            color: #888;
-            font-weight: bold;
-        }
-        .hotel-details .cell .value {
-            font-size: 0.95rem;
-            margin-top: 5px;
-        }
-        .hotel-price {
-            text-align: right;
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: #c0392b;
-            margin-top: 1rem;
-        }
-        .hotel-price .label {
-            font-size: 0.9rem;
-            font-weight: normal;
-            color: #555;
-        }
-        .hotel-total {
-            text-align: right;
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: #c0392b;
-            margin-top: 1rem;
-        }
-        .hotel-total .label {
-            font-size: 0.9rem;
-            font-weight: normal;
-            color: #555;
-        }
-        .hotel-link {
-            font-size: 0.85rem;
-            color: #3498db;
-            text-decoration: none;
-            margin-top: 1rem;
-            display: inline-block;
+        .day-list li:last-child {
+            border-left: none;
+            padding-left: 12px;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Roteiro de Viagem</h1>
-        <div class="sub">Detalhes do seu roteiro em {{ $viagem->destino_viagem ?? 'destino desconhecido' }}</div>
+        <h1>ROTEIRO DE VIAGEM</h1>
+        <div class="sub">Seu Plano Detalhado para **{{ $viagem->destino_viagem ?? 'uma Jornada Incrível' }}**</div>
     </div>
+
     <div class="container">
+        
+        <div class="section-title geral">Visão Geral da Viagem</div>
         <table class="info-table">
-            <tr><td class="label">Destino:</td><td>{{ $viagem->destino_viagem ?? '-' }}</td></tr>
-            <tr><td class="label">Data de Início:</td><td>{{ $viagem->data_inicio_viagem ? Carbon::parse($viagem->data_inicio_viagem)->format('d/m/Y') : '-' }}</td></tr>
-            <tr><td class="label">Data de Fim:</td><td>{{ $viagem->data_final_viagem ? Carbon::parse($viagem->data_final_viagem)->format('d/m/Y') : '-' }}</td></tr>
+            <tr><td class="label">Destino:</td><td>**{{ $viagem->destino_viagem ?? 'Não Informado' }}**</td></tr>
+            <tr><td class="label">Início:</td><td>{{ $viagem->data_inicio_viagem ? Carbon::parse($viagem->data_inicio_viagem)->format('d/m/Y') : '-' }}</td></tr>
+            <tr><td class="label">Fim:</td><td>{{ $viagem->data_final_viagem ? Carbon::parse($viagem->data_final_viagem)->format('d/m/Y') : '-' }}</td></tr>
             <tr>
                 <td class="label">Viajantes:</td>
                 <td>
-                    @forelse($viagem->viajantes as $v)
-                        {{ $v->nome ?? 'Sem nome' }}
-                        @if (isset($v->idade)) ({{ $v->idade }} anos) @endif
+                    @forelse($viagem->viajantes ?? [] as $v)
+                        {{ $v->nome ?? 'Sem nome' }} 
+                        @if (isset($v->idade)) ({{ $v->idade }} anos) @endif 
                         @if(!$loop->last), @endif
                     @empty
                         <span class="empty">Nenhum viajante cadastrado.</span>
@@ -369,10 +385,10 @@
             </tr>
         </table>
         
-        <div class="section-title">Objetivos</div>
-        <ul style="padding-left: 20px;">
-            @forelse($viagem->objetivos as $objetivo)
-                <li>{{ $objetivo->nome ?? '-' }}</li>
+        <div class="section-title objetivos">Objetivos e Foco da Viagem</div>
+        <ul class="objectives-list">
+            @forelse($viagem->objetivos ?? [] as $objetivo)
+                <li>{{ $objetivo->nome ?? 'Objetivo não detalhado.' }}</li>
             @empty
                 <li class="empty">Nenhum objetivo cadastrado.</li>
             @endforelse
@@ -380,48 +396,45 @@
 
         <hr class="divider" />
         
-        <div class="section-title">Hotéis</div>
-        @forelse($viagem->hotel as $hotel)
+        <div class="section-title hospedagem">Hospedagem</div>
+        @forelse($viagem->hotel ?? [] as $hotel)
+            @php
+                $check_in = $hotel->data_check_in ? Carbon::parse($hotel->data_check_in) : null;
+                $check_out = $hotel->data_check_out ? Carbon::parse($hotel->data_check_out) : null;
+                $dias_hospedagem = ($check_in && $check_out) ? $check_in->diffInDays($check_out) : 0;
+                $preco_total = ($dias_hospedagem > 0 && isset($hotel->preco)) ? $dias_hospedagem * $hotel->preco : 0;
+            @endphp
             <div class="hotel-card">
                 <div class="image-cell">
-                    <img src="{{ $hotel->image_url ?? 'nada tem' }}" alt="Imagem do Hotel">
+                    <img src="{{ $hotel->image_url ?? 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjIwIiB2aWV3Qm94PSIwIDAgMjAwIDIyMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMjAiIGZpbGw9IiNlOWVjZWYiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjExIiBmaWxsPSIjNjc3ZDc1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjM1ZW0iPlNFTSBJTUFHRU0gREUgSE9URUw8L3RleHQ+PC9zdmc+' }}" alt="Imagem do Hotel">
                 </div>
                 <div class="details-cell">
-                    <div class="hotel-name">{{ $hotel->nome_hotel ?? '-' }}</div>
-                    <div class="hotel-rating">Avaliação: {{ $hotel->avaliacao ?? '-' }}</div>
+                    <div class="hotel-name">{{ $hotel->nome_hotel ?? 'Hotel Não Informado' }}</div>
+                    <div class="hotel-rating">Avaliação: **{{ $hotel->avaliacao ?? '-' }}** estrelas</div>
                     
                     <div class="hotel-details">
                         <div class="cell">
-                            <div class="label">Check-in</div>
-                            <div class="value">{{ $hotel->data_check_in ? Carbon::parse($hotel->data_check_in)->format('d/m/Y') : '-' }}</div>
+                            <div class="label">CHECK-IN</div>
+                            <div class="value">{{ $check_in ? $check_in->format('d/m/Y') : '-' }}</div>
                         </div>
                         <div class="cell">
-                            <div class="label">Check-out</div>
-                            <div class="value">{{ $hotel->data_check_out ? Carbon::parse($hotel->data_check_out)->format('d/m/Y') : '-' }}</div>
+                            <div class="label">CHECK-OUT</div>
+                            <div class="value">{{ $check_out ? $check_out->format('d/m/Y') : '-' }}</div>
                         </div>
                         <div class="cell">
-                            <div class="label">Duração</div>
-                            <div class="value">
-                                @php
-                                    $dias_hospedagem = 0;
-                                    if ($hotel->data_check_in && $hotel->data_check_out) {
-                                        $check_in = Carbon::parse($hotel->data_check_in);
-                                        $check_out = Carbon::parse($hotel->data_check_out);
-                                        $dias_hospedagem = $check_in->diffInDays($check_out);
-                                    }
-                                    $preco_total = ($dias_hospedagem > 0 && $hotel->preco) ? $dias_hospedagem * $hotel->preco : 0;
-                                @endphp
-                                {{ $dias_hospedagem }} noites
-                            </div>
+                            <div class="label">DURAÇÃO</div>
+                            <div class="value">**{{ $dias_hospedagem }}** noites</div>
                         </div>
                     </div>
                     
                     <div class="hotel-price">
-                        <span class="label">Valor por noite: </span>R$ {{ number_format($hotel->preco, 2, ',', '.') ?? '0,00' }}
+                        <span class="label">Valor por noite: </span>R$ **{{ number_format($hotel->preco ?? 0, 2, ',', '.') }}**
                     </div>
-                    <div class="hotel-total">
-                        <span class="label">Total estimado da hospedagem:</span> R$ {{ number_format($preco_total, 2, ',', '.') }}
-                    </div>
+                    @if ($dias_hospedagem > 0 && isset($hotel->preco))
+                        <div class="hotel-total">
+                            <span class="label">Total estimado da hospedagem:</span> R$ **{{ number_format($preco_total, 2, ',', '.') }}**
+                        </div>
+                    @endif
                 </div>
             </div>
         @empty
@@ -430,11 +443,14 @@
 
         <hr class="divider" />
 
-        <div class="section-title">Seguros</div>
-        @forelse($viagem->seguros as $seguro)
+        <div class="section-title seguros">Seguros de Viagem</div>
+        @forelse($viagem->seguros ?? [] as $seguro)
             <div class="seguro-card">
                 <div class="seguro-info">
-                    <p><b>{{ $seguro->site ?? '-' }}</b> - Preço: R$ {{ number_format($seguro->preco ?? 0, 2, ',', '.') }}</p>
+                    <p>
+                        <b>{{ $seguro->site ?? 'Site Não Informado' }}</b> 
+                        - Preço: R$ **{{ number_format($seguro->preco ?? 0, 2, ',', '.') }}**
+                    </p>
                     <p><b>Informações:</b> {{ $seguro->dados ?? 'Nenhuma informação adicional.' }}</p>
                     <p><b>Link:</b> <a href="{{ $seguro->link ?? '#' }}" target="_blank" style="word-break: break-all;">{{ $seguro->link ?? 'N/A' }}</a></p>
                 </div>
@@ -445,38 +461,44 @@
 
         <hr class="divider" />
         
-        <div class="section-title">Voos</div>
-        @forelse($viagem->voos as $voo)
+        <div class="section-title voos">Detalhes dos Voos</div>
+        @forelse($viagem->voos ?? [] as $voo)
+            @php
+                $data_hora_partida = $voo->data_hora_partida ? Carbon::parse($voo->data_hora_partida) : null;
+            @endphp
             <div class="voo-card">
-                <div class="voo-card-header">
-                    <div class="voo-card-header-left">
-                        <div class="voo-icon">{{ $loop->iteration }}</div>
-                        <div class="voo-details-text">
-                            <div class="line1">{{ $voo->desc_aeronave_voo ?? '-' }}</div>
-                            <div class="line2">{{ $voo->companhia_voo ?? '-' }}</div>
-                        </div>
-                    </div>
-                    <div class="voo-card-header-right">
-                        <div class="date">{{ $voo->data_hora_partida ? Carbon::parse($voo->data_hora_partida)->format('d/m/Y') : '-' }}</div>
-                        <div class="time">{{ $voo->data_hora_partida ? Carbon::parse($voo->data_hora_partida)->format('H:i') : '-' }}</div>
-                    </div>
-                </div>
+                <div class="voo-card-header"> 
+                    <div class="voo-card-header-left"> 
+                        <div class="voo-icon">{{ $loop->iteration }}</div> 
+                        <div class="voo-details-text"> 
+                            <div class="line1">{{ $voo->desc_aeronave_voo ?? 'Voo Não Informado' }}</div> 
+                            <div class="line2">{{ $voo->companhia_voo ?? 'Companhia Aérea' }}</div> 
+                        </div> 
+                    </div> 
+                    <div class="voo-card-header-right"> 
+                        <div class="date">{{ $data_hora_partida ? $data_hora_partida->format('d/m/Y') : '-' }}</div> 
+                        <div class="time">Partida: **{{ $data_hora_partida ? $data_hora_partida->format('H:i') : '-' }}**</div> 
+                    </div> 
+                </div> 
                 
                 <div class="voo-route-info">
                     <div class="cell origin">
-                        <div class="label">Origem</div>
-                        <div class="code">{{ $voo->origem_voo ?? '-' }}</div>
-                        <div class="airport-name">{{ $voo->origem_nome_voo ?? '' }}</div>
+                        <div class="label">ORIGEM</div>
+                        <div class="code">{{ $voo->origem_voo ?? '???' }}</div>
+                        <div class="airport-name">{{ $voo->origem_nome_voo ?? 'Aeroporto' }}</div>
                     </div>
                     <div class="cell route">
-                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTAgMTAwIj48cGF0aCBkPSJNMCA1MEgyNDcuNSIgc3Ryb2tlPSIjMjk4M2I4IiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbD0ibm9uZSIvPjxjaXJjbGUgY3g9IjIuNSIgY3k9IjUwIiByPSIyLjUiIGZpbGw9IiMyOTgzYjgiLz48Y2lyY2xlIGN4PSI2Ny41IiBjeT0iNTAiIHI9IjIuNSIgZmlsbD0iI2Q3ZWVmOSIvPjxjaXJjbGUgY3g9IjEyMi41IiBjeT0iNTAiIHI9IjIuNSIgZmlsbD0iI2Q3ZWVmOSIvPjxjaXJjbGUgY3g9IjE4Mi41IiBjeT0iNTAiIHI9IjIuNSIgZmlsbD0iI2Q3ZWVmOSIvPjxjaXJjbGUgY3g9IjI0Ny41IiBjeT0iNTAiIHI9IjIuNSIgZmlsbD0iIzI5ODNiOCIvPjwvc3ZnPg==" style="width: 100%; height: auto; display: block; margin: 0 auto;"/>
+                        <div style="display: block; width: 100%;">
+                            <img class="route-icon" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSI0cHgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMiIgeT0iMiIgZmlsbD0iI2Y0YTI2MSIvPjwvcmVjdD48L3N2Zz4=" alt="Linha de Rota" style="max-width: 100%; height: 2px; background: #f4a261; border-radius: 1px; margin-top: 25px;"/>
+                        </div>
                     </div>
                     <div class="cell destination">
-                        <div class="label">Destino</div>
-                        <div class="code">{{ $voo->destino_voo ?? '-' }}</div>
-                        <div class="airport-name">{{ $voo->destino_nome_voo ?? '' }}</div>
+                        <div class="label">DESTINO</div>
+                        <div class="code">{{ $voo->destino_voo ?? '???' }}</div>
+                        <div class="airport-name">{{ $voo->destino_nome_voo ?? 'Aeroporto' }}</div>
                     </div>
                 </div>
+
                 <div class="voo-additional-info">
                     <div class="info-item">
                         <div class="info-label">Classe:</div>
@@ -484,18 +506,19 @@
                     </div>
                     <div class="info-item">
                         <div class="info-label">Preço:</div>
-                        <span>R$ {{ number_format($voo->preco_voo, 2, ',', '.') ?? '0,00' }}</span>
+                        <span>R$ **{{ number_format($voo->preco_voo ?? 0, 2, ',', '.') }}**</span>
                     </div>
                     <div class="info-item">
-                        <div class="info-label">N° Voo:</div>
-                        <span>{{ $voo->numero_voo ?? '-' }}</span>
+                        <div class="info-label">Nº Voo / Reserva:</div>
+                        <span>{{ $voo->numero_voo ?? '-' }} / {{ $voo->codigo_reserva_voo ?? '-' }}</span>
                     </div>
                 </div>
+                
                 @if ($voo->conexao_voo)
-                <div class="voo-additional-info" style="margin-top:0.5rem; padding-top:0.5rem; border-top:1px dashed #c9d8e0;">
+                <div class="voo-additional-info" style="margin-top:0.5rem; padding-top:0.5rem; border-top:1px dashed #e9ecef;">
                     <div class="info-item" style="width:100%;">
-                         <div class="info-label">Conexão:</div>
-                         <span>{{ $voo->conexao_voo ?? '-' }} - {{ $voo->conexao_nome_voo ?? '-' }}</span>
+                        <div class="info-label">Conexão (Escala):</div>
+                        <span>**{{ $voo->conexao_voo ?? '-' }}** - {{ $voo->conexao_nome_voo ?? 'Nome do Aeroporto de Conexão' }}</span>
                     </div>
                 </div>
                 @endif
@@ -506,22 +529,28 @@
 
         <hr class="divider" />
         
-        <div class="section-title">Roteiro Detalhado</div>
+        <div class="section-title roteiro">Roteiro Diário Detalhado</div>
         
-        @php
-            $dias = [];
-            foreach($viagem->pontosInteresse as $ponto) {
-                $data = !empty($ponto->data_ponto_interesse) ? Carbon::parse($ponto->data_ponto_interesse)->format('d/m/Y') : 'Data não definida';
-                $dias[$data][] = $ponto;
-            }
-            $icones = [
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M542.2 32.7c-5.6-2.5-12.1-1.2-16.1 3.2L304 221.7l-94.2-22.6-47.5-120.7c-2.7-6.8-9.4-11.2-16.8-11.2s-14.1 4.4-16.8 11.2l-47.5 120.7-94.2 22.6L50.2 36c-4.1-4.4-10.6-5.7-16.1-3.2S19.5 41.8 19 48.3L1.5 258.9c-.3 4.1-.2 8.3.3 12.3l11.4 86.4c.5 4.1 2.3 8.1 5.3 11.2L282.6 498.4c5.7 5.7 13.3 8.6 20.9 8.6s15.2-2.9 20.9-8.6l253.9-204.6c3-3.1 4.8-7.1 5.3-11.2l11.4-86.4c.5-4 .6-8.2.3-12.3L557 48.3c-.5-6.5-6.1-11.1-14.8-15.6zM288 421.2L85.6 257.7l86.6-20.8L288 344.2l115.8-107.3 86.6 20.8L288 421.2z"/></svg>',
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M592 128h-32v32c0 17.7-14.3 32-32 32s-32-14.3-32-32v-32H256v32c0 17.7-14.3 32-32 32s-32-14.3-32-32v-32H48c-26.5 0-48 21.5-48 48v224c0 26.5 21.5 48 48 48h544c26.5 0 48-21.5 48-48V176c0-26.5-21.5-48-48-48zM32 368V176c0-8.8 7.2-16 16-16h80v32c0 17.7 14.3 32 32 32s32-14.3 32-32v-32h160v32c0 17.7 14.3 32 32 32s32-14.3 32-32v-32h80c8.8 0 16 7.2 16 16v192c0 8.8-7.2 16-16 16H48c-8.8 0-16-7.2-16-16zM464 96H288v32h176V96zm-96-64h96c17.7 0 32 14.3 32 32v32h32c17.7 0 32 14.3 32 32v128c0 17.7-14.3 32-32 32h-32v32c0 17.7-14.3 32-32 32s-32-14.3-32-32v-32H256v32c0 17.7-14.3 32-32 32s-32-14.3-32-32v-32H160c-17.7 0-32-14.3-32-32V96c0-17.7 14.3-32 32-32h32V32c0-17.7 14.3-32 32-32h96c17.7 0 32 14.3 32 32V64zM256 64h128V32h-128v32z"/></svg>',
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M495.9 203.2c-5.7-11.7-16.4-18.2-28.5-18.2H388.5c-4.4 0-8.6 2.1-11.4 5.7L256 312.4 134.9 190.7c-2.8-3.6-7-5.7-11.4-5.7H44.6c-12.1 0-22.8 6.5-28.5 18.2-5.7 11.7-6.2 25.3-1.4 37.5L245.2 466.7c7.7 19.3 28.7 28.7 48.7 21.8L497.3 240.7c4.8-12.2 4.3-25.8-1.4-37.5z"/></svg>',
-                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M495.9 203.2c-5.7-11.7-16.4-18.2-28.5-18.2H388.5c-4.4 0-8.6 2.1-11.4 5.7L256 312.4 134.9 190.7c-2.8-3.6-7-5.7-11.4-5.7H44.6c-12.1 0-22.8 6.5-28.5 18.2-5.7 11.7-6.2 25.3-1.4 37.5L245.2 466.7c7.7 19.3 28.7 28.7 48.7 21.8L497.3 240.7c4.8-12.2 4.3-25.8-1.4-37.5z"/></svg>'
+        @php 
+            $dias = collect($viagem->pontosInteresse ?? [])
+                ->map(function ($ponto) {
+                    $ponto->data_formatada = !empty($ponto->data_ponto_interesse) 
+                        ? Carbon::parse($ponto->data_ponto_interesse)->format('d/m/Y') 
+                        : 'Data não definida';
+                    return $ponto;
+                })
+                ->groupBy('data_formatada')
+                ->sortKeys();
+            
+            // Ícones mais temáticos e limpos
+            $icones = [ 
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M48 200h416c17.7 0 32-14.3 32-32s-14.3-32-32-32H48c-17.7 0-32 14.3-32 32s14.3 32 32 32zm0 160h416c17.7 0 32-14.3 32-32s-14.3-32-32-32H48c-17.7 0-32 14.3-32 32s14.3 32 32 32z"/></svg>', // Avião
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 32c12.5 0 24.5 3.1 35.3 8.8l144 72c6.9 3.4 13 8.3 17.8 14.2L498.4 227c2.3 2.9 3.6 6.3 3.6 9.8c0 8-6.5 14.5-14.5 14.5H448V496c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V251.3H14.5C6.5 251.3 0 244.8 0 236.8c0-3.5 1.3-6.9 3.6-9.8L59.1 115c4.8-5.9 10.9-10.8 17.8-14.2l144-72C231.5 35.1 243.5 32 256 32zm-8 160c-2.7 0-5-2.2-5-5s2.2-5 5-5h16c2.7 0 5 2.2 5 5s-2.2 5-5 5h-16zM155.1 192h16c2.7 0 5-2.2 5-5s-2.2-5-5-5h-16c-2.7 0-5 2.2-5 5s2.2 5 5 5zM357.5 192h16c2.7 0 5-2.2 5-5s-2.2-5-5-5h-16c-2.7 0-5 2.2-5 5s2.2 5 5 5zM435.9 192h16c2.7 0 5-2.2 5-5s-2.2-5-5-5h-16c-2.7 0-5 2.2-5 5s2.2 5 5 5z"/></svg>', // Edifício (Hotel)
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 0 0 128 64 64 0 1 0 0-128z"/></svg>', // Local (Pin)
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 32a224 224 0 1 0 0 448 224 224 0 1 0 0-448zm-16 64h32c8.8 0 16 7.2 16 16v160c0 8.8-7.2 16-16 16h-32c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16z"/></svg>' // Relógio (Atividade)
             ];
-            $i = 0;
-        @endphp
+            $i = 0; 
+        @endphp 
 
         @forelse($dias as $data => $pontos)
             <div class="day-section">
@@ -532,14 +561,19 @@
                         </div>
                     </div>
                     <div class="content-cell">
-                        <div class="day-header">Dia {{ $loop->iteration }} <span style="font-weight:normal; color:#888; font-size:0.9em;">({{ $data }})</span></div>
+                        <div class="day-header">
+                            Dia {{ $loop->iteration }} 
+                            <span style="font-weight:400; color:#6c757d; font-size:0.8em;">
+                                &bull; {{ $data }}
+                            </span>
+                        </div>
                         <ul class="day-list">
                             @foreach($pontos as $ponto)
                                 <li>
                                     @if (!empty($ponto->hora_ponto_interesse))
-                                        <span class="time">{{ Carbon::parse($ponto->hora_ponto_interesse)->format('H:i') }}</span> -
+                                        <span class="time">{{ Carbon::parse($ponto->hora_ponto_interesse)->format('H:i') }}</span>
                                     @endif
-                                    {{ $ponto->nome_ponto_interesse ?? '-' }}
+                                    **{{ $ponto->nome_ponto_interesse ?? 'Atividade Sem Nome' }}**
                                     @if (!empty($ponto->desc_ponto_interesse))
                                         <span class="location">{{ $ponto->desc_ponto_interesse }}</span>
                                     @endif
