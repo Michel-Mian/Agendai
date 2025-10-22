@@ -272,9 +272,21 @@ class TripController extends Controller
                 $structuredData['seguradora'] = str_replace('Seguradora: ', '', $linha);
             } elseif (str_starts_with($linha, 'Plano: ')) {
                 $structuredData['plano'] = str_replace('Plano: ', '', $linha);
-            } elseif (str_starts_with($linha, 'Detalhes etários: ')) {
-                $structuredData['detalhes_etarios'] = str_replace('Detalhes etários: ', '', $linha);
-            } elseif (str_starts_with($linha, 'Despesa médica hospitalar: ')) {
+            } elseif (
+                str_starts_with($linha, 'Detalhes etários: ') ||
+                str_starts_with($linha, 'Faixa etária:') ||
+                stripos($linha, 'faixa etária') !== false ||
+                stripos($linha, 'faixa etaria') !== false ||
+                stripos($linha, 'detalhes etari') !== false ||
+                stripos($linha, 'idade') !== false
+            ) {
+                // Extrair o conteúdo após ":" se houver, senão usar a linha inteira.
+                $parts = preg_split('/:\s*/', $linha, 2);
+                $valor = isset($parts[1]) ? trim($parts[1]) : trim($linha);
+                // Normalizar espaços e pipes (manter o texto original para exibição,
+                // mas garantir que o frontend consiga parsear faixas de idade)
+                $structuredData['detalhes_etarios'] = $valor;
+             } elseif (str_starts_with($linha, 'Despesa médica hospitalar: ')) {
                 $structuredData['coberturas']['medica'] = str_replace('Despesa médica hospitalar: ', '', $linha);
             } elseif (str_starts_with($linha, 'Seguro bagagem: ')) {
                 $structuredData['coberturas']['bagagem'] = str_replace('Seguro bagagem: ', '', $linha);

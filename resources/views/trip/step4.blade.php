@@ -514,6 +514,38 @@
                 });
         }
 
+        // --- ADIÇÃO: função global para reiniciar a busca (polling) ---
+        window.restartSearch = function () {
+            console.info('[Seguros] restartSearch acionado');
+            attemptsMade = 0;
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+            // Fazer a primeira tentativa imediatamente
+            try {
+                searchInsuranceAttempt();
+            } catch (e) {
+                console.error('[Seguros] erro ao executar primeira tentativa:', e);
+            }
+
+            // Agendar tentativas subsequentes
+            intervalId = setInterval(() => {
+                if (attemptsMade < maxAttempts) {
+                    try {
+                        searchInsuranceAttempt();
+                    } catch (e) {
+                        console.error('[Seguros] erro em polling:', e);
+                        clearInterval(intervalId);
+                        intervalId = null;
+                    }
+                } else {
+                    clearInterval(intervalId);
+                    intervalId = null;
+                }
+            }, 4000);
+        };
+
         function showTravelerTabsOnly() {
             // Ocultar loading e container de seguros
             document.getElementById('loading-seguros').style.display = 'none';
@@ -572,25 +604,91 @@
         }
 
         // =========================================================================
-        // Função para renderizar os seguros e aplicar a paginação (Ver Mais)
+        // Funções novas / modificadas: filtrar por idade, renderizar por viajante
         // =========================================================================
+
+        // Parseia strings de faixa etária e retorna [min, max] ou null se indisponível
+        function parseAgeRange(text) {
+            if (!text) return null;
+            const txt = String(text).toLowerCase();
+
+            // Busca explicitamente por "faixa etária" e pega o primeiro intervalo
+            let faixaMatch = txt.match(/faixa et[aá]ria[:\s]*([^\|]+)/i);
+            let faixaStr = faixaMatch ? faixaMatch[1] : txt;
+
+            // Remove tokens de preço e outros irrelevantes
+            faixaStr = faixaStr.replace(/r\$\s*[\d\.,]+/g, '')
+                               .replace(/us\$?\s*[\d\.,]+/g, '')
+                               .replace(/usd\s*[\d\.,]+/g, '')
+                               .replace(/maiores de\s*\d{1,3}/g, '')
+                               .replace(/menores de\s*\d{1,3}/g, '')
+                               .replace(/até\s*\d{1,3}/g, '');
+
+            // Padrão "0 a 75", "0 até 75", "0-75"
+            let m = faixaStr.match(/(\d{1,3})\s*(?:a|até|-)\s*(\d{1,3})/i);
+            if (m) {
+                return [parseInt(m[1], 10), parseInt(m[2], 10)];
+            }
+
+            // "maiores de 64 anos" -> [65, 120]
+            m = txt.match(/maiores?\s*de\s*(\d{1,3})/i);
+            if (m) {
+                return [parseInt(m[1], 10) + 1, 120];
+            }
+
+            // "até 75 anos" -> [0,75]
+            m = txt.match(/até\s*(\d{1,3})/i);
+            if (m) {
+                return [0, parseInt(m[1], 10)];
+            }
+
+            // Se não encontrou nada, retorna null
+            return null;
+        }
+
+        function isValidForAge(insurance, age) {
+            const detalhes = insurance.detalhes_etarios || insurance.details || '';
+            const range = parseAgeRange(detalhes);
+            // Se não houver faixa definida, só mostra para idades até 75
+            if (!range) return age <= 75;
+            return age >= range[0] && age <= range[1];
+        }
+
+        // Mantém map de filtros por viajante para paginação/Ver mais
+        window.filteredInsurancesByViajante = window.filteredInsurancesByViajante || {};
+
         function displayInsurancesForTab(viaganteIndex, insurances, tabContentContainer) {
-            // Inicializa a contagem de visíveis para esta aba, se não existir
+            // Obtem idades atuais (fallback para 25)
+            const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
+            const idade = (idadeInputs[viaganteIndex] && parseInt(idadeInputs[viaganteIndex].value)) ? parseInt(idadeInputs[viaganteIndex].value) : 25;
+
+            // Cria array com mapeamento para índice original
+            const mapped = insurances.map((ins, idx) => ({ insurance: ins, originalIndex: idx }));
+
+            // Filtra por idade do viajante
+            const filtered = mapped.filter(item => isValidForAge(item.insurance, idade));
+
+            // Salva para uso posterior (show more)
+            window.filteredInsurancesByViajante[viaganteIndex] = filtered;
+
+            // Inicializa contagem visível se necessário
             if (!window.visibleInsuranceCount[viaganteIndex]) {
                 window.visibleInsuranceCount[viaganteIndex] = INSURANCES_PER_PAGE;
             }
 
             const currentVisibleCount = window.visibleInsuranceCount[viaganteIndex];
-            const totalInsurances = insurances.length;
+            const totalInsurances = filtered.length;
 
             // Limpa o container
             tabContentContainer.innerHTML = '';
             let html = '';
 
-            // Renderiza apenas os seguros visíveis
-            insurances.forEach((insurance, index) => {
-                if (index < currentVisibleCount) {
-                    // Acessa os dados pelas chaves, de forma segura e independente da ordem
+            // Renderiza apenas os seguros visíveis (usando originalIndex para referência)
+            filtered.forEach((item, idx) => {
+                if (idx < currentVisibleCount) {
+                    const insurance = item.insurance;
+                    const originalIndex = item.originalIndex;
+
                     const seguradora = insurance.seguradora || 'Seguradora N/A';
                     const plano = insurance.plano || 'Plano N/A';
                     const coberturaMedica = insurance.coberturas?.medica || 'N/A';
@@ -601,9 +699,8 @@
                     const detalhesEtarios = insurance.detalhes_etarios || '';
                     const link = insurance.link || '#';
 
-                    // Estrutura HTML do card de seguro
                     html += `
-                        <div class="seguro-card" data-insurance-index="${index}" data-viajante-index="${viaganteIndex}" onclick="selectInsurance(this, ${index}, ${viaganteIndex})">
+                        <div class="seguro-card" data-insurance-index="${idx}" data-original-index="${originalIndex}" data-viajante-index="${viaganteIndex}" onclick="selectInsurance(this, ${originalIndex}, ${viaganteIndex})">
                             <div class="p-5 border-b border-gray-200">
                                 <p class="text-sm text-gray-500">${seguradora}</p>
                                 <h3 class="font-bold text-gray-800 text-lg">${plano}</h3>
@@ -653,7 +750,6 @@
 
             // Adiciona o botão "Ver Mais" se houver seguros não exibidos
             if (currentVisibleCount < totalInsurances) {
-                // MODIFICAÇÃO AQUI: Largura reduzida e centralizada
                 const showMoreButton = document.createElement('button');
                 showMoreButton.type = 'button';
                 showMoreButton.className = 'mx-auto w-1/6 mt-6 py-3 px-4 bg-gray-100 text-blue-600 font-semibold rounded-lg hover:bg-gray-200 transition-colors border border-gray-300';
@@ -663,7 +759,6 @@
                     window.showMoreInsurances(viaganteIndex);
                 };
                 
-                // Cria um container para centralizar o botão
                 const buttonContainer = document.createElement('div');
                 buttonContainer.className = 'flex justify-center w-full';
                 buttonContainer.appendChild(showMoreButton);
@@ -674,7 +769,7 @@
             // Re-aplicar a seleção se houver uma (após recarregar a lista)
             const selectedData = window.selectedInsurancesByViajante ? window.selectedInsurancesByViajante[viaganteIndex] : null;
             if (selectedData) {
-                const selectedCard = tabContentContainer.querySelector(`.seguro-card[data-insurance-index="${selectedData.insuranceIndex}"]`);
+                const selectedCard = tabContentContainer.querySelector(`.seguro-card[data-original-index="${selectedData.insuranceIndex}"]`);
                 if (selectedCard) {
                     selectedCard.classList.add('selected');
                 }
@@ -682,128 +777,76 @@
         }
 
         // =========================================================================
-        // Função para o botão "Ver Mais"
+        // Função para o botão "Ver Mais" (ajustada para trabalhar com filtered list)
         // =========================================================================
         window.showMoreInsurances = function(viaganteIndex) {
-            const insurances = window.currentInsurances;
+            const filtered = window.filteredInsurancesByViajante[viaganteIndex] || [];
             const currentVisible = window.visibleInsuranceCount[viaganteIndex] || INSURANCES_PER_PAGE;
-            
-            // Calcula o novo total de visíveis
             const newVisible = currentVisible + INSURANCES_PER_PAGE;
-            window.visibleInsuranceCount[viaganteIndex] = Math.min(newVisible, insurances.length);
+            window.visibleInsuranceCount[viaganteIndex] = Math.min(newVisible, filtered.length);
             
-            // Re-renderiza a lista completa para o viajante atual
             const tabContentContainer = document.querySelector(`#tab-content-${viaganteIndex} .flex.flex-col.gap-6`);
             if (tabContentContainer) {
-                displayInsurancesForTab(viaganteIndex, insurances, tabContentContainer);
+                // Re-renderiza usando a lista original completa (será filtrada dentro da função)
+                displayInsurancesForTab(viaganteIndex, window.currentInsurances, tabContentContainer);
             }
         };
 
-
         // =========================================================================
-        // MODIFICADO: renderInsurances para usar a nova lógica de paginação
+        // MODIFICADO: renderInsurances para usar a nova lógica de paginação / filtro
         // =========================================================================
         function renderInsurances(insurances) {
             window.currentInsurances = insurances;
-            
-            // Limpa o rastreamento de visíveis para uma nova busca
             window.visibleInsuranceCount = {};
+            window.filteredInsurancesByViajante = {};
 
-            // Obter informações dos viajantes
             const viajantesInfo = getViajantesInfo();
-            
-            // Criar as tabs (que já criam o esqueleto de conteúdo)
             createTabs(viajantesInfo);
-            
-            // Distribuir seguros para cada tab (cada viajante terá todos os seguros)
-            const { numPessoas } = viajantesInfo;
+
+            const { numPessoas, idades } = viajantesInfo;
             
             for (let viaganteIndex = 0; viaganteIndex < numPessoas; viaganteIndex++) {
                 const tabContentContainer = document.querySelector(`#tab-content-${viaganteIndex} .flex.flex-col.gap-6`);
                 if (!tabContentContainer) continue;
                 
-                // Chamada para a nova função de exibição com paginação
+                // Agora cada tab mostra apenas seguros compatíveis com a idade do viajante
                 displayInsurancesForTab(viaganteIndex, insurances, tabContentContainer);
             }
         }
 
-
-        window.restartSearch = function () {
-            attemptsMade = 0;
-            if (intervalId) clearInterval(intervalId);
-
-            searchInsuranceAttempt();
-            intervalId = setInterval(() => {
-                if (attemptsMade < maxAttempts) searchInsuranceAttempt();
-                else clearInterval(intervalId);
-            }, 4000);
-        };
-
-        // Função para obter o nome do viajante (com fallback)
-        function getViajanteNome(viaganteIndex) {
-            const nomeInput = document.getElementById(`viajante-nome-${viaganteIndex}`);
-            const nomePersonalizado = nomeInput ? nomeInput.value.trim() : '';
-            return nomePersonalizado || `Viajante ${viaganteIndex + 1}`;
-        }
-
-        // Função para atualizar o título da tab quando o nome é digitado
-        window.updateTabTitle = function(viaganteIndex, nomeValue) {
-            const tabButton = document.querySelectorAll('.tab-button')[viaganteIndex];
-            if (tabButton) {
-                const nomeExibir = nomeValue.trim() || `Viajante ${viaganteIndex + 1}`;
-                const idadeInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
-                const idade = idadeInputs[viaganteIndex] ? parseInt(idadeInputs[viaganteIndex].value) || 25 : 25;
-
-                tabButton.innerHTML = `
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-user text-sm"></i>
-                        <span>${nomeExibir}</span>
-                        <span class="text-xs text-gray-500">(${idade} anos)</span>
-                    </div>
-                `;
-            }
-        }
-
-        window.selectInsurance = function (cardElement, index, viaganteIndex) {
-            // 1. Atualiza a interface (UI) - remove seleção de todos os cards da tab atual
+        // =========================================================================
+        // Seleção de seguro: agora recebe originalIndex (índice no array completo)
+        // =========================================================================
+        window.selectInsurance = function (cardElement, originalIndex, viaganteIndex) {
             const currentTabContent = document.querySelector(`#tab-content-${viaganteIndex}`);
             if (currentTabContent) {
                 currentTabContent.querySelectorAll('.seguro-card').forEach(card => card.classList.remove('selected'));
             }
             cardElement.classList.add('selected');
 
-            // 2. Pega os dados do seguro selecionado do array global
-            const insuranceData = window.currentInsurances[index];
-
+            const insuranceData = window.currentInsurances[originalIndex];
             if (!insuranceData) {
-                console.error('Dados do seguro não encontrados para o índice:', index);
+                console.error('Dados do seguro não encontrados para o índice original:', originalIndex);
                 return;
             }
 
-            // 3. Obtém o nome do viajante
-            const nomeViajante = getViajanteNome(viaganteIndex);
-
-            // 4. Armazena a seleção por viajante (incluindo nome)
             if (!window.selectedInsurancesByViajante) {
                 window.selectedInsurancesByViajante = {};
             }
             window.selectedInsurancesByViajante[viaganteIndex] = {
                 insuranceData: insuranceData,
-                insuranceIndex: index,
-                nomeViajante: nomeViajante
+                insuranceIndex: originalIndex,
+                nomeViajante: getViajanteNome(viaganteIndex)
             };
 
             const fullInsuranceName = `${insuranceData.seguradora} - ${insuranceData.plano}`;
             sessionStorage.setItem(`selectedSeguroName_viajante_${viaganteIndex}`, fullInsuranceName);
-            sessionStorage.setItem(`nomeViajante_${viaganteIndex}`, nomeViajante);
+            sessionStorage.setItem(`nomeViajante_${viaganteIndex}`, getViajanteNome(viaganteIndex));
 
-            // 5. Para compatibilidade, armazenar também no formato antigo (primeiro viajante)
             if (viaganteIndex === 0) {
                 const hiddenInput = document.getElementById('seguroSelecionadoData');
                 if (hiddenInput) {
                     hiddenInput.value = JSON.stringify(insuranceData);
-                } else {
-                    console.error('O campo hidden #seguroSelecionadoData não foi encontrado no formulário.');
                 }
                 sessionStorage.setItem('selectedSeguroName', fullInsuranceName);
             }
