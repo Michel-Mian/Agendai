@@ -51,6 +51,8 @@ Route::middleware(['auth'])->group(function (){
     Route::delete('/viagens/{id}', [ViagensController::class, 'destroyViagem'])->name('viagens.destroy');
     
     // Rotas antigas (mantidas por segurança, mas não serão mais usadas pela nova UI)
+
+    Route::get('/viagens/{viagem}/events/{destino}', [ViagensController::class, 'getEventsDataForDestination'])->name('viagens.events');
     Route::get('/viagens/{id}/weather', [ViagensController::class, 'getWeatherData'])->name('viagens.weather');
     Route::get('/viagens/{id}/news', [ViagensController::class, 'getNewsData'])->name('viagens.news');
 

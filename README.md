@@ -4,59 +4,81 @@
     <h5 align="center">Clique na imagem!</h5>
 </p>
 
-<h1 align="center">🌍 AgendAí – Planeje Sua Viagem dos Sonhos</h1>
+# 🌍 AgendAí – Planeje Sua Viagem dos Sonhos
 
-<p align="center">
-  <strong>Projeto de TCC – Etec João Belarmino de Amparo</strong><br/>
-  <em>Curso Técnico em Informática • 2025</em>
-</p>
+**Projeto de TCC – Etec João Belarmino de Amparo**  
+**Curso Técnico em Informática • 2025**
 
-<p align="center">
-  <strong>Integrantes:</strong> Matheus Porcaro • Michel Mian • Nara Stachetti • Rafael Fante • Samy Maiorini
-</p>
+**Integrantes:**  
+Matheus Porcaro • Michel Mian • Nara Stachetti • Rafael Fante • Samy Maiorini  
 
 ---
 
 ## 📌 Sobre o Projeto
 
-**AgendAí** é um sistema web voltado para o planejamento de viagens, oferecendo uma experiência completa para usuários que desejam montar seus roteiros de forma prática, organizada e personalizada. O sistema centraliza informações essenciais como hospedagem, passagens, câmbio, clima, atrações e cronograma, evitando a dispersão de dados e o estresse durante o planejamento.
+**AgendAí** é um software com ferramentas completas para o viajante, apoiando no planejamento detalhado e personalizado de sua viagem.  
+
+O projeto tem como objetivo desenvolver um **sistema web e mobile** que centralize todas as informações e recursos necessários para organizar uma viagem de forma prática, intuitiva e eficiente.  
+
+A proposta surgiu da constatação de que pessoas que organizam viagens por conta própria enfrentam dificuldades devido à **dispersão de informações** — hospedagem, transporte, câmbio, clima, atrações, entre outros — o que torna o processo **demorado e confuso**, resultando em **frustração e desorganização**.  
+
+O **AgendAí** busca resolver esse problema ao **unificar todas essas informações em um único ambiente digital**, permitindo que o usuário:
+- Monte um **roteiro personalizado**  
+- Visualize **mapas com pontos turísticos**  
+- **Compare hotéis e voos**  
+- Acompanhe **clima e câmbio em tempo real**  
+- Acesse **conteúdos atualizados sobre o destino**  
 
 ---
 
 ## 💡 Problematização
 
-Atualmente, planejar uma viagem exige buscar dados em múltiplas fontes: hotéis, restaurantes, pontos turísticos, transporte, moeda, clima, entre outros. Isso torna o processo **demorado, confuso e desgastante**, podendo frustrar as expectativas do viajante.
+Atualmente, planejar uma viagem exige buscar dados em múltiplas fontes — hotéis, restaurantes, pontos turísticos, transporte, moeda e clima.  
+Essa fragmentação torna o processo **demorado, confuso e desgastante**, prejudicando a experiência do viajante.  
 
 ---
 
-## 🎯 Objetivo
+## 🎯 Objetivo Geral
 
-### 🎯 Objetivo Geral
+Desenvolver um sistema web e mobile completo, intuitivo e centralizado, que auxilie o usuário no planejamento e organização de viagens, reunindo todas as informações necessárias em um único ambiente.
 
-Desenvolver um **sistema web completo e intuitivo**, capaz de auxiliar no **planejamento e organização de viagens**, servindo como uma central de recursos turísticos.
+---
 
-### 📌 Objetivos Específicos
+## 📌 Objetivos Específicos
 
-- 🗺️ **R1 – Mapa com Pontos de Relevância**  
-  Visualização interativa de hotéis, restaurantes, atrações e casas de câmbio.
+🗺️ **R1 – Mapa com Pontos de Relevância**  
+Visualização interativa de hotéis, restaurantes, atrações e casas de câmbio.
 
-- 🏨 **R2 – Comparativo de Hotéis**  
-  Informações detalhadas e comparação entre hospedagens da região.
+🏨 **R2 – Comparativo de Hotéis**  
+Informações detalhadas e comparação entre hospedagens da região.
 
-- ✈️ **R3 – Listagem de Voos e Preços**  
-  Exibição de voos com preços, horários, companhias e detalhes do trajeto.
+✈️ **R3 – Listagem de Voos e Preços**  
+Exibição de voos com preços, horários, companhias e detalhes do trajeto.
 
-- 📆 **R4 – Cronograma da Viagem (Day-by-Day)**  
-  Ferramenta para criar um roteiro diário com horários, destinos e orçamento.
+📆 **R4 – Cronograma da Viagem (Day-by-Day)**  
+Ferramenta para criar um roteiro diário com horários, destinos e orçamento.
 
-- 💱 **R5 – Câmbio da Moeda Turística**  
-  Cotação atualizada de moedas internacionais com gráficos e conversão.
+💱 **R5 – Câmbio da Moeda Turística**  
+Cotação atualizada de moedas internacionais com gráficos e conversão.
 
-- 📚 **R6 – Informações do Destino**  
-  Curiosidades, cultura local, eventos e notícias sobre o local visitado.
+📚 **R6 – Informações do Destino**  
+Curiosidades, cultura local, eventos e notícias sobre o local visitado.
 
-- 🌤️ **R7 – Previsão do Clima**  
-  Dados meteorológicos detalhados por dia e período da viagem.
+🌤️ **R7 – Previsão do Clima**  
+Dados meteorológicos detalhados por dia e período da viagem.
+
+---
+
+## ✨ Funcionalidades Principais (Features)
+
+- 🗺️ **Mapa interativo com marcações de pontos de interesse**  
+- 🛡️ **Busca de seguros de viagem com técnica de Web Scraping**  
+- 🏨 **Busca de hotéis e voos integrados com APIs do Google**  
+- 🌦️ **Acompanhamento de clima real e atualizado**  
+- 💰 **Cálculo automatizado de orçamento da viagem**  
+- 📰 **Acompanhamento de notícias reais sobre o destino**  
+- 💱 **Cotação de moedas com atualização dinâmica**  
+- 📆 **Criação de linha do tempo dos pontos escolhidos (roteiro personalizado)**  
 
 ---
 
@@ -64,30 +86,32 @@ Desenvolver um **sistema web completo e intuitivo**, capaz de auxiliar no **plan
 
 - HTML5 / CSS3  
 - JavaScript  
-- PHP
-- Laravel / Blade
+- PHP  
+- Laravel / Blade  
 - MySQL  
-- APIs
-- Figma
-- Node.Js
-- Tailwind
+- Node.js  
+- Tailwind CSS  
+- APIs externas (Google, OpenWeather, entre outras)  
+- Figma  
+- Web Scraping  
 
 ---
 
 ## 📈 Status do Projeto
 
-📌 **Em desenvolvimento**  
+📌 Em desenvolvimento  
 
 ---
 
 ## 📝 Licença
 
-Este projeto foi desenvolvido como parte do Trabalho de Conclusão de Curso (TCC) na Etec João Belarmino de Amparo. Uso acadêmico, sem fins lucrativos.
+Este projeto foi desenvolvido como parte do **Trabalho de Conclusão de Curso (TCC)** da **Etec João Belarmino de Amparo**.  
+Uso **acadêmico e sem fins lucrativos**.
 
 ---
 
 ## 📷 Capturas de Tela
 
-<img src="public/imgs/Flights.PNG" alt="Flights" width="500"/> <img src="public/imgs/dashBoard.PNG" alt="Dashboard" width="500"/> <img src="public/imgs/MyTrips.PNG" alt="MyTrips" width="500"/> <img src="public/imgs/explore.jpeg" alt="Explore" width="500"/>
+<img src="public/imgs/readme/agendai-1.png" alt="Home" width="500"/> <img src="public/imgs/readme/agendai-2.png" alt="EditTrip" width="500"/> <img src="public/imgs/readme/agendai-3.png" alt="FormTrip" width="500"/> <img src="public/imgs/readme/agendai-4.png" alt="Explore" width="500"/>
 
 ---

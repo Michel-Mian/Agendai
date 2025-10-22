@@ -79,19 +79,22 @@
             <!-- Transporte -->
             <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
                 <div class="w-12 h-12 md:w-16 md:h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6">
-                    <svg class="w-6 h-6 md:w-8 md:h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                    </svg>
+                    <svg class="w-6 h-6 md:w-8 md:h-8 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="m20.893 13.393-1.135-1.135a2.252 2.252 0 0 1-.421-.585l-1.08-2.16a.414.414 0 0 0-.663-.107.827.827 0 0 1-.812.21l-1.273-.363a.89.89 0 0 0-.738 1.595l.587.39c.59.395.674 1.23.172 1.732l-.2.2c-.212.212-.33.498-.33.796v.41c0 .409-.11.809-.32 1.158l-1.315 2.191a2.11 2.11 0 0 1-1.81 1.025 1.055 1.055 0 0 1-1.055-1.055v-1.172c0-.92-.56-1.747-1.414-2.089l-.655-.261a2.25 2.25 0 0 1-1.383-2.46l.007-.042a2.25 2.25 0 0 1 .29-.787l.09-.15a2.25 2.25 0 0 1 2.37-1.048l1.178.236a1.125 1.125 0 0 0 1.302-.795l.208-.73a1.125 1.125 0 0 0-.578-1.315l-.665-.332-.091.091a2.25 2.25 0 0 1-1.591.659h-.18c-.249 0-.487.1-.662.274a.931.931 0 0 1-1.458-1.137l1.411-2.353a2.25 2.25 0 0 0 .286-.76m11.928 9.869A9 9 0 0 0 8.965 3.525m11.928 9.868A9 9 0 1 1 8.965 3.525" />
+</svg>
+
+
+
                 </div>
-                <h3 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4 text-center">Transporte</h3>
+                <h3 class="text-lg md:text-xl font-semibold text-gray-900 mb-3 md:mb-4 text-center">Voos</h3>
                 <p class="text-sm md:text-base text-gray-600 text-center mb-3 md:mb-4">
-                    Metrô, ônibus, táxis, aluguel de carros e todas as opções de mobilidade urbana
+                    Confira as melhores passagens aéreas, horários e companhias para chegar ao seu destino
                 </p>
                 <ul class="text-xs md:text-sm text-gray-500 space-y-1">
-                    <li>• Transporte público</li>
-                    <li>• Táxis e ride-sharing</li>
-                    <li>• Aluguel de veículos</li>
-                    <li>• Rotas e horários</li>
+                    <li>• Passagens para o mundo todo</li>
+                    <li>• Seguro viagem</li>
+                    <li>• Filtros para selecionar o voo perfeito</li>
+                    <li>• Todos os detalhes da passagem</li>
                 </ul>
             </div>
 
