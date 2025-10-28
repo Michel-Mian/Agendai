@@ -7,10 +7,29 @@
     <div class="mb-6">
         <label class="block text-gray-600 font-semibold mb-2">Qual será o meio de locomoção?<label class="text-red-600 text-base font-thin">*</label></label>
         <select class="input">
-            <option>Carro</option>
+            <option>Carro (próprio)</option>
+            <option>Carro (alugado)</option>
             <option>Ônibus</option>
             <option>Avião</option>
         </select>
+    </div>
+    <div id="cars-rent" class="hidden flex gap-6 mb-8">
+        <div class="mb-8 relative">
+            <label class="block text-gray-600 font-semibold mb-2">Qual hora deseja retirar?<label class="text-red-600 text-base font-thin">*</label></label>
+            <input 
+                type="datetime-local" 
+                name="car_pickup_datetime" 
+                id="car_pickup_datetime"
+                class="input"
+            >
+            <label class="block text-gray-600 font-semibold mb-2">Qual hora deseja devolver?<label class="text-red-600 text-base font-thin">*</label></label>
+            <input 
+                type="datetime-local" 
+                name="car_return_datetime" 
+                id="car_pickup_datetime"
+                class="input"
+            >
+        </div>
     </div>
     <div id="dep_iata_container" class="hidden flex gap-6 mb-8">
         <div class="mb-8 relative">

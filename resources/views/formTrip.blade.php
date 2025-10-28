@@ -30,8 +30,11 @@
                     <!-- Passo 5 -->
                     @include('trip.step5')
 
-                    <!-- Passo 6: Revisão final -->
+                    <!-- Passo 6: Aluguel de carros -->
                     @include('trip.step6')
+
+                    <!-- Passo 7: Revisão final -->
+                    @include('trip.step7')
                 </form>
             </div>
         </div>
