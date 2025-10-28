@@ -115,7 +115,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // -------------------- Variáveis Globais e Steps --------------------
     let currentStep = 0;
-    const steps = document.querySelectorAll('.form-step');
+    const stepsNodeList = document.querySelectorAll('.form-step');
+    const steps = Array.from(stepsNodeList); // usar array para facilitar manipulação
     const nextBtns = document.querySelectorAll('.next-btn');
     const prevBtns = document.querySelectorAll('.prev-btn');
     let meioLocomocao = '';
@@ -125,6 +126,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     let voosCarregados = []; // Armazena voos carregados
     let flightSearchInitiated = false; // Controla se a busca de voos já foi iniciada
+    // Descobrir dinamicamente o índice do step de aluguel de carros (se existir)
+    const carStepIndex = steps.findIndex(s => s.querySelector('h2') && s.querySelector('h2').innerText.trim().toLowerCase().includes('aluguel de carros'));
+    const insuranceStepIndex = steps.findIndex(s => s.querySelector('#seguros-container') || s.querySelector('#tabs-seguros-container') || (s.querySelector('h2') && s.querySelector('h2').innerText.trim().toLowerCase().includes('seguro')));
+    let carRentalNeeded = false; // flag para controlar se exibir/pular o step de aluguel
 
     // -------------------- Função para mostrar o passo atual --------------------
     function showStep(idx) {
@@ -135,8 +140,17 @@ document.addEventListener('DOMContentLoaded', function() {
             el.classList.toggle('active', i === idx);
         });
 
-        // Se chegou no step de voos (step 4, index 4) e meio de locomoção é avião
-        if (idx === 4 && meioLocomocao === 'Avião' && !flightSearchInitiated) {
+        // Se o step atual for o de aluguel e ele não for necessário, pular para o próximo
+        if (idx === carStepIndex && carStepIndex !== -1 && !carRentalNeeded) {
+            idx = idx + 1;
+            currentStep = idx;
+            steps.forEach((step, i) => step.classList.toggle('active', i === idx));
+            document.querySelectorAll('.step-indicator').forEach((el, i) => el.classList.toggle('active', i === idx));
+        }
+
+        // Se chegou no step de voos (index dinâmico) e meio de locomoção é avião
+        const flightsIndex = steps.findIndex(s => s.querySelector('h2') && s.querySelector('h2').innerText.trim().toLowerCase().includes('voos'));
+        if (idx === flightsIndex && meioLocomocao === 'Avião' && !flightSearchInitiated) {
             flightSearchInitiated = true;
             searchFlights();
         }
@@ -502,23 +516,42 @@ document.addEventListener('DOMContentLoaded', function() {
             const meioSelect = document.querySelectorAll('.form-step')[1].querySelector('select');
             meioLocomocao = meioSelect.value; // Atualiza sempre
 
-            // Lógica de navegação entre os passos
-            if (currentStep === 2) {
-                currentStep++
-            } else if (currentStep === 3) {
-                currentStep++;
-            } else if (currentStep === 4) {
-                // Do step 4 (seguros), decidir para onde ir baseado em meio de locomoção
-                if (meioLocomocao === 'Avião') {
-                    currentStep++; // Vai para step 5 (voos)
-                    flightSearchInitiated = true;
-                    searchFlights();
+            // Atualiza flag de necessidade do step de aluguel
+            carRentalNeeded = (meioLocomocao === 'Carro (alugado)');
+            // Mostrar/ocultar o elemento do step de aluguel se existir
+            if (carStepIndex !== -1) {
+                const carStepEl = steps[carStepIndex];
+                if (carRentalNeeded) {
+                    carStepEl.classList.remove('hidden');
                 } else {
-                    currentStep += 2; // Pula step 5, vai para step 6 (revisão)
+                    carStepEl.classList.add('hidden');
                 }
-            } else {
-                currentStep++;
             }
+
+            // Lógica de navegação entre os passos com pulo condicional
+            let nextStep = currentStep + 1;
+
+            // Se o próximo passo for o de aluguel e não precisamos dele, pular
+            if (nextStep === carStepIndex && !carRentalNeeded) nextStep++;
+
+            // Se o próximo passo for o de voos e meio não for avião, pular voos
+            const flightsIndex2 = steps.findIndex(s => s.querySelector('h2') && s.querySelector('h2').innerText.trim().toLowerCase().includes('voos'));
+            if (nextStep === flightsIndex2 && meioLocomocao !== 'Avião') {
+                // pular voos
+                nextStep++;
+            }
+
+            // Se o próximo passo for o de seguros e o usuário escolheu 'Não' no step 2, pular seguros
+            const seguroVal = document.getElementById('seguroViagem') ? document.getElementById('seguroViagem').value : '';
+            if (nextStep === insuranceStepIndex && seguroVal === 'Não') nextStep++;
+
+            // Atualizar flightSearchInitiated se estivermos indo para voos
+            if (nextStep === flightsIndex2 && meioLocomocao === 'Avião' && !flightSearchInitiated) {
+                flightSearchInitiated = true;
+                searchFlights();
+            }
+
+            currentStep = nextStep;
 
             if (currentStep >= steps.length) currentStep = steps.length - 1;
             showStep(currentStep);
@@ -531,32 +564,31 @@ document.addEventListener('DOMContentLoaded', function() {
             const meioSelect = document.querySelectorAll('.form-step')[1].querySelector('select');
             meioLocomocao = meioSelect.value;
 
-            // Lógica corrigida para voltar corretamente
-            if (currentStep === 6) {
-                // Do step 6, voltar baseado na configuração
-                if (seguro && seguro.value === 'Não') {
-                    // Se não quer seguro
-                    if (meioLocomocao === 'Avião') {
-                        currentStep -= 1; // Volta para step 5 (voos)
-                    } else {
-                        currentStep -= 3; // Volta para step 3 (preferências)
-                    }
-                } else {
-                    // Se quer seguro
-                    if (meioLocomocao === 'Avião') {
-                        currentStep -= 1; // Volta para step 5 (voos)
-                    } else {
-                        currentStep -= 2; // Volta para step 4 (seguros)
-                    }
+            // Atualiza flag
+            carRentalNeeded = (meioLocomocao === 'Carro (alugado)');
+
+            // Navegação para trás com pulo condicional
+            let prevStep = currentStep - 1;
+
+            // Se o passo anterior é o de aluguel e não é necessário, pular mais
+            if (prevStep === carStepIndex && !carRentalNeeded) prevStep--;
+
+            // Se o passo anterior é voos e meio não for avião, pular
+            const flightsIndex3 = steps.findIndex(s => s.querySelector('h2') && s.querySelector('h2').innerText.trim().toLowerCase().includes('voos'));
+                if (prevStep === flightsIndex3 && meioLocomocao !== 'Avião') {
+                    prevStep--;
                 }
-            } else if (currentStep === 5) {
-                currentStep -= 1;
-            } else {
-                // Navegação normal (voltar 1 step)
-                currentStep--;
-            }
-            
-            if (currentStep < 0) currentStep = 0;
+
+                // Se o passo anterior é o de seguros e o usuário escolheu 'Não' no step 2, pular mais
+                const seguroValuePrev = document.getElementById('seguroViagem') ? document.getElementById('seguroViagem').value : '';
+                if (prevStep === insuranceStepIndex && seguroValuePrev === 'Não') {
+                    prevStep--;
+                }
+
+            // Segurança: garantir limites
+            if (prevStep < 0) prevStep = 0;
+
+            currentStep = prevStep;
             showStep(currentStep);
         });
     });
@@ -613,6 +645,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // -------------------- Exibição dinâmica de campos conforme seleção --------------------
     const meioSelect = document.querySelectorAll('.form-step')[1].querySelector('select');
     const depIataContainer = document.getElementById('dep_iata_container');
+    const carsRentContainer = document.getElementById('cars-rent');
     const seguro = document.getElementById('seguroViagem');
     const insuranceOptions = document.getElementById('insurance-options');
 
@@ -622,6 +655,15 @@ document.addEventListener('DOMContentLoaded', function() {
             depIataContainer.classList.remove('hidden');
         } else {
             depIataContainer.classList.add('hidden');
+        }
+
+        // Mostrar opções de aluguel no step 2 se escolher 'Carro (alugado)'
+        if (carsRentContainer) {
+            if (this.value === 'Carro (alugado)') {
+                carsRentContainer.classList.remove('hidden');
+            } else {
+                carsRentContainer.classList.add('hidden');
+            }
         }
     });
 
@@ -662,6 +704,13 @@ document.addEventListener('DOMContentLoaded', function() {
         depIataContainer.classList.remove('hidden');
     } else {
         depIataContainer.classList.add('hidden');
+    }
+    if (carsRentContainer) {
+        if (meioSelect.value === 'Carro (alugado)') {
+            carsRentContainer.classList.remove('hidden');
+        } else {
+            carsRentContainer.classList.add('hidden');
+        }
     }
 
     // -------------------- Inicialização --------------------
@@ -933,6 +982,29 @@ function validarStep(idx) {
             if (!destinoSeguro || !destinoSeguro.value || destinoSeguro.value === '') {
                 alert('Selecione um destino para a viagem.');
                 if (destinoSeguro) destinoSeguro.focus();
+                return false;
+            }
+        }
+
+        // Se o meio for Carro (alugado), exigir campos de especificação de aluguel
+        const meioLoc = (typeof meioLocomocao === 'string' && meioLocomocao) ? meioLocomocao : (document.querySelectorAll('.form-step')[1]?.querySelector('select')?.value || '');
+        if (meioLoc === 'Carro (alugado)') {
+            const pickup = document.querySelector('input[name="car_pickup_datetime"]');
+            const ret = document.querySelector('input[name="car_return_datetime"]');
+            if (!pickup || !pickup.value) {
+                showNotification('Informe a data/hora de retirada do carro.', 'error');
+                if (pickup) pickup.focus();
+                return false;
+            }
+            if (!ret || !ret.value) {
+                showNotification('Informe a data/hora de devolução do carro.', 'error');
+                if (ret) ret.focus();
+                return false;
+            }
+            // Validação adicional: devolução não pode ser antes da retirada
+            if (ret.value < pickup.value) {
+                showNotification('A data/hora de devolução não pode ser anterior à retirada.', 'error');
+                ret.focus();
                 return false;
             }
         }
