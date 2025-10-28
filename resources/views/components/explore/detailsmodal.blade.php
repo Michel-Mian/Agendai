@@ -1,7 +1,7 @@
 <div id="placeDetailsModal"
      class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 hidden"
      style="background: rgba(17,24,39,0.3); backdrop-filter: blur(8px);">
-    <div class="explore-details-modal-base bg-white rounded-lg shadow-xl relative flex flex-col max-w-2xl w-full max-h-[90vh] overflow-hidden">
+    <div class="explore-details-modal-base bg-white rounded-lg shadow-xl relative flex flex-col max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-10">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
