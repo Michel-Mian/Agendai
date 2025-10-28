@@ -20,9 +20,9 @@
 
             <!-- Menu  flutuante -->
             <div id="floatingMenu"
-                class="absolute right-6 top-6 bottom-6 w-96 flex-shrink-0 overflow-hidden z-30 shadow-lg rounded-2xl bg-white border border-gray-200 transition-transform duration-300"
+                class="absolute right-6 top-6 bottom-6 w-96 flex-shrink-0 z-30 shadow-lg rounded-2xl bg-white border border-gray-200 transition-transform duration-300 overflow-hidden"
                 style="transform: translateX(110%);">
-                <div class="flex flex-col h-full w-full bg-white rounded-2xl overflow-hidden">
+                <div class="flex flex-col h-full w-full bg-white rounded-2xl overflow-y-auto">
                     <div class="mb-6 flex-shrink-0 px-4 pt-4">
                         <div class="my-4 flex items-center">
                             <div class="relative flex-1">
@@ -113,8 +113,8 @@
                             />
                         </div>
 
-                        <div class="flex-1 overflow-y-auto min-h-0">
-                            <div id="itinerary-content" class="h-full">
+                        <div class="flex-1 overflow-y-auto min-h-[320px] max-h-[500px]">
+                            <div id="itinerary-content" class="h-full min-h-[300px] max-h-[480px] overflow-y-auto">
                                 <div class="flex flex-col items-center justify-center h-full text-gray-400 py-8">
                                     <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
@@ -132,7 +132,7 @@
                                 </svg>
                                 <h3 class="font-semibold text-gray-900">Sugestões para Você</h3>
                             </div>
-                            <div id="suggestions-list" class="space-y-3 max-h-48 overflow-y-auto">
+                            <div id="suggestions-list" class="space-y-3 max-h-28 overflow-y-auto">
                             </div>
                         </div>
                     </div>
