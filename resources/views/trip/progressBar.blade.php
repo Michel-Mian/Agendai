@@ -26,7 +26,7 @@
             min-width: 80px;
         }
 
-        /* Connector line between steps (subtle background) */
+        /* Linha de conexão padrão */
         .progress-step::after {
             content: '';
             position: absolute;
@@ -41,6 +41,11 @@
         }
         /* Hide connector for last step */
         .progress-step:last-child::after { display: none; }
+
+        /* Linha de conexão verde para passos concluídos */
+        .progress-step.completed::after {
+            background: linear-gradient(90deg, #22c55e 0%, #22c55e 100%);
+        }
 
         /* Step indicator (circle) */
         .step-indicator {
@@ -104,10 +109,18 @@
     </style>
 
     <nav aria-label="Progresso da criação do roteiro" class="progress-steps" role="navigation">
+        @php
+            $currentStep = request()->input('step', 1); // ou defina via variável do controller
+        @endphp
         @foreach(['Informações iniciais', 'Detalhes da viagem', 'Preferências', 'Seguros', 'Voos', 'Revisão final'] as $i => $etapa)
-            <div class="progress-step" aria-current="{{ $i === 0 ? 'step' : 'false' }}">
-                <div class="step-indicator @if($i==0) active @endif" id="step-indicator-{{ $i+1 }}" aria-hidden="true">
-                    {{ $i+1 }}
+            @php
+                $stepNumber = $i + 1;
+                $isActive = $stepNumber == $currentStep;
+                $isCompleted = $stepNumber < $currentStep;
+            @endphp
+            <div class="progress-step{{ $isCompleted ? ' completed' : '' }}" aria-current="{{ $isActive ? 'step' : 'false' }}">
+                <div class="step-indicator @if($isActive) active @endif" id="step-indicator-{{ $stepNumber }}" aria-hidden="true">
+                    {{ $stepNumber }}
                 </div>
                 <span class="step-label">{{ $etapa }}</span>
                 @if($i < 5)
@@ -116,4 +129,39 @@
             </div>
         @endforeach
     </nav>
+    <script>
+    // Torna o círculo do step atual verde ao avançar
+    document.addEventListener('DOMContentLoaded', function() {
+        function updateProgressBar(step) {
+            const steps = document.querySelectorAll('.progress-step');
+            steps.forEach((el, idx) => {
+                el.classList.remove('completed');
+                el.querySelector('.step-indicator').classList.remove('active');
+                if (idx + 1 < step) {
+                    el.classList.add('completed');
+                }
+                if (idx + 1 === step) {
+                    el.querySelector('.step-indicator').classList.add('active');
+                }
+            });
+        }
+        // Detecta step atual via input hidden ou variável global
+        let step = 1;
+        const stepInput = document.querySelector('input[name="currentStep"]');
+        if (stepInput) step = parseInt(stepInput.value) || 1;
+        else if (window.currentStep) step = parseInt(window.currentStep) || 1;
+        else {
+            // Tenta detectar pelo DOM (primeiro .form-step.active)
+            const activeStep = document.querySelector('.form-step.active');
+            if (activeStep) {
+                const steps = Array.from(document.querySelectorAll('.form-step'));
+                step = steps.indexOf(activeStep) + 1;
+            }
+        }
+        updateProgressBar(step);
+
+        // Exemplo: se você avança steps via JS, chame updateProgressBar(novoStep)
+        window.updateProgressBar = updateProgressBar;
+    });
+    </script>
 </div>

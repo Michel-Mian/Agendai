@@ -35,93 +35,83 @@ class TripController extends Controller
                 'destino' => ['required', 'integer', Rule::in([1, 2, 4, 5, 6, 7, 11, 12, 13, 14])],
                 'data_ida' => 'required|date|after_or_equal:today',
                 'data_volta' => 'required|date|after:data_ida',
+                'idades' => 'present|array',
+                'idades.*' => 'integer|min:0|max:120'
             ]);
 
-            $params = [
+            // Usar apenas o destino e datas para cache inicial
+            $baseCacheKey = 'seguros:' . md5(json_encode([
                 'destino' => (int) $request->input('destino'),
-                'data_ida' => Carbon::parse($request->input('data_ida'))->toDateString(), // Formato YYYY-MM-DD
-                'data_volta' => Carbon::parse($request->input('data_volta'))->toDateString(), // Formato YYYY-MM-DD
-            ];
-        
-            $cacheKey = 'seguros:' . md5(json_encode($params));
-            \Log::info('Verificando cache com chave normalizada', ['cache_key' => $cacheKey, 'params' => $params]);
-            
-            $cacheRow = \DB::table('seguros_cache')->where('cache_key', $cacheKey)->first();
+                'data_ida' => Carbon::parse($request->input('data_ida'))->toDateString(),
+                'data_volta' => Carbon::parse($request->input('data_volta'))->toDateString()
+            ]));
 
-            // **INÍCIO DA LÓGICA CORRIGIDA**
-            if ($cacheRow) {
-                // Um registro de cache foi encontrado, vamos verificar seu status.
-                if ($cacheRow->status === 'completed' && !is_null($cacheRow->result_json)) {
-                    $frases = json_decode($cacheRow->result_json, true) ?? [];
-                    \Log::info('Cache válido encontrado', [
-                        'cache_key' => $cacheKey,
-                        'seguros_count' => count($frases)
-                    ]);
-                    return response()->json(['frases' => $frases, 'status' => 'concluido']);
-                }
+            $cacheRow = \DB::table('seguros_cache')->where('cache_key', $baseCacheKey)->first();
+            $idades = $request->input('idades', []);
 
-                if ($cacheRow->status === 'processing') {
-                    $startedAt = Carbon::parse($cacheRow->started_at ?? $cacheRow->updated_at);
-                    if ($startedAt->diffInMinutes(now()) > 10) {
-                        \Log::warning('Processo travado detectado, limpando cache e iniciando novo job.', [
-                            'cache_key' => $cacheKey,
-                            'started_at' => $startedAt
-                        ]);
-                        \DB::table('seguros_cache')->where('cache_key', $cacheKey)->delete();
-                        // Após limpar, a execução continuará para a lógica de "iniciar novo processo" abaixo.
-                    } else {
-                        // O processo ainda está rodando validamente.
-                        return response()->json(['frases' => [], 'status' => 'carregando']);
+            // Se temos cache válido, filtrar por idade
+            if ($cacheRow && $cacheRow->status === 'completed' && !is_null($cacheRow->result_json)) {
+                $seguros = json_decode($cacheRow->result_json, true) ?? [];
+                $allResults = [];
+
+                foreach ($idades as $idade) {
+                    $segurosParaIdade = array_filter($seguros, function($seguro) use ($idade) {
+                        return $this->seguroAtendeFaixaEtaria($seguro, $idade);
+                    });
+
+                    if (!empty($segurosParaIdade)) {
+                        $allResults[$idade] = array_values($segurosParaIdade); // Reindex array
                     }
                 }
-                
-                // Adicionado para lidar com jobs que falharam permanentemente (requer o método failed() no Job)
-                if ($cacheRow->status === 'failed') {
-                    \Log::warning('Retornando erro de job que falhou para o frontend', ['cache_key' => $cacheKey]);
+
+                if (!empty($allResults)) {
                     return response()->json([
-                        'error' => 'A busca pelos seguros falhou no servidor.',
-                        'status' => 'failed'
-                    ], 500);
-                }
-            }
-            
-            // Se chegamos até aqui, significa que:
-            // 1. Nenhum cache foi encontrado ($cacheRow era nulo desde o início).
-            // 2. Ou um cache 'travado' foi encontrado e limpo.
-            // Em ambos os casos, precisamos iniciar um novo processo de scraping.
-
-            $lockKey = "scraping_lock:{$cacheKey}";
-            $lock = Cache::lock($lockKey, 360);
-
-            if ($lock->get()) {
-                try {
-                    \DB::table('seguros_cache')->updateOrInsert(
-                        ['cache_key' => $cacheKey],
-                        [
-                            'result_json' => null, 
-                            'status' => 'processing', 
-                            'started_at' => now(),
-                            'updated_at' => now()
-                        ]
-                    );
-                    
-                    \App\Jobs\ScrapeInsuranceJob::dispatch(['cache_key' => $cacheKey, 'params' => $params]);
-                    \Log::info('Job de scraping disparado', ['cache_key' => $cacheKey]);
-                    
-                } finally {
-                    $lock->release();
+                        'frases' => $allResults,
+                        'status' => 'concluido'
+                    ]);
                 }
             }
 
-            return response()->json(['frases' => [], 'status' => 'carregando']);
-            // **FIM DA LÓGICA CORRIGIDA**
+            // Se não temos cache ou está vazio/expirado
+            if (!$cacheRow || $cacheRow->status === 'failed' || 
+                ($cacheRow->status === 'processing' && Carbon::parse($cacheRow->started_at)->diffInMinutes(now()) > 10)) {
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Erro de validação no scrapingAjax', [
-                'errors' => $e->errors(),
-                'request_data' => $request->all()
+                $lockKey = "scraping_lock:{$baseCacheKey}";
+                $lock = Cache::lock($lockKey, 360);
+
+                if ($lock->get()) {
+                    try {
+                        \DB::table('seguros_cache')->updateOrInsert(
+                            ['cache_key' => $baseCacheKey],
+                            [
+                                'result_json' => null,
+                                'status' => 'processing',
+                                'started_at' => now(),
+                                'updated_at' => now()
+                            ]
+                        );
+
+                        // Dispatch job com parâmetros básicos
+                        \App\Jobs\ScrapeInsuranceJob::dispatch([
+                            'cache_key' => $baseCacheKey,
+                            'params' => [
+                                'destino' => (int) $request->input('destino'),
+                                'data_ida' => Carbon::parse($request->input('data_ida'))->toDateString(),
+                                'data_volta' => Carbon::parse($request->input('data_volta'))->toDateString()
+                            ]
+                        ]);
+
+                    } finally {
+                        $lock->release();
+                    }
+                }
+            }
+
+            return response()->json([
+                'frases' => [],
+                'status' => 'carregando'
             ]);
-            return response()->json(['error' => 'Dados inválidos', 'details' => $e->errors()], 422);
+
         } catch (\Exception $e) {
             \Log::error('Erro crítico no scrapingAjax', [
                 'error' => $e->getMessage(),
@@ -130,6 +120,77 @@ class TripController extends Controller
             ]);
             return response()->json(['error' => 'Erro interno do servidor', 'message' => $e->getMessage()], 500);
         }
+    }
+
+    private function seguroAtendeFaixaEtaria($seguro, $idade)
+    {
+        if (empty($seguro['detalhes_etarios'])) {
+            return true; // Se não tem restrição, aceita qualquer idade
+        }
+
+        $detalhes = mb_strtolower($seguro['detalhes_etarios']);
+
+        // Padrões comuns de faixa etária
+        $patterns = [
+            '/até (\d+)/i' => function($matches) use ($idade) {
+                return $idade <= (int)$matches[1];
+            },
+            '/(\d+)\s*(?:a|até)\s*(\d+)/i' => function($matches) use ($idade) {
+                return $idade >= (int)$matches[1] && $idade <= (int)$matches[2];
+            },
+            '/acima de (\d+)/i' => function($matches) use ($idade) {
+                return $idade > (int)$matches[1];
+            },
+            '/maior que (\d+)/i' => function($matches) use ($idade) {
+                return $idade > (int)$matches[1];
+            },
+            '/menor que (\d+)/i' => function($matches) use ($idade) {
+                return $idade < (int)$matches[1];
+            },
+            '/(\d+)\s*anos/i' => function($matches) use ($idade) {
+                return $idade == (int)$matches[1];
+            }
+        ];
+
+        foreach ($patterns as $pattern => $validator) {
+            if (preg_match($pattern, $detalhes, $matches)) {
+                return $validator($matches);
+            }
+        }
+
+        // Se não encontrou nenhum padrão conhecido, aceita o seguro
+        return true;
+    }
+
+    private function filtrarSegurosPorIdade($seguros, $idade)
+    {
+        return array_filter($seguros, function($seguro) use ($idade) {
+            if (empty($seguro['detalhes_etarios'])) {
+                return true; // Se não tem restrição de idade, permite para todos
+            }
+
+            $detalhes = strtolower($seguro['detalhes_etarios']);
+            
+            // Verifica diferentes formatos de faixa etária
+            if (preg_match('/até (\d+)/', $detalhes, $matches)) {
+                return $idade <= (int)$matches[1];
+            }
+            
+            if (preg_match('/(\d+) a (\d+)/', $detalhes, $matches)) {
+                return $idade >= (int)$matches[1] && $idade <= (int)$matches[2];
+            }
+            
+            if (preg_match('/maior que (\d+)/', $detalhes, $matches)) {
+                return $idade > (int)$matches[1];
+            }
+            
+            if (preg_match('/menor que (\d+)/', $detalhes, $matches)) {
+                return $idade < (int)$matches[1];
+            }
+            
+            // Se não conseguiu identificar o formato, retorna true para incluir o seguro
+            return true;
+        });
     }
 
     // AJAX: Retorna todos os seguros da viagem

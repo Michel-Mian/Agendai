@@ -328,46 +328,62 @@
         }
 
         function getFormData() {
-            // Buscar todas as datas dos destinos
-            const dataInicioInputs = document.querySelectorAll('input[name="destino_data_inicio[]"]');
-            const dataFimInputs = document.querySelectorAll('input[name="destino_data_fim[]"]');
-            const destinoSelect = document.getElementById('MainContent_Cotador_selContinente');
+            try {
+                // Buscar todas as datas dos destinos
+                const dataInicioInputs = document.querySelectorAll('input[name="destino_data_inicio[]"]');
+                const dataFimInputs = document.querySelectorAll('input[name="destino_data_fim[]"]');
+                const destinoSelect = document.getElementById('MainContent_Cotador_selContinente');
+                const idadesInputs = document.querySelectorAll('#idades-container input[name="idades[]"]');
 
-            if (!destinoSelect) {
-                console.error('Campo de destino não encontrado no formulário.');
-                return { error: 'Campo de destino ausente.' };
-            }
+                if (!destinoSelect) {
+                    console.error('Campo de destino não encontrado no formulário.');
+                    return null;
+                }
 
-            // Para o seguro, usar a data do primeiro destino como data de início e a data do último destino como data de fim
-            let dataIda = '';
-            let dataVolta = '';
+                // Coletar idades dos inputs
+                const idades = Array.from(idadesInputs).map(input => {
+                    const valor = parseInt(input.value);
+                    return isNaN(valor) ? 25 : valor; // Fallback para 25 anos se inválido
+                });
 
-            if (dataInicioInputs.length > 0 && dataInicioInputs[0].value) {
-                dataIda = dataInicioInputs[0].value; // Data de início do primeiro destino
-            }
+                // Se não houver idades, usar array com idade padrão
+                if (idades.length === 0) {
+                    idades.push(25);
+                }
 
-            if (dataFimInputs.length > 0) {
-                // Pegar a data de fim do último destino que tenha valor
-                for (let i = dataFimInputs.length - 1; i >= 0; i--) {
-                    if (dataFimInputs[i].value) {
-                        dataVolta = dataFimInputs[i].value;
-                        break;
+                // Para o seguro, usar a data do primeiro destino como data de início 
+                // e a data do último destino como data de fim
+                let dataIda = '';
+                let dataVolta = '';
+
+                if (dataInicioInputs.length > 0 && dataInicioInputs[0].value) {
+                    dataIda = dataInicioInputs[0].value;
+                }
+
+                if (dataFimInputs.length > 0) {
+                    for (let i = dataFimInputs.length - 1; i >= 0; i--) {
+                        if (dataFimInputs[i].value) {
+                            dataVolta = dataFimInputs[i].value;
+                            break;
+                        }
                     }
                 }
+
+                if (!dataIda || !dataVolta) {
+                    console.error('Datas de início ou fim dos destinos não encontradas.');
+                    return null;
+                }
+
+                return {
+                    destino: destinoSelect.value,
+                    data_ida: dataIda,
+                    data_volta: dataVolta,
+                    idades: idades
+                };
+            } catch (error) {
+                console.error('Erro ao coletar dados do formulário:', error);
+                return null;
             }
-
-            if (!dataIda || !dataVolta) {
-                console.error('Datas de início ou fim dos destinos não encontradas.');
-                return { error: 'Datas dos destinos não encontradas.' };
-            }
-
-            const formData = {
-                destino: destinoSelect.value,
-                data_ida: dataIda,
-                data_volta: dataVolta
-            };
-
-            return formData;
         }
 
         // Função para obter o número de viajantes e suas idades
@@ -478,40 +494,52 @@
             updateProgress(attemptsMade);
 
             const formData = getFormData();
+            if (!formData) {
+                hideLoading();
+                showErrorMessage('Dados do formulário inválidos ou incompletos');
+                return;
+            }
 
             fetch('{{ route('run.Scraping.ajax') }}', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
                 body: JSON.stringify(formData)
             })
-                .then(res => {
-                    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-                    return res.json();
-                })
-                .then(data => {
-                    if (data.error) throw new Error(data.error + (data.message ? ': ' + data.message : ''));
+            .then(res => {
+                if (!res.ok) {
+                    return res.json().then(err => {
+                        throw new Error(err.message || `HTTP ${res.status}: ${res.statusText}`);
+                    });
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data.error) throw new Error(data.error + (data.message ? ': ' + data.message : ''));
 
-                    if (data.frases && data.frases.length > 0) {
-                        clearInterval(intervalId);
-                        intervalId = null;
-                        hideLoading();
-                        renderInsurances(data.frases);
-                    } else if (data.status === 'carregando' && attemptsMade < maxAttempts) {
-                        // Polling continua
-                    } else {
-                        clearInterval(intervalId);
-                        intervalId = null;
-                        hideLoading();
-                        showNoInsuranceMessage();
-                    }
-                })
-                .catch((err) => {
+                if (data.frases && Object.keys(data.frases).length > 0) {
                     clearInterval(intervalId);
                     intervalId = null;
                     hideLoading();
-                    console.error('[Seguros] Erro na requisição:', err);
-                    showErrorMessage(err.message);
-                });
+                    renderInsurances(data.frases);
+                } else if (data.status === 'carregando' && attemptsMade < maxAttempts) {
+                    // Polling continua
+                } else {
+                    clearInterval(intervalId);
+                    intervalId = null;
+                    hideLoading();
+                    showNoInsuranceMessage();
+                }
+            })
+            .catch((err) => {
+                clearInterval(intervalId);
+                intervalId = null;
+                hideLoading();
+                console.error('[Seguros] Erro na requisição:', err);
+                showErrorMessage(err.message || 'Erro ao buscar seguros');
+            });
         }
 
         // --- ADIÇÃO: função global para reiniciar a busca (polling) ---
@@ -780,15 +808,18 @@
         // Função para o botão "Ver Mais" (ajustada para trabalhar com filtered list)
         // =========================================================================
         window.showMoreInsurances = function(viaganteIndex) {
+            const viajantesInfo = getViajantesInfo();
+            const idade = viajantesInfo.idades[viaganteIndex];
+            const segurosParaIdade = window.currentInsurances[idade] || [];
             const filtered = window.filteredInsurancesByViajante[viaganteIndex] || [];
             const currentVisible = window.visibleInsuranceCount[viaganteIndex] || INSURANCES_PER_PAGE;
             const newVisible = currentVisible + INSURANCES_PER_PAGE;
             window.visibleInsuranceCount[viaganteIndex] = Math.min(newVisible, filtered.length);
-            
+
             const tabContentContainer = document.querySelector(`#tab-content-${viaganteIndex} .flex.flex-col.gap-6`);
             if (tabContentContainer) {
-                // Re-renderiza usando a lista original completa (será filtrada dentro da função)
-                displayInsurancesForTab(viaganteIndex, window.currentInsurances, tabContentContainer);
+                // Agora passa apenas os seguros da idade correta
+                displayInsurancesForTab(viaganteIndex, segurosParaIdade, tabContentContainer);
             }
         };
 
@@ -811,6 +842,29 @@
                 
                 // Agora cada tab mostra apenas seguros compatíveis com a idade do viajante
                 displayInsurancesForTab(viaganteIndex, insurances, tabContentContainer);
+            }
+        }
+
+        // REMOVA a versão antiga de renderInsurances que espera array!
+        // MANTENHA apenas esta versão, que espera um objeto frases { idade: [seguros...] }
+        function renderInsurances(frasesObj) {
+            window.currentInsurances = frasesObj;
+            window.visibleInsuranceCount = {};
+            window.filteredInsurancesByViajante = {};
+
+            const viajantesInfo = getViajantesInfo();
+            createTabs(viajantesInfo);
+
+            const { numPessoas, idades } = viajantesInfo;
+
+            for (let viaganteIndex = 0; viaganteIndex < numPessoas; viaganteIndex++) {
+                const idade = idades[viaganteIndex];
+                const tabContentContainer = document.querySelector(`#tab-content-${viaganteIndex} .flex.flex-col.gap-6`);
+                if (!tabContentContainer) continue;
+
+                // Pega os seguros para a idade do viajante
+                const segurosParaIdade = frasesObj[idade] || [];
+                displayInsurancesForTab(viaganteIndex, segurosParaIdade, tabContentContainer);
             }
         }
 
@@ -879,4 +933,73 @@
             step4Observer.observe(step4Element);
         }
     });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Supondo que você tem as idades dos viajantes disponíveis
+    const idades = window.idadesViajantes || [18, 20, 90]; // Exemplo, substitua pelo real
+    const tabs = document.querySelectorAll('.tab-button');
+    const segurosWrapper = document.getElementById('seguros-wrapper');
+
+    function renderInsurances(seguroArray, container) {
+        container.innerHTML = '';
+        if (!seguroArray || seguroArray.length === 0) {
+            container.innerHTML = '<div class="text-red-600">Nenhum seguro disponível para esta idade.</div>';
+            return;
+        }
+        seguroArray.forEach(seguro => {
+            container.innerHTML += `<div class="insurance-card">${seguro.seguradora} - ${seguro.plano} (${seguro.detalhes_etarios || 'todas idades'})</div>`;
+        });
+    }
+
+    function carregarSeguros() {
+        // Monta o payload para o backend
+        const data = {
+            destino: document.getElementById('MainContent_Cotador_selContinente').value,
+            data_ida: document.getElementById('data_ida').value,
+            data_volta: document.getElementById('data_volta').value,
+            idades: idades
+        };
+
+        fetch('/trip/search-insurance', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'concluido' && data.frases) {
+                // Para cada tab/idade, renderiza os seguros corretos
+                tabs.forEach((tab, idx) => {
+                    const idade = idades[idx];
+                    let container = document.getElementById(`seguros-container-${idx}`);
+                    if (!container) {
+                        container = document.createElement('div');
+                        container.id = `seguros-container-${idx}`;
+                        container.classList.add('seguros-container');
+                        if (idx !== 0) container.classList.add('hidden');
+                        segurosWrapper.appendChild(container);
+                    }
+                    renderInsurances(data.frases[idade], container);
+
+                    tab.addEventListener('click', () => {
+                        tabs.forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        document.querySelectorAll('.seguros-container').forEach(c => c.classList.add('hidden'));
+                        container.classList.remove('hidden');
+                    });
+                });
+            } else {
+                // Mostra mensagem de carregando ou erro
+                segurosWrapper.innerHTML = '<div class="text-gray-600">Carregando seguros...</div>';
+            }
+        });
+    }
+
+    carregarSeguros();
+});
 </script>
