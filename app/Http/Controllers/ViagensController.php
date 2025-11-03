@@ -45,6 +45,7 @@ class ViagensController extends Controller
                 'user',
                 'hotel',
                 'seguros',
+                'veiculos',
                 'destinos' => function($query) {
                     $query->orderBy('ordem_destino', 'asc');
                 },
@@ -78,6 +79,9 @@ class ViagensController extends Controller
             // Adicionar seguros
             $seguros = $viagem->seguros;
 
+            // Adicionar veículos
+            $veiculos = $viagem->veiculos;
+
             // Inicializar eventos/notícias vazios (serão carregados via AJAX)
             $eventos = collect();
 
@@ -104,6 +108,7 @@ class ViagensController extends Controller
                 'pontos_count' => $pontosOrdenados->count(),
                 'viajantes_count' => $viajantes->count(),
                 'seguros_count' => $seguros->count(),
+                'veiculos_count' => $veiculos->count(),
                 'hotel_count' => $hotel ? $hotel->count() : 0
             ]);
 
@@ -117,6 +122,7 @@ class ViagensController extends Controller
                 'voos',
                 'hotel',
                 'seguros',
+                'veiculos',
                 'eventos',
                 'estatisticas'
             ));

@@ -52,6 +52,12 @@
                 <span class="nav-text ml-3">Explorar</span> 
             </a> 
         </li> 
+        <li>
+            <a href="/vehicles" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition-colors">
+                <i class="fa-solid fa-car"></i>
+                <span class="nav-text">Veículos</span>
+            </a>
+        </li>
     </ul> 
 </nav>
 

@@ -556,7 +556,7 @@
     <!-- Modal de Adicionar Viajante -->
     @include('components.myTrips.modals.addViajantesModal')
 
-    @include('components/explore/detailsModal')
+    @include('components/explore/detailsmodal')
 
     <!-- Insurance modals (add and details) -->
     @include('components.myTrips.modals.addInsurance')

@@ -4,15 +4,16 @@ use App\Http\Controllers\DashBoardController;
 use App\Http\Controllers\FlightsController;
 use App\Http\Controllers\FormController;
 use Illuminate\Support\Facades\Route;
-use App\http\controllers\UserController;
-use App\http\controllers\ExploreController;
-use App\http\controllers\ViagensController;
-use App\http\controllers\HotelsController;
-use App\http\controllers\MobileController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ExploreController;
+use App\Http\Controllers\ViagensController;
+use App\Http\Controllers\HotelsController;
+use App\Http\Controllers\MobileController;
 use Illuminate\Http\Request;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 use App\Http\Controllers\ViagemPdfController;
 use App\Http\Controllers\TripController;
+use App\Http\Controllers\VehiclesController;
 
 Route::get('/', function () {
     return view('home');
@@ -91,6 +92,14 @@ Route::middleware(['auth'])->group(function (){
     Route::get('/trip/insurances', [TripController::class, 'getInsurancesAjax']);
     Route::post('/trip/update-insurance', [TripController::class, 'updateInsuranceAjax']);
     Route::post('/trip/save-traveler-insurance', [TripController::class, 'saveInsuranceForTraveler'])->name('trip.save.traveler.insurance');
+
+    // ROTAS DE VEÍCULOS
+    Route::get('/vehicles', [VehiclesController::class, 'index'])->name('vehicles.index');
+    Route::post('/vehicles/search', [VehiclesController::class, 'searchVehiclesAjax'])->name('vehicles.search.ajax');
+    Route::post('/vehicles/save', [VehiclesController::class, 'saveVehicleForTrip'])->name('vehicles.save');
+    Route::delete('/vehicles/{id}', [VehiclesController::class, 'destroy'])->name('vehicles.destroy');
+    Route::get('/vehicles/trip/{trip_id}', [VehiclesController::class, 'getVehiclesByTrip'])->name('vehicles.by.trip');
+    Route::get('/vehicles/user/trips', [VehiclesController::class, 'getUserTrips'])->name('vehicles.user.trips');
 
     // NOVAS ROTAS PARA ESTATÍSTICAS POR DESTINO
     Route::get('/viagens/{viagem}/weather/{destino}', [ViagensController::class, 'getWeatherDataForDestination'])->name('viagens.weather.destino');
