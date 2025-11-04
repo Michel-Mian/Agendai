@@ -282,6 +282,41 @@ class FormController extends Controller
 
             }
 
+            // 7. Se o formulário traz dados do veículo selecionado (fluxo de criação), persistir veículo
+            if ($request->filled('selected_car_data')) {
+                try {
+                    $veiculoData = json_decode($request->input('selected_car_data'), true);
+                    if (is_array($veiculoData)) {
+                        \App\Models\Veiculos::create([
+                            'fk_id_viagem' => $viagem->pk_id_viagem,
+                            'nome_veiculo' => $veiculoData['nome'] ?? ($veiculoData['nome_veiculo'] ?? 'N/A'),
+                            'categoria' => $veiculoData['categoria'] ?? null,
+                            'imagem_url' => $veiculoData['imagem'] ?? ($veiculoData['imagem_url'] ?? null),
+                            'passageiros' => $veiculoData['configuracoes']['passageiros'] ?? ($veiculoData['passageiros'] ?? null),
+                            'malas' => $veiculoData['configuracoes']['malas'] ?? ($veiculoData['malas'] ?? null),
+                            'ar_condicionado' => $veiculoData['configuracoes']['ar_condicionado'] ?? ($veiculoData['ar_condicionado'] ?? false),
+                            'cambio' => $veiculoData['configuracoes']['cambio'] ?? ($veiculoData['cambio'] ?? null),
+                            'quilometragem' => $veiculoData['configuracoes']['quilometragem'] ?? ($veiculoData['quilometragem'] ?? null),
+                            'diferenciais' => json_encode($veiculoData['diferenciais'] ?? []),
+                            'tags' => json_encode($veiculoData['tags'] ?? []),
+                            'endereco_retirada' => $veiculoData['local_retirada']['endereco'] ?? ($veiculoData['endereco_retirada'] ?? null),
+                            'tipo_local' => $veiculoData['local_retirada']['tipo'] ?? ($veiculoData['tipo_local'] ?? null),
+                            'nome_local' => $veiculoData['local_retirada']['nome'] ?? ($veiculoData['nome_local'] ?? null),
+                            'locadora_nome' => $veiculoData['locadora']['nome'] ?? ($veiculoData['locadora_nome'] ?? null),
+                            'locadora_logo' => $veiculoData['locadora']['logo'] ?? ($veiculoData['locadora_logo'] ?? null),
+                            'avaliacao_locadora' => $veiculoData['locadora']['avaliacao'] ?? ($veiculoData['avaliacao_locadora'] ?? null),
+                            'preco_total' => $veiculoData['preco']['total'] ?? ($veiculoData['preco_total'] ?? null),
+                            'preco_diaria' => $veiculoData['preco']['diaria'] ?? ($veiculoData['preco_diaria'] ?? null),
+                            'link_reserva' => $veiculoData['link_continuar'] ?? ($veiculoData['link_reserva'] ?? null),
+                            'is_selected' => true,
+                            'observacoes' => $request->input('veiculo_observacoes') ?? null,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Erro ao persistir veiculo durante criação da viagem', ['error' => $e->getMessage()]);
+                }
+            }
+
             // 7. Atualizar viagem com seguro se houver (manter compatibilidade)
             // Nota: Com o novo sistema, seguros são vinculados aos viajantes individuais
             // mas mantemos esta linha para compatibilidade com visualizações existentes

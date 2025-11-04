@@ -4,7 +4,7 @@
 <!-- CSS do Autocomplete -->
 <link rel="stylesheet" href="{{ asset('css/places-autocomplete.css') }}">
 
-<div class="flex min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-white">
+<div class="flex min-h-screen bg-white">
     @include('components.layout.sidebar')
     
     <div id="main-content" class="flex-1 flex flex-col px-0">

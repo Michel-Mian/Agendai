@@ -21,13 +21,15 @@
                 name="car_pickup_datetime" 
                 id="car_pickup_datetime"
                 class="input"
+                step="1800"
             >
             <label class="block text-gray-600 font-semibold mb-2">Qual hora deseja devolver?<label class="text-red-600 text-base font-thin">*</label></label>
             <input 
                 type="datetime-local" 
                 name="car_return_datetime" 
-                id="car_pickup_datetime"
+                id="car_return_datetime"
                 class="input"
+                step="1800"
             >
         </div>
     </div>
