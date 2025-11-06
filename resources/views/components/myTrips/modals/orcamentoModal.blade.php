@@ -26,13 +26,8 @@
             </div>
         </div>
 
-<<<<<<< HEAD
-        <!-- Corpo do Modal -->
-        <div class="p-8 overflow-y-auto max-h-[60vh]">
-=======
     <!-- Corpo do Modal -->
     <div class="p-6 sm:p-8 overflow-y-auto max-h-[80vh] sm:max-h-[60vh]">
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
             <h4 class="text-xl font-semibold text-gray-800 mb-4">Hotéis</h4>
             @forelse ($viagem->hotel as $hotel)
                 @php
@@ -60,9 +55,6 @@
             @endforelse
 
             <hr class="my-6">
-
-<<<<<<< HEAD
-=======
             <h4 class="text-xl font-semibold text-gray-800 mb-4">Carros alugados</h4>
             @php
                 $veiculosList = $viagem->veiculos ?? collect();
@@ -101,8 +93,6 @@
                 @endforeach
                 </div>
             @endif
-
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
             <h4 class="text-xl font-semibold text-gray-800 mb-4">Voos</h4>
             @php
                 $numero_viajantes = $viajantes->count();
@@ -116,11 +106,7 @@
                 @php
                     $preco_total_voo = $voo->preco_voo * $numero_viajantes;
                 @endphp
-<<<<<<< HEAD
-                <div class="mb-4 p-4 rounded-lg border border-gray-100 shadow-sm bg-gray-50">
-=======
                     <div class="mb-4 p-4 sm:p-4 rounded-lg border border-gray-100 shadow-sm bg-gray-50">
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
                     <div class="flex justify-between items-center">
                         <span class="font-semibold text-gray-700">{{ $voo->companhia_voo }} - {{ $voo->numero_voo ?? $voo->flight_number ?? '' }}</span>
                         <div class="flex flex-col gap-1 text-right">
@@ -175,11 +161,7 @@
 
             <hr class="my-6">
 
-<<<<<<< HEAD
-            <div class="flex justify-between items-center mt-6">
-=======
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-6 gap-4">
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
                 <h4 class="text-lg font-semibold text-gray-800">Total do Orçamento</h4>
                 @php
                     $preco_total = 0;
@@ -202,11 +184,6 @@
                         $preco_seguro = $seguro->preco_pix ?? $seguro->preco_cartao ?? 0;
                         $preco_total += $preco_seguro * $numero_viajantes;
                     }
-<<<<<<< HEAD
-                @endphp
-                
-                <span class="text-green-600 text-2xl font-bold">R$ {{ number_format($preco_total, 2, ',', '.') }}</span>
-=======
 
                     // Soma dos veículos (preco_total em Veiculos)
                     $total_veiculos = 0;
@@ -220,7 +197,6 @@
                 @endphp
                 
                 <span class="text-green-600 text-xl sm:text-2xl font-bold">R$ {{ number_format($preco_total, 2, ',', '.') }}</span>
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
             </div>
 
             <!-- Breakdown do total -->
@@ -230,10 +206,7 @@
                     $total_hoteis = 0;
                     $total_voos = 0;
                     $total_seguros = 0;
-<<<<<<< HEAD
-=======
                     $total_veiculos = $total_veiculos ?? 0;
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
                     
                     foreach ($viagem->hotel as $hotel) {
                         $checkin = \Carbon\Carbon::parse($hotel->data_check_in);
@@ -251,11 +224,7 @@
                         $total_seguros += $preco_seguro * $numero_viajantes;
                     }
                 @endphp
-<<<<<<< HEAD
-                <div class="grid grid-cols-3 gap-4 text-sm">
-=======
                 <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 text-sm">
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
                     <div class="text-center">
                         <div class="text-gray-600">Hospedagem</div>
                         <div class="font-bold text-green-600">R$ {{ number_format($total_hoteis, 2, ',', '.') }}</div>
@@ -268,13 +237,10 @@
                         <div class="text-gray-600">Seguros</div>
                         <div class="font-bold text-purple-600">R$ {{ number_format($total_seguros, 2, ',', '.') }}</div>
                     </div>
-<<<<<<< HEAD
-=======
                     <div class="text-center">
                         <div class="text-gray-600">Carros</div>
                         <div class="font-bold text-orange-500">R$ {{ number_format($total_veiculos, 2, ',', '.') }}</div>
                     </div>
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
                 </div>
             </div>
         </div>

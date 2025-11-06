@@ -155,8 +155,6 @@ document.addEventListener('DOMContentLoaded', function() {
             searchFlights();
         }
 
-<<<<<<< HEAD
-=======
         // Se chegou no step de aluguel e o aluguel for necessário, iniciar busca de carros
         if (idx === carStepIndex && carStepIndex !== -1 && carRentalNeeded) {
             // Inicia busca de veículos em background (não bloqueará o usuário)
@@ -165,7 +163,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
         // Se for o último passo, preenche a revisão
         if (idx === steps.length - 1) {
             preencherRevisao();
@@ -492,8 +489,6 @@ document.addEventListener('DOMContentLoaded', function() {
             vooInfoHtml = `<li><b>Voo:</b> Nenhum voo selecionado</li>`;
         }
 
-<<<<<<< HEAD
-=======
         // Dados do veículo selecionado (step 6)
         let veiculoInfoHtml = '';
         const selectedCarDataInput = document.getElementById('selected_car_data');
@@ -529,7 +524,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (selCarDiv) selCarDiv.innerHTML = '<p class="italic text-gray-500">Nenhum veículo selecionado.</p>';
         }
 
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
         // Montar HTML da revisão
         let reviewHtml = `
             ${nomeViagem ? `<li><b>✨ Nome da viagem:</b> ${nomeViagem}</li>` : ''}
@@ -544,10 +538,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ${orcamento ? `<li><b>💰 Orçamento:</b> R$ ${orcamento}</li>` : ''}
             ${aeroportosInfo}
             ${vooInfoHtml}
-<<<<<<< HEAD
-=======
             ${veiculoInfoHtml}
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
             ${seguroInfo}
             <li><b>❤️ Preferências:</b> ${preferences.length > 0 ? preferences.join(', ') : 'Nenhuma'}</li>
         `;
@@ -581,27 +572,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-<<<<<<< HEAD
-            // Lógica de navegação entre os passos com pulo condicional
-            let nextStep = currentStep + 1;
-
-            // Se o próximo passo for o de aluguel e não precisamos dele, pular
-            if (nextStep === carStepIndex && !carRentalNeeded) nextStep++;
-
-            // Se o próximo passo for o de voos e meio não for avião, pular voos
-            const flightsIndex2 = steps.findIndex(s => s.querySelector('h2') && s.querySelector('h2').innerText.trim().toLowerCase().includes('voos'));
-            if (nextStep === flightsIndex2 && meioLocomocao !== 'Avião') {
-                // pular voos
-                nextStep++;
-            }
-
-            // Se o próximo passo for o de seguros e o usuário escolheu 'Não' no step 2, pular seguros
-            const seguroVal = document.getElementById('seguroViagem') ? document.getElementById('seguroViagem').value : '';
-            if (nextStep === insuranceStepIndex && seguroVal === 'Não') nextStep++;
-
-            // Atualizar flightSearchInitiated se estivermos indo para voos
-            if (nextStep === flightsIndex2 && meioLocomocao === 'Avião' && !flightSearchInitiated) {
-=======
             // Lógica de navegação entre os passos com pulo condicional (robusta)
             let nextStep = currentStep + 1;
 
@@ -629,18 +599,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Se vamos entrar no passo de voos e for avião, iniciar busca
             if (nextStep === flightsIndex2 && meioAtual === 'Avião' && !flightSearchInitiated) {
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
                 flightSearchInitiated = true;
                 searchFlights();
             }
 
-<<<<<<< HEAD
-            currentStep = nextStep;
-
-            if (currentStep >= steps.length) currentStep = steps.length - 1;
-=======
             currentStep = Math.min(nextStep, steps.length - 1);
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
             showStep(currentStep);
         });
     });
@@ -654,25 +617,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Atualiza flag
             carRentalNeeded = (meioLocomocao === 'Carro (alugado)');
 
-<<<<<<< HEAD
-            // Navegação para trás com pulo condicional
-            let prevStep = currentStep - 1;
-
-            // Se o passo anterior é o de aluguel e não é necessário, pular mais
-            if (prevStep === carStepIndex && !carRentalNeeded) prevStep--;
-
-            // Se o passo anterior é voos e meio não for avião, pular
-            const flightsIndex3 = steps.findIndex(s => s.querySelector('h2') && s.querySelector('h2').innerText.trim().toLowerCase().includes('voos'));
-                if (prevStep === flightsIndex3 && meioLocomocao !== 'Avião') {
-                    prevStep--;
-                }
-
-                // Se o passo anterior é o de seguros e o usuário escolheu 'Não' no step 2, pular mais
-                const seguroValuePrev = document.getElementById('seguroViagem') ? document.getElementById('seguroViagem').value : '';
-                if (prevStep === insuranceStepIndex && seguroValuePrev === 'Não') {
-                    prevStep--;
-                }
-=======
             // Navegação para trás com pulo condicional (robusta)
             let prevStep = currentStep - 1;
 
@@ -691,7 +635,6 @@ document.addEventListener('DOMContentLoaded', function() {
             while (shouldSkipPrev(prevStep) && prevStep > 0) {
                 prevStep--;
             }
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
 
             // Segurança: garantir limites
             if (prevStep < 0) prevStep = 0;
@@ -864,14 +807,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // -------------------- Evento de submit do formulário --------------------
 const multiStepForm = document.getElementById('multiStepForm');
 if (multiStepForm) {
-<<<<<<< HEAD
-    multiStepForm.addEventListener('submit', function (e) {
-        // Coletar dados dos viajantes e seguros antes do envio
-        prepararDadosViajantes();
-        
-        // Permitir o envio normal do formulário para o servidor
-        // O formulário será enviado via POST para a rota definida
-=======
     multiStepForm.addEventListener('submit', async function (e) {
         // Interceptar para garantir que o veículo selecionado seja salvo via AJAX antes do envio final
         e.preventDefault();
@@ -930,7 +865,6 @@ if (multiStepForm) {
         }
         // finalmente submeter o formulário
         return multiStepForm.submit();
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
     });
 }
 
@@ -1209,8 +1143,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-<<<<<<< HEAD
-=======
 // -------------------- Snap de 30 minutos para inputs de aluguel --------------------
 document.addEventListener('DOMContentLoaded', function() {
     const pickup = document.getElementById('car_pickup_datetime');
@@ -1279,7 +1211,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
 // -------------------- Mostrar/Ocultar detalhes do voo --------------------
 document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
@@ -1378,9 +1309,6 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     });
-<<<<<<< HEAD
-});
-=======
 });
 
 // -------------------- Integração de busca de aluguel de carros --------------------
@@ -1692,4 +1620,3 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
 })();
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
