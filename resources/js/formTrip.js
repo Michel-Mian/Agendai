@@ -155,6 +155,17 @@ document.addEventListener('DOMContentLoaded', function() {
             searchFlights();
         }
 
+<<<<<<< HEAD
+=======
+        // Se chegou no step de aluguel e o aluguel for necessário, iniciar busca de carros
+        if (idx === carStepIndex && carStepIndex !== -1 && carRentalNeeded) {
+            // Inicia busca de veículos em background (não bloqueará o usuário)
+            if (typeof initiateCarSearch === 'function') {
+                initiateCarSearch();
+            }
+        }
+
+>>>>>>> d643e774296f46c453f341bc72b8ad752d734306
         // Se for o último passo, preenche a revisão
         if (idx === steps.length - 1) {
             preencherRevisao();
@@ -481,6 +492,44 @@ document.addEventListener('DOMContentLoaded', function() {
             vooInfoHtml = `<li><b>Voo:</b> Nenhum voo selecionado</li>`;
         }
 
+<<<<<<< HEAD
+=======
+        // Dados do veículo selecionado (step 6)
+        let veiculoInfoHtml = '';
+        const selectedCarDataInput = document.getElementById('selected_car_data');
+        if (selectedCarDataInput && selectedCarDataInput.value) {
+            try {
+                const carData = JSON.parse(selectedCarDataInput.value);
+                const carNome = carData.nome || carData.nome_veiculo || carData.title || 'Veículo selecionado';
+                const carPreco = (carData.preco && carData.preco.total) ? carData.preco.total : (carData.preco_total || null);
+                const localRet = (carData.local_retirada && (carData.local_retirada.endereco || carData.local_retirada.nome)) ? (carData.local_retirada.endereco || carData.local_retirada.nome) : (carData.nome_local || carData.endereco_retirada || 'Local não informado');
+                veiculoInfoHtml = `<li><b>Veículo selecionado:</b> ${carNome}${carPreco ? ' — R$ ' + carPreco : ''}<br><span class="text-sm text-gray-400">Local de retirada: ${localRet}</span></li>`;
+
+                // Também popular o bloco específico em Step 7
+                const selCarDiv = document.getElementById('selectedCarReview');
+                if (selCarDiv) {
+                    let html = `<div class="flex items-start gap-4">
+                        <div class="w-32 flex-shrink-0"><img src="${carData.imagem || carData.imagem_url || '/imgs/default-car.png'}" class="w-full h-20 object-contain" alt="${carNome}"></div>
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-800">${carNome}</div>
+                            ${carPreco ? `<div class="text-blue-600 font-bold">R$ ${String(carPreco).replace('.',',')}</div>` : ''}
+                            <div class="text-sm text-gray-600 mt-2">${localRet}</div>
+                        </div>
+                    </div>`;
+                    selCarDiv.innerHTML = html;
+                }
+
+            } catch (e) {
+                console.error('Erro ao parsear selected_car_data:', e);
+                veiculoInfoHtml = `<li><b>Veículo:</b> Dados não disponíveis</li>`;
+            }
+        } else {
+            veiculoInfoHtml = `<li><b>Veículo:</b> Nenhum veículo selecionado</li>`;
+            const selCarDiv = document.getElementById('selectedCarReview');
+            if (selCarDiv) selCarDiv.innerHTML = '<p class="italic text-gray-500">Nenhum veículo selecionado.</p>';
+        }
+
+>>>>>>> d643e774296f46c453f341bc72b8ad752d734306
         // Montar HTML da revisão
         let reviewHtml = `
             ${nomeViagem ? `<li><b>✨ Nome da viagem:</b> ${nomeViagem}</li>` : ''}
@@ -495,6 +544,10 @@ document.addEventListener('DOMContentLoaded', function() {
             ${orcamento ? `<li><b>💰 Orçamento:</b> R$ ${orcamento}</li>` : ''}
             ${aeroportosInfo}
             ${vooInfoHtml}
+<<<<<<< HEAD
+=======
+            ${veiculoInfoHtml}
+>>>>>>> d643e774296f46c453f341bc72b8ad752d734306
             ${seguroInfo}
             <li><b>❤️ Preferências:</b> ${preferences.length > 0 ? preferences.join(', ') : 'Nenhuma'}</li>
         `;
@@ -528,6 +581,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
+<<<<<<< HEAD
             // Lógica de navegação entre os passos com pulo condicional
             let nextStep = currentStep + 1;
 
@@ -547,13 +601,46 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Atualizar flightSearchInitiated se estivermos indo para voos
             if (nextStep === flightsIndex2 && meioLocomocao === 'Avião' && !flightSearchInitiated) {
+=======
+            // Lógica de navegação entre os passos com pulo condicional (robusta)
+            let nextStep = currentStep + 1;
+
+            // recalcular índices e valores no momento do clique
+            const flightsIndex2 = steps.findIndex(s => s.querySelector('h2') && s.querySelector('h2').innerText.trim().toLowerCase().includes('voos'));
+            const carIndexNow = carStepIndex;
+            const seguroVal = document.getElementById('seguroViagem') ? document.getElementById('seguroViagem').value : '';
+            const meioAtual = (meioLocomocao || '').toString().trim();
+
+            function shouldSkipStep(index) {
+                if (index < 0 || index >= steps.length) return false;
+                // pular aluguel se não necessário
+                if (index === carIndexNow && !carRentalNeeded) return true;
+                // pular seguros se usuário escolheu 'Não'
+                if (index === insuranceStepIndex && seguroVal === 'Não') return true;
+                // pular voos se meio não for Avião
+                if (index === flightsIndex2 && meioAtual !== 'Avião') return true;
+                return false;
+            }
+
+            // avançar até encontrar um passo válido
+            while (shouldSkipStep(nextStep) && nextStep < steps.length) {
+                nextStep++;
+            }
+
+            // Se vamos entrar no passo de voos e for avião, iniciar busca
+            if (nextStep === flightsIndex2 && meioAtual === 'Avião' && !flightSearchInitiated) {
+>>>>>>> d643e774296f46c453f341bc72b8ad752d734306
                 flightSearchInitiated = true;
                 searchFlights();
             }
 
+<<<<<<< HEAD
             currentStep = nextStep;
 
             if (currentStep >= steps.length) currentStep = steps.length - 1;
+=======
+            currentStep = Math.min(nextStep, steps.length - 1);
+>>>>>>> d643e774296f46c453f341bc72b8ad752d734306
             showStep(currentStep);
         });
     });
@@ -567,6 +654,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Atualiza flag
             carRentalNeeded = (meioLocomocao === 'Carro (alugado)');
 
+<<<<<<< HEAD
             // Navegação para trás com pulo condicional
             let prevStep = currentStep - 1;
 
@@ -584,6 +672,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (prevStep === insuranceStepIndex && seguroValuePrev === 'Não') {
                     prevStep--;
                 }
+=======
+            // Navegação para trás com pulo condicional (robusta)
+            let prevStep = currentStep - 1;
+
+            const flightsIndex3 = steps.findIndex(s => s.querySelector('h2') && s.querySelector('h2').innerText.trim().toLowerCase().includes('voos'));
+            const seguroValuePrev = document.getElementById('seguroViagem') ? document.getElementById('seguroViagem').value : '';
+            const meioAtualPrev = (meioLocomocao || '').toString().trim();
+
+            function shouldSkipPrev(index) {
+                if (index < 0 || index >= steps.length) return false;
+                if (index === carStepIndex && !carRentalNeeded) return true;
+                if (index === insuranceStepIndex && seguroValuePrev === 'Não') return true;
+                if (index === flightsIndex3 && meioAtualPrev !== 'Avião') return true;
+                return false;
+            }
+
+            while (shouldSkipPrev(prevStep) && prevStep > 0) {
+                prevStep--;
+            }
+>>>>>>> d643e774296f46c453f341bc72b8ad752d734306
 
             // Segurança: garantir limites
             if (prevStep < 0) prevStep = 0;
@@ -756,12 +864,73 @@ document.addEventListener('DOMContentLoaded', function() {
 // -------------------- Evento de submit do formulário --------------------
 const multiStepForm = document.getElementById('multiStepForm');
 if (multiStepForm) {
+<<<<<<< HEAD
     multiStepForm.addEventListener('submit', function (e) {
         // Coletar dados dos viajantes e seguros antes do envio
         prepararDadosViajantes();
         
         // Permitir o envio normal do formulário para o servidor
         // O formulário será enviado via POST para a rota definida
+=======
+    multiStepForm.addEventListener('submit', async function (e) {
+        // Interceptar para garantir que o veículo selecionado seja salvo via AJAX antes do envio final
+        e.preventDefault();
+
+        // Coletar dados dos viajantes e seguros antes do envio
+        prepararDadosViajantes();
+
+        // Proteção contra envios duplicados do formulário
+        if (window.isSubmitting) {
+            console.log('Submit já em progresso, ignorando submissão duplicada');
+            return;
+        }
+        window.isSubmitting = true;
+
+        // Se já salvamos o veículo via AJAX anteriormente, prosseguir
+        if (window.vehicleSavedViaAjax) {
+            // Submeter o formulário normalmente (usando submit() para não re-disparar este listener)
+            return multiStepForm.submit();
+        }
+
+        // Se há um veículo selecionado localmente, tentar salvar via AJAX apenas se a viagem já existir
+        const selectedCarDataInput = document.getElementById('selected_car_data');
+        const selectedCarIndexInput = document.getElementById('selected_car_index');
+
+        if (selectedCarDataInput && selectedCarDataInput.value) {
+            // Determinar se a viagem já tem ID (edição) ou é criação nova
+            const existingViagemId = window.VIAGEM_DATA && window.VIAGEM_DATA.pk_id_viagem ? window.VIAGEM_DATA.pk_id_viagem : (document.querySelector('input[name="pk_id_viagem"]') ? document.querySelector('input[name="pk_id_viagem"]').value : null);
+
+            // Se não existir viagemId, não tentamos salvar via AJAX (pois o endpoint exige fk_id_viagem existente).
+            // Neste caso, deixamos o formulário submeter normalmente. O backend que receber a criação da viagem
+            // deve ler o campo `selected_car_data` e persistir o veículo após criar a viagem.
+            if (!existingViagemId) {
+                showNotification('Veículo será salvo automaticamente após a criação da viagem.', 'info');
+                return multiStepForm.submit();
+            }
+
+            // Caso exista viagemId, salvamos via AJAX antes do submit final
+            let carObj = null;
+            try {
+                carObj = JSON.parse(selectedCarDataInput.value);
+            } catch (err) {
+                showNotification('Dados do veículo corrompidos. Não foi possível salvar.', 'error');
+                return;
+            }
+
+            const idx = selectedCarIndexInput && selectedCarIndexInput.value ? parseInt(selectedCarIndexInput.value) : null;
+
+            const saved = await saveSelectedCar(idx, carObj);
+            if (!saved) {
+                showNotification('Não foi possível salvar o veículo. Tente novamente antes de finalizar.', 'error');
+                window.isSubmitting = false;
+                return;
+            }
+            // marca flag para não salvar novamente
+            window.vehicleSavedViaAjax = true;
+        }
+        // finalmente submeter o formulário
+        return multiStepForm.submit();
+>>>>>>> d643e774296f46c453f341bc72b8ad752d734306
     });
 }
 
@@ -1040,6 +1209,77 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+<<<<<<< HEAD
+=======
+// -------------------- Snap de 30 minutos para inputs de aluguel --------------------
+document.addEventListener('DOMContentLoaded', function() {
+    const pickup = document.getElementById('car_pickup_datetime');
+    const ret = document.getElementById('car_return_datetime');
+
+    function parseLocalDateTime(val) {
+        if (!val) return null;
+        const parts = val.split('T');
+        if (parts.length < 2) return null;
+        const [datePart, timePart] = parts;
+        const [y, m, d] = datePart.split('-').map(n => parseInt(n, 10));
+        const [hh, mm] = timePart.split(':').map(n => parseInt(n, 10));
+        return new Date(y, m - 1, d, hh || 0, mm || 0, 0, 0);
+    }
+
+    function formatLocalDateTime(dt) {
+        if (!dt) return '';
+        const y = dt.getFullYear();
+        const mo = String(dt.getMonth() + 1).padStart(2, '0');
+        const d = String(dt.getDate()).padStart(2, '0');
+        const hh = String(dt.getHours()).padStart(2, '0');
+        const mm = String(dt.getMinutes()).padStart(2, '0');
+        return `${y}-${mo}-${d}T${hh}:${mm}`;
+    }
+
+    function snapTo30(dt) {
+        const mins = dt.getMinutes();
+        const snapped = Math.round(mins / 30) * 30;
+        dt.setMinutes(snapped);
+        dt.setSeconds(0);
+        dt.setMilliseconds(0);
+        return dt;
+    }
+
+    function snapAndSet(el) {
+        if (!el) return;
+        const val = el.value;
+        const dt = parseLocalDateTime(val);
+        if (!dt) return;
+        const snapped = snapTo30(new Date(dt.getTime()));
+        el.value = formatLocalDateTime(snapped);
+    }
+
+    function ensureReturnAfterPickup() {
+        if (!pickup || !ret) return;
+        const p = parseLocalDateTime(pickup.value);
+        const r = parseLocalDateTime(ret.value);
+        if (!p || !r) return;
+        if (r < p) {
+            const adjusted = new Date(p.getTime() + 30 * 60 * 1000);
+            snapTo30(adjusted);
+            ret.value = formatLocalDateTime(adjusted);
+            showNotification('A data/hora de devolução foi ajustada para ser pelo menos 30 minutos após a retirada.', 'warning');
+        }
+    }
+
+    ['change', 'blur', 'input'].forEach(evt => {
+        if (pickup) pickup.addEventListener(evt, function() {
+            snapAndSet(pickup);
+            ensureReturnAfterPickup();
+        });
+        if (ret) ret.addEventListener(evt, function() {
+            snapAndSet(ret);
+            ensureReturnAfterPickup();
+        });
+    });
+});
+
+>>>>>>> d643e774296f46c453f341bc72b8ad752d734306
 // -------------------- Mostrar/Ocultar detalhes do voo --------------------
 document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
@@ -1138,4 +1378,318 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     });
+<<<<<<< HEAD
 });
+=======
+});
+
+// -------------------- Integração de busca de aluguel de carros --------------------
+(function() {
+    // Função que monta o payload esperado pelo endpoint de veículos
+    function getCarSearchFormData() {
+        // local_retirada: usar primeiro destino preenchido, ou origem
+        const destinoFirst = document.querySelector('.destino-input');
+        const origem = document.getElementById('origem');
+        const local_retirada = (destinoFirst && destinoFirst.value.trim()) ? destinoFirst.value.trim() : (origem ? origem.value.trim() : '');
+
+        // datas e horas a partir dos inputs de pick-up/return
+        const pickup = document.getElementById('car_pickup_datetime');
+        const ret = document.getElementById('car_return_datetime');
+        let data_retirada = '', hora_retirada = '', data_devolucao = '', hora_devolucao = '';
+        if (pickup && pickup.value) {
+            const parts = pickup.value.split('T');
+            data_retirada = parts[0];
+            hora_retirada = parts[1] ? parts[1].slice(0,5) : '';
+        }
+        if (ret && ret.value) {
+            const parts = ret.value.split('T');
+            data_devolucao = parts[0];
+            hora_devolucao = parts[1] ? parts[1].slice(0,5) : '';
+        }
+
+        return {
+            local_retirada,
+            data_retirada,
+            hora_retirada,
+            data_devolucao,
+            hora_devolucao
+        };
+    }
+
+    // Inicia a busca e faz polling até obter resultados
+    window.initiateCarSearch = async function() {
+        try {
+            const payload = getCarSearchFormData();
+
+            // Validação mínima antes de disparar
+            if (!payload.local_retirada || !payload.data_retirada || !payload.hora_retirada || !payload.data_devolucao || !payload.hora_devolucao) {
+                // Não iniciar se estiver incompleto — usuário ainda pode preencher
+                console.log('Busca de carros não iniciada: dados incompletos', payload);
+                return;
+            }
+
+            const url = window.APP_ROUTES && window.APP_ROUTES.searchVehicles ? window.APP_ROUTES.searchVehicles : '/vehicles/search';
+
+            // Indicador visual simplificado
+            const container = document.getElementById('cars-container');
+            if (container) {
+                container.innerHTML = '<div class="flex flex-col items-center justify-center py-8"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div><div class="text-gray-600">Buscando veículos...</div></div>';
+            }
+
+            // Primeiro POST para iniciar processo (o endpoint retorna 'carregando' e dispatcha job)
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': token },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                console.error('Erro ao iniciar busca de carros', err);
+                if (container) container.innerHTML = '<div class="text-red-600">Erro ao iniciar busca de veículos.</div>';
+                return;
+            }
+
+            const data = await res.json();
+
+            // Se já estiver concluído e retornar veículos
+            if (data.status === 'concluido' && Array.isArray(data.veiculos)) {
+                renderCarResults(data.veiculos, data.alerta || null);
+                return;
+            }
+
+            // Caso esteja carregando, iniciar polling
+            if (data.status === 'carregando' || !data.status) {
+                pollCarSearch(payload, 0, container);
+            } else if (data.status === 'failed') {
+                if (container) container.innerHTML = '<div class="text-red-600">A busca por veículos falhou.</div>';
+            }
+
+        } catch (e) {
+            console.error('Erro em initiateCarSearch:', e);
+        }
+    };
+
+    // Polling até obter resultados (timeout em N tentativas)
+    async function pollCarSearch(payload, attempt = 0, container) {
+        const maxAttempts = 40; // ~40 * 3s = 120s
+        const waitMs = 3000;
+
+        try {
+            await new Promise(res => setTimeout(res, waitMs));
+
+            const url = window.APP_ROUTES && window.APP_ROUTES.searchVehicles ? window.APP_ROUTES.searchVehicles : '/vehicles/search';
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': token },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                console.error('Erro no polling de veículos, tentativa', attempt);
+                if (attempt < maxAttempts) return pollCarSearch(payload, attempt + 1, container);
+                if (container) container.innerHTML = '<div class="text-red-600">Não foi possível obter resultados de veículos.</div>';
+                return;
+            }
+
+            const data = await res.json();
+            if (data.status === 'concluido' && Array.isArray(data.veiculos)) {
+                renderCarResults(data.veiculos, data.alerta || null);
+                return;
+            }
+
+            if (data.status === 'carregando' && attempt < maxAttempts) {
+                return pollCarSearch(payload, attempt + 1, container);
+            }
+
+            if (data.status === 'failed') {
+                if (container) container.innerHTML = '<div class="text-red-600">A busca por veículos falhou.</div>';
+                return;
+            }
+
+            // fallback
+            if (attempt < maxAttempts) return pollCarSearch(payload, attempt + 1, container);
+            if (container) container.innerHTML = '<div class="text-yellow-600">Nenhum veículo encontrado no momento.</div>';
+
+        } catch (e) {
+            console.error('Erro no pollCarSearch:', e);
+            if (attempt < maxAttempts) return pollCarSearch(payload, attempt + 1, container);
+        }
+    }
+
+    // Renderiza os veículos no container
+    function renderCarResults(veiculos, alerta = null) {
+        const container = document.getElementById('cars-container');
+        if (!container) return;
+        if (!Array.isArray(veiculos) || veiculos.length === 0) {
+            container.innerHTML = '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center"><div class="text-yellow-800 font-semibold mb-2">Nenhum veículo encontrado</div><div class="text-yellow-600 text-sm">Tente alterar horários ou local de retirada.</div></div>';
+            return;
+        }
+
+        let html = '';
+
+        // Header com contagem
+        html += `<div class="mb-4 text-xl font-semibold text-gray-800">${veiculos.length} veículo${veiculos.length > 1 ? 's' : ''} encontrados</div>`;
+
+        veiculos.forEach((v, idx) => {
+            const nome = v.nome || v.nome_veiculo || 'Veículo';
+            const subtitulo = v.subtitle || v.tipo || (v.locadora && v.locadora.nome) || '';
+            const categoria = v.categoria || '';
+            const imagem = v.imagem || v.imagem_url || '/imgs/default-car.png';
+            const preco = (v.preco && v.preco.total) ? Number(v.preco.total).toFixed(2) : (v.preco_total ? Number(v.preco_total).toFixed(2) : null);
+            const precoHtml = preco ? `R$ ${preco.replace('.',',')}` : 'Preço não disponível';
+            const protecoes = v.protecoes || v.protections || v.included_protections || [];
+            const localRetirada = (v.local_retirada && (v.local_retirada.endereco || v.local_retirada.nome)) ? (v.local_retirada.endereco || v.local_retirada.nome) : (v.nome_local || v.endereco_retirada || 'Local não informado');
+            const locadoraLogo = (v.locadora && v.locadora.logo) ? v.locadora.logo : (v.locadora_logo || '');
+            const linkReserva = v.link_continuar || v.link_reserva || '#';
+
+            html += `
+            <div class="bg-white shadow rounded-lg overflow-hidden mb-6 car-result-card" data-index="${idx}">
+                <div class="bg-blue-600 text-white px-6 py-3 font-semibold">${protecoes && protecoes.length ? protecoes[0] : 'Proteção a terceiros incluida'}</div>
+                <div class="p-6 flex gap-6">
+                    <div class="w-40 flex-shrink-0">
+                        <img src="${imagem}" alt="${nome}" class="w-full h-28 object-contain">
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-2xl font-bold text-gray-800">${nome}</div>
+                                <div class="text-sm text-gray-500">${subtitulo}</div>
+                                <div class="flex gap-3 text-sm text-gray-600 mt-3">
+                                    <div><i class="fas fa-users"></i> ${(v.configuracoes && v.configuracoes.passageiros) ? v.configuracoes.passageiros : (v.passageiros || '—')} passageiros</div>
+                                    <div>• ${(v.configuracoes && v.configuracoes.malas) ? v.configuracoes.malas + ' malas' : (v.malas ? v.malas + ' malas' : '—')}</div>
+                                    <div>• ${v.configuracoes && v.configuracoes.ar_condicionado ? 'Ar condicionado' : (v.ar_condicionado ? 'Ar condicionado' : '—')}</div>
+                                    <div>• ${v.configuracoes && v.configuracoes.cambio ? v.configuracoes.cambio : (v.cambio || '—')}</div>
+                                </div>
+
+                                ${protecoes && protecoes.length ? `<div class="mt-4 text-sm text-gray-700"><b>Proteções incluídas:</b><ul class="ml-4 list-disc">${protecoes.map(p => `<li class="text-sm text-gray-600">${p}</li>`).join('')}</ul></div>` : ''}
+
+                                <div class="mt-4 text-sm text-gray-700"><b>Local de retirada:</b><div class="text-gray-600">${localRetirada}</div></div>
+                            </div>
+
+                            <div class="w-48 text-right">
+                                <div class="text-sm text-gray-500">Total</div>
+                                <div class="text-3xl font-bold text-blue-600">${precoHtml}</div>
+                                <div class="mt-6 flex justify-end gap-3">
+                                    <a href="${linkReserva}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded shadow" rel="noopener noreferrer">Ir para Site</a>
+                                </div>
+                                ${locadoraLogo ? `<div class="mt-3"><img src="${locadoraLogo}" alt="locadora" class="h-6 inline-block"></div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+        });
+
+        container.innerHTML = html;
+
+        // Tornar todo o card clicável: clicar no card seleciona-o (não submete o formulário)
+        document.querySelectorAll('.car-result-card').forEach(card => {
+            // prevenir que cliques em links internos disparem a seleção
+            card.querySelectorAll('a').forEach(a => a.addEventListener('click', function(e){ e.stopPropagation(); }));
+
+            card.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Se o clique veio de um link interno, ignore
+                const anchor = e.target.closest('a');
+                if (anchor) return;
+
+                const idx = parseInt(this.getAttribute('data-index'));
+                const veiculo = veiculos[idx];
+
+                // Marcar seleção localmente (não salvar no servidor ainda)
+                const selIdx = document.getElementById('selected_car_index');
+                const selData = document.getElementById('selected_car_data');
+                if (selIdx) selIdx.value = idx;
+                if (selData) selData.value = JSON.stringify(veiculo);
+
+                // Visual feedback de seleção no cliente
+                document.querySelectorAll('.car-result-card').forEach(c => c.classList.remove('border-4', 'border-green-600'));
+                this.classList.add('border-4', 'border-green-600');
+
+                showNotification('Veículo selecionado localmente. O salvamento será feito ao finalizar o formulário.', 'success');
+            });
+        });
+
+        // Se houver alerta (local alternativo), mostrar aviso
+        if (alerta) {
+            const alertaHtml = `<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4 text-sm"><b>Local alternativo sugerido:</b> ${alerta.local_alternativo} (distância ${alerta.distancia} km)</div>`;
+            container.insertAdjacentHTML('beforeend', alertaHtml);
+        }
+    }
+
+    // Salva veículo selecionado via AJAX
+    // Expor a função globalmente para que listeners fora do IIFE possam chamá-la
+    window.saveSelectedCar = async function(index, veiculoData) {
+        try {
+            // Proteção: evitar salvar repetidamente para a mesma viagem
+            const viagemIdCheck = window.VIAGEM_DATA && window.VIAGEM_DATA.pk_id_viagem ? window.VIAGEM_DATA.pk_id_viagem : (document.querySelector('input[name="pk_id_viagem"]') ? document.querySelector('input[name="pk_id_viagem"]').value : null);
+            if (window.vehicleSavedForViagemId && viagemIdCheck && String(window.vehicleSavedForViagemId) === String(viagemIdCheck)) {
+                console.log('saveSelectedCar: veículo já salvo anteriormente para esta viagem (ignorado)');
+                return true;
+            }
+            const url = window.APP_ROUTES && window.APP_ROUTES.saveVehicle ? window.APP_ROUTES.saveVehicle : '/vehicles/save';
+            const viagemId = window.VIAGEM_DATA && window.VIAGEM_DATA.pk_id_viagem ? window.VIAGEM_DATA.pk_id_viagem : (document.querySelector('input[name="pk_id_viagem"]') ? document.querySelector('input[name="pk_id_viagem"]').value : null);
+            if (!viagemId) {
+                showNotification('Viagem não encontrada para salvar o veículo.', 'error');
+                return false;
+            }
+
+            const payload = {
+                fk_id_viagem: viagemId,
+                veiculo_data: veiculoData
+            };
+
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': token },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json().catch(() => ({ success: false }));
+            if (res.ok && data.success) {
+                // Atualizar hidden inputs
+                const selIdx = document.getElementById('selected_car_index');
+                const selData = document.getElementById('selected_car_data');
+                if (selIdx) selIdx.value = index;
+                if (selData) selData.value = JSON.stringify(veiculoData);
+
+                showNotification('Veículo salvo com sucesso!', 'success');
+
+                // Marcar visualmente o selecionado
+                document.querySelectorAll('.car-result-card').forEach(card => card.classList.remove('border-4', 'border-green-600'));
+                const selectedCard = document.querySelector(`.car-result-card[data-index="${index}"]`);
+                if (selectedCard) selectedCard.classList.add('border-4', 'border-green-600');
+                // Marcar como salvo via AJAX para evitar reenvios
+                window.vehicleSavedViaAjax = true;
+                window.vehicleSavedForViagemId = viagemId;
+
+                // Para evitar duplicação do lado do servidor quando o formulário também submeter
+                // o campo selected_car_data, limpamos o hidden correspondente pois já persistimos via AJAX
+                try {
+                    const selData = document.getElementById('selected_car_data');
+                    if (selData) selData.value = '';
+                } catch (e) {
+                    // ignore
+                }
+                return true;
+            } else {
+                console.error('Erro ao salvar veículo:', data);
+                showNotification('Erro ao salvar veículo.', 'error');
+                return false;
+            }
+        } catch (e) {
+            console.error('Erro em saveSelectedCar:', e);
+            showNotification('Erro ao salvar veículo.', 'error');
+            return false;
+        }
+    }
+
+})();
+>>>>>>> d643e774296f46c453f341bc72b8ad752d734306

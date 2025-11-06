@@ -17,6 +17,22 @@
         </div>
     </div>
 
+<<<<<<< HEAD
+=======
+    <!-- Resumo do veículo selecionado -->
+    <div class="bg-white rounded-xl shadow p-4 mb-6" id="selectedCarReviewContainer">
+        <h4 class="text-lg font-semibold mb-3">Resumo do veículo selecionado</h4>
+        <div id="selectedCarReview" class="text-sm text-gray-700">
+            <p class="italic text-gray-500">Nenhum veículo selecionado.</p>
+        </div>
+
+        <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700">Observações sobre o veículo (opcional)</label>
+            <textarea name="veiculo_observacoes" id="veiculo_observacoes" class="input mt-2" rows="3" placeholder="Observações que deseja salvar junto com o veículo..."></textarea>
+        </div>
+    </div>
+
+>>>>>>> d643e774296f46c453f341bc72b8ad752d734306
     <!-- Seção de informações importantes -->
     <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
         <div class="flex items-center gap-2 mb-2">

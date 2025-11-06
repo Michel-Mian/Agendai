@@ -66,4 +66,10 @@ class Viagens extends Model
     {
         return $this->hasMany(Destinos::class, 'fk_id_viagem', 'pk_id_viagem')->orderBy('ordem_destino', 'asc');
     }
+
+    // Relação com os veículos (Veiculos)
+    public function veiculos(): HasMany
+    {
+        return $this->hasMany(Veiculos::class, 'fk_id_viagem', 'pk_id_viagem');
+    }
 }
