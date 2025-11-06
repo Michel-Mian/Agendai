@@ -143,8 +143,6 @@ document.addEventListener("DOMContentLoaded", function () {
 }
 </style></style>
 <script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places&callback=initTripFormMap" async defer></script>
-<<<<<<< HEAD
-=======
 
 <script>
     // Rotas e dados da viagem para o formulário (usado por resources/js/formTrip.js)
@@ -157,4 +155,3 @@ document.addEventListener("DOMContentLoaded", function () {
     // Não depender da sessão aqui para evitar associar o formulário a uma viagem anterior.
     window.VIAGEM_DATA = <?php echo isset($viagem) ? json_encode($viagem, 15, 512) : 'null'; ?>;
 </script>
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306

@@ -17,8 +17,6 @@
         </div>
     </div>
 
-<<<<<<< HEAD
-=======
     <!-- Resumo do veículo selecionado -->
     <div class="bg-white rounded-xl shadow p-4 mb-6" id="selectedCarReviewContainer">
         <h4 class="text-lg font-semibold mb-3">Resumo do veículo selecionado</h4>
@@ -32,7 +30,6 @@
         </div>
     </div>
 
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
     <!-- Seção de informações importantes -->
     <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
         <div class="flex items-center gap-2 mb-2">

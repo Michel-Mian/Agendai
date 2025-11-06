@@ -10,8 +10,6 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
-<<<<<<< HEAD
-=======
         <script data-noptimize="1" data-cfasync="false" data-wpfc-render="false">
             (function () {
                 var script = document.createElement("script");
@@ -20,7 +18,6 @@
                 document.head.appendChild(script);
             })();
         </script>
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
         <meta name="csrf-token" content="{{ csrf_token() }}">
         @vite(['resources/css/app.css', 'resources/css/explore.css', 'resources/css/nightMode.css', 'resources/js/app.js', 'resources/js/dashBoard.js', 'resources/js/searchFlights.js', 'resources/js/formTrip.js' , 'resources/js/hotels.js', 'resources/js/nightMode.js', 'resources/js/insurance-modal.js'])
         <style>
@@ -236,14 +233,10 @@
 
                 document.querySelectorAll("form").forEach(form => {
                     form.addEventListener("submit", () => {
-<<<<<<< HEAD
-                        loader.classList.remove("hidden");
-=======
                         // Não mostra loader se o form tiver atributo data-no-loader
                         if (!form.hasAttribute('data-no-loader')) {
                             loader.classList.remove("hidden");
                         }
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
                     });
                 });
             });

@@ -14,15 +14,12 @@
     <!-- Seção de Hotéis -->
     @include('components/myTrips/screenSections/themes/hotelSection', ['hotel' => $hotel ?? collect()])
 
-<<<<<<< HEAD
-=======
     <!-- Seção de Seguros -->
     @include('components/myTrips/screenSections/themes/insuranceSection', ['seguros' => $seguros ?? collect()])
 
     <!-- Seção de Veículos -->
     @include('components/myTrips/screenSections/themes/vehicleSection', ['veiculos' => $veiculos ?? collect()])
 
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
     {{-- REMOVIDO: Seções de clima e notícias (movidas para informacoesEstatisticas) --}}
 </div>
 

@@ -3,11 +3,7 @@
     <div id="orcamento-modal-overlay" class="absolute inset-0 bg-gradient-to-br from-gray-900/60 to-gray-800/60 backdrop-blur-md" aria-hidden="true"></div>
 
     <!-- Conteúdo do Modal -->
-<<<<<<< HEAD
-    <div id="orcamento-modal-panel" class="relative w-full max-w-2xl transform rounded-2xl bg-white shadow-2xl transition-all duration-300 scale-95 opacity-0 overflow-hidden max-h-[90vh]">
-=======
     <div id="orcamento-modal-panel" class="relative w-full max-w-2xl sm:max-w-3xl md:max-w-4xl transform rounded-2xl bg-white shadow-2xl transition-all duration-300 scale-95 opacity-0 overflow-hidden max-h-[90vh]">
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
         <!-- Header com gradiente -->
         <div class="bg-purple-500 px-8 py-6">
             <div class="flex items-center justify-between">

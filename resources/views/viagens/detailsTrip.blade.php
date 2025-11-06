@@ -458,11 +458,7 @@
                                 'usuario' => $usuario,
                                 'hotel' => $hotel ?? collect()
                             ])
-<<<<<<< HEAD
-                            {{-- Add flights section here if not already included --}}
-=======
                             
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
                         </div>
                         <div id="content-rotas-mapa" class="tab-panel hidden">
                             @include('components/myTrips/screenSections/rotasMapa', ['viagem' => $viagem])
@@ -560,11 +556,7 @@
     <!-- Modal de Adicionar Viajante -->
     @include('components.myTrips.modals.addViajantesModal')
 
-<<<<<<< HEAD
-    @include('components/explore/detailsModal')
-=======
     @include('components/explore/detailsmodal')
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
 
     <!-- Insurance modals (add and details) -->
     @include('components.myTrips.modals.addInsurance')
@@ -577,8 +569,6 @@
         };
     </script>
 
-<<<<<<< HEAD
-=======
     <script>
         // Rotas adicionais usadas por esta view
         window.APP_ROUTES = Object.assign(window.APP_ROUTES || {}, {
@@ -644,7 +634,6 @@
         }
     </script>
 
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
     <!-- Scripts externos -->
     <script src="{{ asset('js/inlineEditManager.js') }}"></script>
     <script src="{{ asset('js/lazyLoader.js') }}"></script>
@@ -1103,58 +1092,6 @@ document.addEventListener("DOMContentLoaded", function () {
      * @param {string} type - Tipo da notificação ('success', 'error', 'info')
      */
     function showNotification(message, type = 'info') {
-<<<<<<< HEAD
-        // Criar elemento de notificação
-        const notification = document.createElement('div');
-        notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 transform translate-x-full`;
-        
-        // Definir cores baseadas no tipo
-        let bgColor, textColor, icon;
-        switch(type) {
-            case 'success':
-                bgColor = 'bg-green-500';
-                textColor = 'text-white';
-                icon = '✅';
-                break;
-            case 'error':
-                bgColor = 'bg-red-500';
-                textColor = 'text-white';
-                icon = '❌';
-                break;
-            default:
-                bgColor = 'bg-blue-500';
-                textColor = 'text-white';
-                icon = 'ℹ️';
-        }
-        
-        notification.className += ` ${bgColor} ${textColor}`;
-        notification.innerHTML = `
-            <div class="flex items-center gap-2">
-                <span>${icon}</span>
-                <span>${message}</span>
-            </div>
-        `;
-        
-        // Adicionar ao DOM
-        document.body.appendChild(notification);
-        
-        // Animar entrada
-        setTimeout(() => {
-            notification.classList.remove('translate-x-full');
-            notification.classList.add('translate-x-0');
-        }, 100);
-        
-        // Remover após 3 segundos
-        setTimeout(() => {
-            notification.classList.remove('translate-x-0');
-            notification.classList.add('translate-x-full');
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 3000);
-=======
         // Toast container (cria se não existir)
         const containerId = 'global-toast-container';
         let container = document.getElementById(containerId);
@@ -1222,7 +1159,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Auto remove after 4s
         setTimeout(removeToast, 4000);
->>>>>>> d643e774296f46c453f341bc72b8ad752d734306
     }
 </script>
 
