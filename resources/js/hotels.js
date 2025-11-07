@@ -27,6 +27,32 @@ document.addEventListener("DOMContentLoaded", () => {
   const tripSelect = document.getElementById("trip-select")
   const cancelTripBtn = document.getElementById("cancel-trip-btn")
   const confirmTripBtn = document.getElementById("add-to-trip-confirm-btn")
+  const closeTripModalBtn = document.getElementById("close-trip-modal-btn")
+  function formatDateBr(dateStr) {
+    if (!dateStr) return ''
+    try {
+      const d = new Date(dateStr + 'T00:00:00')
+      return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    } catch {
+      return dateStr
+    }
+  }
+
+  function computeTripDays(trip) {
+    if (!trip || !trip.data_inicio_viagem || !trip.data_final_viagem) return 1
+    return computeNights(trip.data_inicio_viagem, trip.data_final_viagem)
+  }
+
+  function computePerNight(hotel) {
+    const perNight = hotel?.rate_per_night?.extracted_lowest || hotel?.rate_per_night?.lowest || null
+    if (typeof perNight === 'number') return perNight
+    if (typeof perNight === 'string') {
+      const parsed = parseMoneyString(perNight)
+      if (!isNaN(parsed)) return parsed
+    }
+    // Fallback leve: tentar a divisão de total pelas noites (quando vier total)
+    return NaN
+  }
 
   let allHotels = []
   let filteredHotels = []
@@ -49,6 +75,65 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const trips = window.userTrips || []
+
+  function computeNights(start, end) {
+    try {
+      const s = new Date(start)
+      const e = new Date(end)
+      const diff = Math.ceil((e - s) / (1000 * 60 * 60 * 24))
+      return Math.max(diff, 1)
+    } catch {
+      return 1
+    }
+  }
+
+  function parseMoneyString(str) {
+    if (typeof str !== 'string') return NaN
+    // Remove qualquer caractere que não seja dígito, vírgula ou ponto
+    const cleaned = str.replace(/[^\d,.]/g, '').replace(/\./g, '').replace(',', '.')
+    const val = parseFloat(cleaned)
+    return isNaN(val) ? NaN : val
+  }
+
+  function computeHotelTotal(hotel, checkInDate, checkOutDate) {
+    // Preferir total_rate se existir
+    const totalFromField = hotel.total_rate?.extracted_lowest || hotel.total_rate?.lowest || null
+    let total = 0
+    if (typeof totalFromField === 'number') {
+      total = totalFromField
+    } else if (typeof totalFromField === 'string') {
+      const parsed = parseMoneyString(totalFromField)
+      if (!isNaN(parsed)) total = parsed
+    }
+
+    if (!total) {
+      // Calcular via rate_per_night * noites
+      const perNight = hotel.rate_per_night?.extracted_lowest || hotel.rate_per_night?.lowest || null
+      let per = 0
+      if (typeof perNight === 'number') {
+        per = perNight
+      } else if (typeof perNight === 'string') {
+        const parsed = parseMoneyString(perNight)
+        if (!isNaN(parsed)) per = parsed
+      }
+      const nights = computeNights(checkInDate, checkOutDate)
+      if (per && nights) total = per * nights
+    }
+
+    if (!total) {
+      // Fallback para extracted_price/price (algumas respostas trazem isso)
+      if (typeof hotel.extracted_price === 'number') total = hotel.extracted_price
+      else if (typeof hotel.extracted_price === 'string') {
+        const parsed = parseMoneyString(hotel.extracted_price)
+        if (!isNaN(parsed)) total = parsed
+      } else if (typeof hotel.price === 'string') {
+        const parsed = parseMoneyString(hotel.price)
+        if (!isNaN(parsed)) total = parsed
+      }
+    }
+
+    return total || 0
+  }
 
   const today = new Date().toISOString().split("T")[0]
   const checkinInput = document.getElementById("check-in-date")
@@ -602,28 +687,15 @@ const hotelJsonString = JSON.stringify(hotel).replace(/"/g, '&quot;');
     }
   }
 
+  // Substituído por Toast; mantém fallback mínimo
   function showError(message, isSuccess = false) {
+    if (window.Toast) {
+      return isSuccess ? Toast.success(message) : Toast.error(message)
+    }
     if (errorText && errorMessage) {
       errorText.textContent = message
       errorMessage.classList.remove("hidden")
-      if (isSuccess) {
-        errorMessage.classList.remove("bg-red-50", "border-red-200")
-        errorMessage.classList.add("bg-green-50", "border-green-200")
-        const icon = errorMessage.querySelector("i")
-        if (icon) {
-          icon.className = "fa-solid fa-check-circle text-green-400"
-        }
-      } else {
-        errorMessage.classList.remove("bg-green-50", "border-green-200")
-        errorMessage.classList.add("bg-red-50", "border-red-200")
-        const icon = errorMessage.querySelector("i")
-        if (icon) {
-          icon.className = "fa-solid fa-exclamation-triangle text-red-400"
-        }
-      }
-      setTimeout(() => {
-        errorMessage.classList.add("hidden")
-      }, 5000)
+      setTimeout(() => errorMessage.classList.add("hidden"), 4000)
     }
   }
 
@@ -661,10 +733,35 @@ const hotelJsonString = JSON.stringify(hotel).replace(/"/g, '&quot;');
       return
     }
 
-    // Popula o select com as viagens do usuário
-    tripSelect.innerHTML = trips
-      .map((trip) => `<option value="${trip.pk_id_viagem}">${trip.destino_viagem}</option>`)
-      .join("")
+    // Filtrar viagens cujo intervalo engloba o período da hospedagem
+    const inRange = (t) => {
+      if (!t || !t.data_inicio_viagem || !t.data_final_viagem) return false
+      try {
+        const ti = new Date(t.data_inicio_viagem + 'T00:00:00')
+        const tf = new Date(t.data_final_viagem + 'T23:59:59')
+        const ci = new Date(checkInDate + 'T00:00:00')
+        const co = new Date(checkOutDate + 'T23:59:59')
+        return ti <= ci && tf >= co
+      } catch {
+        return false
+      }
+    }
+    const matchingTrips = (trips || []).filter(inRange)
+
+    if (matchingTrips.length === 0) {
+  tripSelect.innerHTML = `<option value="" disabled>Nenhuma viagem cobre o período ${formatDateBr(checkInDate)} → ${formatDateBr(checkOutDate)}</option>`
+      confirmTripBtn.disabled = true
+    } else {
+      confirmTripBtn.disabled = false
+      tripSelect.innerHTML = matchingTrips
+        .map((trip) => {
+          const nome = trip.nome_viagem || `Viagem #${trip.pk_id_viagem}`
+          const inicio = formatDateBr(trip.data_inicio_viagem)
+          const fim = formatDateBr(trip.data_final_viagem)
+          return `<option value="${trip.pk_id_viagem}">${nome} (${inicio} → ${fim})</option>`
+        })
+        .join("")
+    }
 
     // Armazena os dados do hotel no botão de confirmação do modal
     confirmTripBtn.dataset.hotel = JSON.stringify(hotelData).replace(/"/g, '"')
@@ -682,6 +779,11 @@ const hotelJsonString = JSON.stringify(hotel).replace(/"/g, '&quot;');
       }
     })
   }
+  if (closeTripModalBtn) {
+    closeTripModalBtn.addEventListener("click", () => {
+      if (tripSelectionModal) tripSelectionModal.classList.add("hidden")
+    })
+  }
 
   if (confirmTripBtn) {
     confirmTripBtn.addEventListener("click", () => {
@@ -694,6 +796,25 @@ const hotelJsonString = JSON.stringify(hotel).replace(/"/g, '&quot;');
         const checkOutDate = confirmTripBtn.dataset.checkOutDate
 
         if (selectedTripId && checkInDate && checkOutDate) {
+          // Verificar orçamento (> 60%) usando diária x dias da viagem
+          const trip = (trips || []).find(t => String(t.pk_id_viagem) === String(selectedTripId))
+          if (trip && trip.orcamento_viagem) {
+            const perNight = computePerNight(hotelData)
+            const tripDays = computeTripDays(trip)
+            const estimatedTotal = (!isNaN(perNight) && tripDays) ? perNight * tripDays : 0
+            const budget = parseFloat(trip.orcamento_viagem)
+            if (estimatedTotal > 0 && !isNaN(budget) && estimatedTotal > 0.6 * budget) {
+              const warnMsg = `Aviso: diária estimada (R$ ${perNight.toFixed(2)}) x ${tripDays} dia(s) = R$ ${estimatedTotal.toFixed(2)} supera 60% do orçamento (R$ ${(budget * 0.6).toFixed(2)}). Deseja continuar?`
+              if (window.Toast && Toast.confirm) {
+                return Toast.confirm(warnMsg, { confirmText: 'Continuar', cancelText: 'Cancelar' })
+                  .then(ok => { if (ok) sendHotelToTrip(hotelData, selectedTripId, checkInDate, checkOutDate) })
+              } else {
+                const proceed = window.confirm(warnMsg)
+                if (!proceed) return
+              }
+            }
+          }
+          // Se não houve confirmação assíncrona, segue com envio
           sendHotelToTrip(hotelData, selectedTripId, checkInDate, checkOutDate)
           if (tripSelectionModal) {
             tripSelectionModal.classList.add("hidden")
@@ -708,9 +829,24 @@ const hotelJsonString = JSON.stringify(hotel).replace(/"/g, '&quot;');
     })
   }
 
+  // Fechar modal de viagem clicando no backdrop
+  if (tripSelectionModal) {
+    tripSelectionModal.addEventListener('click', (e) => {
+      if (e.target === tripSelectionModal) {
+        tripSelectionModal.classList.add('hidden')
+      }
+    })
+  }
+
   function sendHotelToTrip(hotel, tripId, checkInDate, checkOutDate) {
     const url = `/hotels/${tripId}`
     const csrfToken = document.querySelector('input[name="_token"]').value
+
+    // Coerção para compatibilidade com validações antigas (string vs number)
+    const extracted = hotel.extracted_price ?? null
+    const priceRaw = hotel.price ?? null
+    const extractedPrice = typeof extracted === 'number' ? String(extracted) : extracted
+    const priceAsString = typeof priceRaw === 'number' ? String(priceRaw) : priceRaw
 
     const requestBody = {
       name: hotel.name,
@@ -719,8 +855,8 @@ const hotelJsonString = JSON.stringify(hotel).replace(/"/g, '&quot;');
       check_out_date: checkOutDate,
       overall_rating: hotel.overall_rating || null,
       rate_per_night: hotel.rate_per_night || null,
-      extracted_price: hotel.extracted_price || null,
-      price: hotel.price || null,
+      extracted_price: extractedPrice || null,
+      price: priceAsString || null,
       thumbnail: hotel.thumbnail || (hotel.images && hotel.images[0] ? hotel.images[0].thumbnail : null) || null,
       gps_coordinates: hotel.gps_coordinates
         ? {

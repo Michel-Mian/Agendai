@@ -60,6 +60,7 @@
     
     window.VIAGEM_DATA = @json($viagem);
 </script>
+<script src="/js/toast.js"></script>
 
 <!-- Scripts do Autocomplete -->
 <script src="{{ asset('js/placesAutocomplete.js') }}"></script>
