@@ -26,3 +26,5 @@ Route::get('/user', function (Request $request) {
 Route::middleware('auth:sanctum')->get('/dashboard', [DashBoardController::class, 'dashboard']);
 // TEMPORÁRIO: Rota sem autenticação para teste - remova quando configurar auth
 Route::get('/viagens/{id}', [ViagensController::class, 'showApi']);
+// Lista todos os seguros da viagem
+Route::get('/viagens/{id}/seguros', [ViagensController::class, 'segurosByViagem']);

@@ -5,6 +5,7 @@ use App\Models\User;
 use App\Models\Viajantes;
 use App\Models\Objetivos;
 use App\Models\Hotel;
+use App\Models\Seguros;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use App\Models\PontoInteresse;
@@ -22,13 +23,51 @@ Carbon::setLocale('pt_BR');
 class ViagensController extends Controller
 {
     
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
-        $viagens = Viagens::with('viajantes')->where('fk_id_usuario', $user->id)->get();
+        $query = Viagens::with('viajantes')->where('fk_id_usuario', $user->id);
+
+        // Filtro por nome parcial
+        if ($request->filled('nome')) {
+            $nome = trim($request->get('nome'));
+            $query->where('nome_viagem', 'like', "%$nome%");
+        }
+
+    // Filtro por status (usa accessor status) aceita 'planejada', 'andamento', 'concluida'. Mantém compatibilidade com 'proxima'.
+    $statusParam = $request->get('status');
+    $status = $statusParam === 'proxima' ? 'planejada' : $statusParam; // backward compat
+        $hoje = \Carbon\Carbon::today();
+        if (in_array($status, ['concluida','andamento','planejada'])) {
+            if ($status === 'concluida') {
+                $query->where('data_final_viagem', '<', $hoje);
+            } elseif ($status === 'planejada') {
+                $query->where('data_inicio_viagem', '>', $hoje);
+            } else { // andamento
+                $query->where('data_inicio_viagem', '<=', $hoje)->where('data_final_viagem', '>=', $hoje);
+            }
+        }
+
+        // Ordenação por proximidade
+        $sort = $request->get('sort');
+        if ($sort === 'planejada' || $sort === 'proxima') { // aceita os dois termos
+            $query->orderBy('data_inicio_viagem', 'asc');
+        } elseif ($sort === 'longe') {
+            $query->orderBy('data_inicio_viagem', 'desc');
+        } else {
+            $query->orderBy('created_at', 'desc'); // padrão
+        }
+
+        $viagens = $query->get();
+
         return view('viagens/myTrips', [
             'title' => 'Minhas Viagens',
-            'viagens' => $viagens
+            'viagens' => $viagens,
+            'filtros' => [
+                'nome' => $request->get('nome'),
+                'status' => $status,
+                'sort' => $sort,
+            ]
         ]);
     }
 
@@ -690,11 +729,13 @@ class ViagensController extends Controller
                     $query->orderBy('data_ponto_interesse', 'asc')
                           ->orderBy('hora_ponto_interesse', 'asc');
                 },
-                'seguros', 
+                'seguros',
+                'veiculos',
                 'destinos' => function($query) {
                     $query->orderBy('ordem_destino', 'asc');
                 },
-                'seguroSelecionado'
+                'seguroSelecionado',
+                'veiculoSelecionado'
             ])->findOrFail($id);
 
             // TEMPORÁRIO: Verificação de permissão desabilitada para teste
@@ -812,6 +853,8 @@ class ViagensController extends Controller
                 'user' => $viagem->user,
                 'seguros' => $viagem->seguros,
                 'seguro_selecionado' => $viagem->seguroSelecionado,
+                'veiculos' => $viagem->veiculos,
+                'veiculo_selecionado' => $viagem->veiculoSelecionado,
                 'noticias' => $noticias,
                 'eventos' => $eventos,
                 'clima' => $clima,
@@ -831,6 +874,7 @@ class ViagensController extends Controller
                     'total_destinos' => $viagem->destinos->count(),
                     'total_voos' => $viagem->voos->count(),
                     'total_seguros' => $viagem->seguros->count(),
+                    'total_veiculos' => $viagem->veiculos->count(),
                     'total_hoteis' => $viagem->hotel->count(),
                     // Ajusta orcamento_liquido também na API mobile para considerar veículos
                     'orcamento_liquido' => $viagem->orcamento_viagem - $viagem->voos->sum('preco_voo') - $viagem->veiculos->sum('preco_total'),
@@ -848,6 +892,43 @@ class ViagensController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             return response()->json(['success' => false, 'message' => 'Erro interno', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Retorna todos os seguros relacionados a uma viagem específica.
+     */
+    public function segurosByViagem($id)
+    {
+        try {
+            // Confere se a viagem existe (mantém consistência das respostas)
+            $viagem = Viagens::findOrFail($id);
+
+            // Opcional: validar permissão quando autenticação estiver habilitada
+            // if ($viagem->fk_id_usuario !== auth()->id()) {
+            //     return response()->json(['success' => false, 'message' => 'Acesso negado'], 403);
+            // }
+
+            // Busca todos os seguros vinculados à viagem e carrega dados do viajante
+            $seguros = Seguros::with('viajante')
+                ->where('fk_id_viagem', $id)
+                ->orderBy('pk_id_seguro', 'asc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'viagem_id' => $viagem->pk_id_viagem,
+                'total' => $seguros->count(),
+                'data' => $seguros,
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'message' => 'Viagem não encontrada.'], 404);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao listar seguros por viagem', [
+                'viagem_id' => $id,
+                'erro' => $e->getMessage(),
+            ]);
+            return response()->json(['success' => false, 'message' => 'Erro interno.'], 500);
         }
     }
     public function getEventsDataForDestination(Viagens $viagem, Destinos $destino)
