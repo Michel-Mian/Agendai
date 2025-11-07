@@ -44,7 +44,9 @@ class ViagensController extends Controller
                 'objetivos', 
                 'user',
                 'hotel',
+                'veiculos',
                 'seguros',
+                'veiculos',
                 'destinos' => function($query) {
                     $query->orderBy('ordem_destino', 'asc');
                 },
@@ -78,6 +80,10 @@ class ViagensController extends Controller
             // Adicionar seguros
             $seguros = $viagem->seguros;
 
+            // Adicionar veículos
+            $veiculos = $viagem->veiculos;
+            $veiculosTotal = $veiculos->sum('preco_total');
+
             // Inicializar eventos/notícias vazios (serão carregados via AJAX)
             $eventos = collect();
 
@@ -94,7 +100,7 @@ class ViagensController extends Controller
                     $checkout = Carbon::parse($h->data_check_out);
                     $noites = $checkin->diffInDays($checkout);
                     return $h->preco * $noites;
-                }) : 0),
+                }) : 0) - $veiculosTotal,
                 'dias_viagem' => Carbon::parse($viagem->data_inicio_viagem)->diffInDays(Carbon::parse($viagem->data_final_viagem)) + 1
             ];
 
@@ -104,6 +110,7 @@ class ViagensController extends Controller
                 'pontos_count' => $pontosOrdenados->count(),
                 'viajantes_count' => $viajantes->count(),
                 'seguros_count' => $seguros->count(),
+                'veiculos_count' => $veiculos->count(),
                 'hotel_count' => $hotel ? $hotel->count() : 0
             ]);
 
@@ -117,6 +124,7 @@ class ViagensController extends Controller
                 'voos',
                 'hotel',
                 'seguros',
+                'veiculos',
                 'eventos',
                 'estatisticas'
             ));
@@ -824,7 +832,8 @@ class ViagensController extends Controller
                     'total_voos' => $viagem->voos->count(),
                     'total_seguros' => $viagem->seguros->count(),
                     'total_hoteis' => $viagem->hotel->count(),
-                    'orcamento_liquido' => $viagem->orcamento_viagem - $viagem->voos->sum('preco_voo'),
+                    // Ajusta orcamento_liquido também na API mobile para considerar veículos
+                    'orcamento_liquido' => $viagem->orcamento_viagem - $viagem->voos->sum('preco_voo') - $viagem->veiculos->sum('preco_total'),
                     'dias_viagem' => Carbon::parse($viagem->data_inicio_viagem)->diffInDays(Carbon::parse($viagem->data_final_viagem)) + 1
                 ]
             ];

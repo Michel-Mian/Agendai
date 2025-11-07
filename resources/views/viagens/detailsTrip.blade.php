@@ -458,7 +458,7 @@
                                 'usuario' => $usuario,
                                 'hotel' => $hotel ?? collect()
                             ])
-                            {{-- Add flights section here if not already included --}}
+                            
                         </div>
                         <div id="content-rotas-mapa" class="tab-panel hidden">
                             @include('components/myTrips/screenSections/rotasMapa', ['viagem' => $viagem])
@@ -556,7 +556,7 @@
     <!-- Modal de Adicionar Viajante -->
     @include('components.myTrips.modals.addViajantesModal')
 
-    @include('components/explore/detailsModal')
+    @include('components/explore/detailsmodal')
 
     <!-- Insurance modals (add and details) -->
     @include('components.myTrips.modals.addInsurance')
@@ -567,6 +567,71 @@
             searchInsurance: "{{ route('run.Scraping.ajax') }}",
             saveTravelerInsurance: "{{ route('trip.save.traveler.insurance') }}"
         };
+    </script>
+
+    <script>
+        // Rotas adicionais usadas por esta view
+        window.APP_ROUTES = Object.assign(window.APP_ROUTES || {}, {
+            vehiclesDelete: "{{ route('vehicles.destroy', ':id') }}".replace(':id', '')
+        });
+
+        // Função global para excluir veículo via AJAX
+        async function deleteVehicle(pk_id_veiculo, btn) {
+            if (!confirm('Deseja realmente excluir este carro da viagem?')) return;
+
+            const button = btn || document.querySelector(`#vehicle-card-${pk_id_veiculo} button`);
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = 'Excluindo...';
+            }
+
+            try {
+                const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const resp = await fetch(window.APP_ROUTES.vehiclesDelete, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ pk_id_veiculo })
+                });
+
+                const data = await resp.json();
+                if (resp.ok && data.success) {
+                    // Remover card do DOM
+                    const card = document.getElementById(`vehicle-card-${pk_id_veiculo}`);
+                    if (card && card.parentNode) {
+                        card.parentNode.removeChild(card);
+                    }
+
+                    // Atualizar contador
+                    const contador = document.querySelector('.text-sm.text-gray-500');
+                    if (contador && typeof contador.textContent !== 'undefined') {
+                        const match = contador.textContent.match(/(\d+)/);
+                        if (match) {
+                            const n = Math.max(0, parseInt(match[1], 10) - 1);
+                            contador.textContent = `${n} selecionado(s)`;
+                        }
+                    }
+
+                    showNotification(data.message || 'Veículo excluído', 'success');
+                } else {
+                    showNotification(data.message || 'Erro ao excluir veículo', 'error');
+                    if (button) {
+                        button.disabled = false;
+                        button.innerHTML = 'Excluir';
+                    }
+                }
+            } catch (err) {
+                console.error('Erro ao excluir veículo:', err);
+                showNotification('Erro ao excluir veículo. Tente novamente.', 'error');
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = 'Excluir';
+                }
+            }
+        }
     </script>
 
     <!-- Scripts externos -->
@@ -1027,56 +1092,73 @@ document.addEventListener("DOMContentLoaded", function () {
      * @param {string} type - Tipo da notificação ('success', 'error', 'info')
      */
     function showNotification(message, type = 'info') {
-        // Criar elemento de notificação
-        const notification = document.createElement('div');
-        notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 transform translate-x-full`;
-        
-        // Definir cores baseadas no tipo
-        let bgColor, textColor, icon;
-        switch(type) {
+        // Toast container (cria se não existir)
+        const containerId = 'global-toast-container';
+        let container = document.getElementById(containerId);
+        if (!container) {
+            container = document.createElement('div');
+            container.id = containerId;
+            container.style.position = 'fixed';
+            container.style.top = '1rem';
+            container.style.right = '1rem';
+            container.style.zIndex = 9999;
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.gap = '0.5rem';
+            document.body.appendChild(container);
+        }
+
+        // Ícones e cores
+        let icon = '';
+        let barColor = 'bg-blue-500';
+        switch (type) {
             case 'success':
-                bgColor = 'bg-green-500';
-                textColor = 'text-white';
-                icon = '✅';
+                icon = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 00-1.414-1.414L8 11.172 4.707 7.879a1 1 0 10-1.414 1.414l4 4a1 1 0 001.414 0l8-8z" clip-rule="evenodd"/></svg>';
+                barColor = 'bg-emerald-500';
                 break;
             case 'error':
-                bgColor = 'bg-red-500';
-                textColor = 'text-white';
-                icon = '❌';
+                icon = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l6.518 11.59c.75 1.334-.213 2.98-1.742 2.98H3.481c-1.53 0-2.492-1.646-1.742-2.98L8.257 3.1zM11 13a1 1 0 10-2 0 1 1 0 002 0zm-1-8a1 1 0 00-.993.883L9 6v4a1 1 0 001.993.117L11 10V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>';
+                barColor = 'bg-red-500';
                 break;
             default:
-                bgColor = 'bg-blue-500';
-                textColor = 'text-white';
-                icon = 'ℹ️';
+                icon = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor"><path d="M18 10c0 4.418-3.582 8-8 8s-8-3.582-8-8 3.582-8 8-8 8 3.582 8 8zM9 7h2v6H9V7zm0 8h2v2H9v-2z"/></svg>';
+                barColor = 'bg-sky-500';
         }
-        
-        notification.className += ` ${bgColor} ${textColor}`;
-        notification.innerHTML = `
-            <div class="flex items-center gap-2">
-                <span>${icon}</span>
-                <span>${message}</span>
+
+        // Toast element
+        const toast = document.createElement('div');
+        toast.className = 'max-w-sm w-full bg-white border border-gray-100 rounded-lg shadow-lg overflow-hidden transform transition-all duration-300 ease-out';
+        toast.style.display = 'flex';
+        toast.style.alignItems = 'stretch';
+
+        toast.innerHTML = `
+            <div class="${barColor} flex items-center justify-center px-3" style="min-width:48px">${icon}</div>
+            <div class="flex-1 p-3">
+                <div class="text-sm text-gray-800">${message}</div>
+            </div>
+            <div class="p-2 flex items-center">
+                <button class="toast-close text-gray-400 hover:text-gray-600" aria-label="Fechar">&times;</button>
             </div>
         `;
-        
-        // Adicionar ao DOM
-        document.body.appendChild(notification);
-        
-        // Animar entrada
-        setTimeout(() => {
-            notification.classList.remove('translate-x-full');
-            notification.classList.add('translate-x-0');
-        }, 100);
-        
-        // Remover após 3 segundos
-        setTimeout(() => {
-            notification.classList.remove('translate-x-0');
-            notification.classList.add('translate-x-full');
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 3000);
+
+        // Insert and animate
+        container.appendChild(toast);
+        requestAnimationFrame(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+        });
+
+        // Close handler
+        const removeToast = () => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-8px)';
+            setTimeout(() => { try { container.removeChild(toast); } catch(e){} }, 300);
+        };
+
+        toast.querySelector('.toast-close').addEventListener('click', removeToast);
+
+        // Auto remove after 4s
+        setTimeout(removeToast, 4000);
     }
 </script>
 

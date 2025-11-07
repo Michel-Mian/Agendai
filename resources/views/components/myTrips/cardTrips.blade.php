@@ -91,7 +91,7 @@
                 </span>
             </div>
             
-            <a href="{{ route('viagens', ['id' => $viagem->pk_id_viagem]) }}" 
+            <a href="/viagens/{{ $viagem->pk_id_viagem }}"
                class="group flex items-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105">
                 <span>Ver Detalhes</span>
                 <i class="fa-solid fa-arrow-right ml-2 text-sm group-hover:translate-x-1 transition-transform"></i>

@@ -24,7 +24,7 @@
             <i class="fa-solid fa-hotel text-pink-600"></i>
             <h3 class="text-xl font-semibold text-pink-600">Hospedagem</h3>
         </div>
-        <a href="{{ route('hotels.search') }}" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+    <a href="{{ route('hotels.index') }}" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
             <i class="fas fa-plus"></i>
             Adicionar hospedagem
         </a>
@@ -176,7 +176,7 @@
             </svg>
             <p class="text-lg">Nenhuma hospedagem cadastrada para esta viagem</p>
             <p class="text-sm mt-1 mb-4">Adicione informações do hotel para visualizar os detalhes aqui</p>
-            <a href="{{ route('hotels.search') }}" class="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center gap-2">
+            <a href="{{ route('hotels.index') }}" class="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center gap-2">
                 <i class="fas fa-plus"></i>
                 Adicionar primeira hospedagem
             </a>
