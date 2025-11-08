@@ -409,12 +409,10 @@ class VehiclesController extends Controller
     /**
      * Retorna veículos da viagem
      */
-    public function getVehiclesByTrip(Request $request)
+    public function getVehiclesByTrip($trip_id)
     {
         try {
-            $tripId = $request->input('trip_id');
-            
-            $viagem = Viagens::findOrFail($tripId);
+            $viagem = Viagens::findOrFail($trip_id);
             
             if ($viagem->fk_id_usuario !== auth()->id()) {
                 return response()->json([
@@ -423,7 +421,7 @@ class VehiclesController extends Controller
                 ], 403);
             }
             
-            $veiculos = Veiculos::where('fk_id_viagem', $tripId)->get();
+            $veiculos = Veiculos::where('fk_id_viagem', $trip_id)->get();
             
             return response()->json([
                 'success' => true,
@@ -432,7 +430,8 @@ class VehiclesController extends Controller
             
         } catch (\Exception $e) {
             Log::error('Erro ao buscar veículos', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trip_id' => $trip_id
             ]);
             
             return response()->json([
