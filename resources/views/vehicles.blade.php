@@ -59,6 +59,9 @@
     };
     
     window.VIAGEM_DATA = @json($viagem);
+
+    // Configuração global para paginação de veículos (pode ser lida por outros scripts)
+    window.VEHICLES_PAGE_SIZE = 6;
 </script>
 
 <!-- Scripts do Autocomplete -->

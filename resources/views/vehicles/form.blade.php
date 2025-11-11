@@ -38,6 +38,7 @@
                     name="data_retirada"
                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     min="{{ date('Y-m-d') }}"
+                    placeholder="dd/mm/aaaa"
                     required
                 >
             </div>
@@ -54,6 +55,7 @@
                     name="data_devolucao"
                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     min="{{ date('Y-m-d') }}"
+                    placeholder="dd/mm/aaaa"
                     required
                 >
             </div>
@@ -75,7 +77,7 @@
                 >
                     @for($h = 0; $h < 24; $h++)
                         @foreach(['00', '30'] as $m)
-                            <option value="{{ sprintf('%02d:%s', $h, $m) }}">
+                            <option value="{{ sprintf('%02d:%s', $h, $m) }}" {{ (sprintf('%02d:%s', $h, $m) === '10:00') ? 'selected' : '' }}>
                                 {{ sprintf('%02d:%s', $h, $m) }}
                             </option>
                         @endforeach

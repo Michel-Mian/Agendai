@@ -54,6 +54,26 @@ window.initVehiclesMap = function() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM carregado - Configurando formulário de veículos');
     
+    // --- ADIÇÃO: garantir valores padrão para datepickers (hoje) e sincronizar displays ---
+    try {
+        const dataRetirada = document.getElementById('data_retirada');
+        const dataDevolucao = document.getElementById('data_devolucao');
+        const today = new Date();
+        const isoToday = today.toISOString().slice(0,10);
+
+        if (dataRetirada) {
+            dataRetirada.setAttribute('min', isoToday);
+            dataRetirada.value = ''; // campo vazio
+        }
+        if (dataDevolucao) {
+            dataDevolucao.setAttribute('min', isoToday);
+            dataDevolucao.value = ''; // campo vazio
+        }
+    } catch (e) {
+        console.warn('Erro ao aplicar valores padrão para datepickers:', e);
+    }
+    // --- FIM DA ADIÇÃO ---
+
     // Validação do formulário
     const vehicleForm = document.getElementById('vehicle-search-form');
     

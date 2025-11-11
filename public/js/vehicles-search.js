@@ -32,27 +32,36 @@
     });
 
     /**
-     * Define datas padrão (hoje + 1 dia)
+     * Define datas padrão (hoje)
      */
     function setDefaultDates() {
         const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
 
         const dataRetirada = document.getElementById('data_retirada');
         const dataDevolucao = document.getElementById('data_devolucao');
+        const displayRetirada = document.getElementById('data_retirada_display');
+        const displayDevolucao = document.getElementById('data_devolucao_display');
 
-        if (dataRetirada && !dataRetirada.value) {
-            dataRetirada.value = formatDateForInput(tomorrow);
+        const isoToday = formatDateForInput(today);
+        const formatToDisplay = (iso) => {
+            if (!iso) return '';
+            const [y,m,d] = iso.split('-');
+            return `${d}/${m}/${y}`;
+        };
+
+        if (dataRetirada) {
+            dataRetirada.value = isoToday;
+            dataRetirada.setAttribute('min', isoToday);
+        }
+        if (dataDevolucao) {
+            dataDevolucao.value = isoToday;
+            dataDevolucao.setAttribute('min', isoToday);
         }
 
-        if (dataDevolucao && !dataDevolucao.value) {
-            const afterTomorrow = new Date(tomorrow);
-            afterTomorrow.setDate(afterTomorrow.getDate() + 2);
-            dataDevolucao.value = formatDateForInput(afterTomorrow);
-        }
+        if (displayRetirada) displayRetirada.value = formatToDisplay(isoToday);
+        if (displayDevolucao) displayDevolucao.value = formatToDisplay(isoToday);
 
-        // Definir hora padrão 10:00
+        // Definir hora padrão 10:00 (mantém comportamento anterior)
         const horaRetirada = document.getElementById('hora_retirada');
         const horaDevolucao = document.getElementById('hora_devolucao');
         

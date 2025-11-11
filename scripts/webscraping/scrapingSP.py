@@ -92,7 +92,7 @@ def main():
 
         with sync_playwright() as p:
             browser = p.chromium.launch(
-                headless=False, # Alterado para False para facilitar a depuração visual
+                headless=True, # Alterado para False para facilitar a depuração visual
                 args=[
                     '--no-sandbox', 
                     '--disable-dev-shm-usage',
