@@ -519,7 +519,7 @@ def scrape_rentcars(params):
             log_info("Site carregado!")
 
             # Verifica e fecha o pop-up de ofertas antes de interagir
-            fechar_popup_se_existir(page, timeout=4500) # Dando 3s para o pop-up aparecer
+            fechar_popup_se_existir(page, timeout=4500) # Dando 4,5s para o pop-up aparecer
             
             # 2. PREENCHER LOCAL DE RETIRADA
             log_info(f"Preenchendo local: {params['local_retirada']}")

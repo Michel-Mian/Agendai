@@ -22,6 +22,7 @@ return new class extends Migration
             $table->decimal('longitude', 11, 8);
             $table->string('categoria', 100)->nullable();
             $table->timestamps();
+            $table->boolean('is_completed')->nullable()->default(false);
 
             $table->unsignedBigInteger('fk_id_viagem');
             $table->foreign('fk_id_viagem')->references('pk_id_viagem')->on('viagens')->onDelete('cascade');

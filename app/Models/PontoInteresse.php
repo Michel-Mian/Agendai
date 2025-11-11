@@ -22,12 +22,14 @@ class PontoInteresse extends Model
         'hora_ponto_interesse',
         'data_ponto_interesse',
         'fk_id_viagem',
+        'is_completed',
     ];
 
     protected $casts = [
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
         'data_ponto_interesse' => 'date',
+        'is_completed' => 'boolean',
     ];
 
     // Relacionamento com Viagem

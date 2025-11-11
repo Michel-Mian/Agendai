@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashBoardController;
 use App\Http\Controllers\ViagensController;
+use App\Http\Controllers\Api\PontosInteresseController;
 
 // Rotas de autenticação (não protegidas)
 Route::prefix('auth')->group(function () {
@@ -28,3 +29,6 @@ Route::middleware('auth:sanctum')->get('/dashboard', [DashBoardController::class
 Route::get('/viagens/{id}', [ViagensController::class, 'showApi']);
 // Lista todos os seguros da viagem
 Route::get('/viagens/{id}/seguros', [ViagensController::class, 'segurosByViagem']);
+
+// Rota protegida para atualizar status de ponto de interesse
+Route::middleware('auth:sanctum')->put('/pontos-interesse/{id}/toggle-completed', [PontosInteresseController::class, 'toggleCompleted']);
