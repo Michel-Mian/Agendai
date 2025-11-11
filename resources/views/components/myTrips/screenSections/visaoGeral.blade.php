@@ -14,9 +14,6 @@
     <!-- Seção de Hotéis -->
     @include('components/myTrips/screenSections/themes/hotelSection', ['hotel' => $hotel ?? collect()])
 
-    <!-- Seção de Seguros -->
-    @include('components/myTrips/screenSections/themes/insuranceSection', ['seguros' => $seguros ?? collect()])
-
     <!-- Seção de Veículos -->
     @include('components/myTrips/screenSections/themes/vehicleSection', ['veiculos' => $veiculos ?? collect()])
 

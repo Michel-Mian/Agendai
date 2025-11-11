@@ -126,8 +126,8 @@
             @forelse ($seguros ?? collect() as $seguro)
                 @php
                     // Usar preco_pix como padrão, ou preco_cartao se preco_pix não estiver disponível
+                    // Importante: não multiplicar por número de viajantes; cada viajante tem seu próprio registro de seguro
                     $preco_seguro = $seguro->preco_pix ?? $seguro->preco_cartao ?? 0;
-                    $preco_total_seguro = $preco_seguro * $numero_viajantes;
                 @endphp
                 <div class="mb-4 p-4 rounded-lg border border-gray-100 shadow-sm bg-gray-50">
                     <div class="flex justify-between items-center">
@@ -136,8 +136,7 @@
                             <span class="text-sm text-gray-500">{{ $seguro->seguradora }}</span>
                         </div>
                         <div class="flex flex-col gap-1 text-right">
-                            <span class="text-purple-700 font-bold">Por pessoa: R$ {{ number_format($preco_seguro, 2, ',', '.') }}</span>
-                            <span class="text-purple-700 font-bold">Total ({{ $numero_viajantes }}x): R$ {{ number_format($preco_total_seguro, 2, ',', '.') }}</span>
+                            <span class="text-purple-700 font-bold">Preço: R$ {{ number_format($preco_seguro, 2, ',', '.') }}</span>
                         </div>
                     </div>
                     @if($seguro->cobertura_medica)
@@ -175,10 +174,10 @@
                         $preco_total += $voo->preco_voo * $numero_viajantes;
                     }
                     
-                    // Soma dos seguros (multiplicado pelo número de viajantes)
+                    // Soma dos seguros: cada registro já corresponde ao viajante/viagem adequado
                     foreach (($seguros ?? collect()) as $seguro) {
                         $preco_seguro = $seguro->preco_pix ?? $seguro->preco_cartao ?? 0;
-                        $preco_total += $preco_seguro * $numero_viajantes;
+                        $preco_total += $preco_seguro;
                     }
 
                     // Soma dos veículos (preco_total em Veiculos)
@@ -217,7 +216,7 @@
                     
                     foreach (($seguros ?? collect()) as $seguro) {
                         $preco_seguro = $seguro->preco_pix ?? $seguro->preco_cartao ?? 0;
-                        $total_seguros += $preco_seguro * $numero_viajantes;
+                        $total_seguros += $preco_seguro;
                     }
                 @endphp
                 <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 text-sm">

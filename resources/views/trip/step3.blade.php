@@ -61,36 +61,46 @@
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+// Delegação de eventos para funcionar mesmo se o passo for injetado depois do load
+(function () {
+    function syncHiddenInput() {
+        const preferencesInput = document.getElementById('preferences');
+        if (!preferencesInput) return;
+        const selected = Array.from(document.querySelectorAll('.pref-btn.selected'))
+            .map(btn => btn.getAttribute('data-preference'))
+            .filter(Boolean);
+        preferencesInput.value = selected.join(',');
+    }
 
-    
-    let selectedPrefs = [];
-    const preferencesInput = document.getElementById('preferences');
-    
-    document.querySelectorAll('.pref-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            const prefText = this.getAttribute('data-preference');
-
-            
-            // Toggle visual imediato
-            this.classList.toggle('selected');
-            
-            // Atualizar array
-            if (selectedPrefs.includes(prefText)) {
-                selectedPrefs = selectedPrefs.filter(p => p !== prefText);
-            } else {
-                selectedPrefs.push(prefText);
-            }
-            
-            // Atualizar input
-            if (preferencesInput) {
-                preferencesInput.value = selectedPrefs.join(',');
-            }
-            
-
+    function preloadFromHidden() {
+        const input = document.getElementById('preferences');
+        if (!input || !input.value) return;
+        const list = input.value.split(',').map(s => s.trim()).filter(Boolean);
+        if (!list.length) return;
+        document.querySelectorAll('.pref-btn').forEach(btn => {
+            const pref = btn.getAttribute('data-preference');
+            if (list.includes(pref)) btn.classList.add('selected');
         });
+    }
+
+    // Clique global usando delegation
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.pref-btn');
+        if (!btn) return;
+        e.preventDefault();
+        btn.classList.toggle('selected');
+        btn.setAttribute('aria-pressed', btn.classList.contains('selected') ? 'true' : 'false');
+        syncHiddenInput();
     });
-});
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function(){
+            preloadFromHidden();
+            syncHiddenInput();
+        });
+    } else {
+        preloadFromHidden();
+        syncHiddenInput();
+    }
+})();
 </script>

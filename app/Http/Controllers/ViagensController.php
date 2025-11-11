@@ -132,8 +132,9 @@ class ViagensController extends Controller
                 'total_pontos' => $pontosOrdenados->count(), 
                 'total_objetivos' => $objetivos->count(),
                 'total_destinos' => $destinos->count(),
-                'orcamento_liquido' => $viagem->orcamento_viagem - ($voos->sum('preco_voo') * $viajantes->count()) - (($seguros ?? collect())->sum(function($seguro) use ($viajantes) { 
-                    return ($seguro->preco_pix ?? $seguro->preco_cartao ?? 0) * $viajantes->count(); 
+                // Cálculo de orçamento líquido: orçamento - voos*passageiros - hotéis - veículos - seguros (sem multiplicar por viajantes)
+                'orcamento_liquido' => $viagem->orcamento_viagem - ($voos->sum('preco_voo') * $viajantes->count()) - (($seguros ?? collect())->sum(function($seguro) { 
+                    return ($seguro->preco_pix ?? $seguro->preco_cartao ?? 0); 
                 })) - ($hotel ? $hotel->sum(function($h) { 
                     $checkin = Carbon::parse($h->data_check_in);
                     $checkout = Carbon::parse($h->data_check_out);
@@ -435,6 +436,24 @@ class ViagensController extends Controller
 
             $viagem->update($updateData);
 
+            // Após atualização, recalcular orçamento líquido para retornar à UI
+            $viagem->loadMissing(['viajantes','voos','hotel','veiculos','seguros']);
+            $viajantes = $viagem->viajantes ?? collect();
+            $voos = ($viagem->voos ?? collect())->filter(function($voo){ return is_object($voo) && $voo !== false; });
+            $hotel = $viagem->hotel ?? collect();
+            $veiculosTotal = ($viagem->veiculos ?? collect())->sum('preco_total');
+            $seguros = $viagem->seguros ?? collect();
+            $orcamentoLiquido = ($viagem->orcamento_viagem ?? 0)
+                - ($voos->sum('preco_voo') * $viajantes->count())
+                - ($seguros->sum(function($s){ return ($s->preco_pix ?? $s->preco_cartao ?? 0); }))
+                - ($hotel ? $hotel->sum(function($h){
+                    $checkin = \Carbon\Carbon::parse($h->data_check_in);
+                    $checkout = \Carbon\Carbon::parse($h->data_check_out);
+                    $noites = $checkin->diffInDays($checkout);
+                    return ($h->preco ?? 0) * $noites;
+                }) : 0)
+                - $veiculosTotal;
+
             Log::info('Viagem atualizada com sucesso', [
                 'viagem_id' => $id,
                 'user_id' => auth()->id(),
@@ -444,7 +463,9 @@ class ViagensController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Viagem atualizada com sucesso!',
-                'data' => $updateData
+                'data' => array_merge($updateData, [
+                    'orcamento_liquido' => $orcamentoLiquido
+                ])
             ]);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -876,8 +897,19 @@ class ViagensController extends Controller
                     'total_seguros' => $viagem->seguros->count(),
                     'total_veiculos' => $viagem->veiculos->count(),
                     'total_hoteis' => $viagem->hotel->count(),
-                    // Ajusta orcamento_liquido também na API mobile para considerar veículos
-                    'orcamento_liquido' => $viagem->orcamento_viagem - $viagem->voos->sum('preco_voo') - $viagem->veiculos->sum('preco_total'),
+                    // Orçamento líquido para API mobile: orçamento - voos*passageiros - hotéis - veículos - seguros (sem multiplicar)
+                    'orcamento_liquido' => ($viagem->orcamento_viagem)
+                        - ($viagem->voos->sum('preco_voo') * $viagem->viajantes->count())
+                        - (($viagem->hotel ?? collect())->sum(function($h){
+                            $checkin = \Carbon\Carbon::parse($h->data_check_in);
+                            $checkout = \Carbon\Carbon::parse($h->data_check_out);
+                            $noites = $checkin->diffInDays($checkout);
+                            return ($h->preco ?? 0) * $noites;
+                        }))
+                        - ($viagem->veiculos->sum('preco_total'))
+                        - (($viagem->seguros ?? collect())->sum(function($s){
+                            return ($s->preco_pix ?? $s->preco_cartao ?? 0);
+                        })),
                     'dias_viagem' => Carbon::parse($viagem->data_inicio_viagem)->diffInDays(Carbon::parse($viagem->data_final_viagem)) + 1
                 ]
             ];

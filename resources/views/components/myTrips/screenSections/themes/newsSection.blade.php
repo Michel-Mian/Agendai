@@ -2,7 +2,7 @@
     $eventos = $eventos ?? collect();
 @endphp
 
-<div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+<div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden mt-8">
     <div class="bg-gradient-to-r from-red-500 via-red-600 to-orange-600 px-8 py-6 relative overflow-hidden">
         <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
         <div class="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-10 -translate-x-10"></div>
@@ -19,8 +19,8 @@
                     <p class="text-red-600 text-sm">Selecione um destino para ver as últimas notícias</p>
                 </div>
                 @if(isset($viagem->destinos) && $viagem->destinos->count() > 0)
-                <div class="w-1/3">
-                    <select id="news-destination-select" class="block w-full bg-white/20 text-white border-white/30 rounded-lg shadow-sm focus:ring-red-300 focus:border-red-300">
+                <div class="w-1/3 relative z-10">
+                    <select id="news-destination-select" class="block w-full bg-white text-gray-800 border-white/60 rounded-lg shadow-sm px-3 py-2 focus:ring-red-300 focus:border-red-300">
                         @foreach($viagem->destinos as $destino)
                             <option value="{{ $destino->pk_id_destino }}">{{ $destino->nome_destino }}</option>
                         @endforeach
