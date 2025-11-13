@@ -6,13 +6,79 @@
     </div>
     <div class="mb-6">
         <label class="block text-gray-600 font-semibold mb-2">Qual será o meio de locomoção?<label class="text-red-600 text-base font-thin">*</label></label>
-        <select class="input">
-            <option>Carro (próprio)</option>
-            <option>Carro (alugado)</option>
-            <option>Ônibus</option>
-            <option>Avião</option>
+        <select class="input" id="meio_locomocao" name="meio_locomocao">
+            <option value="carro_proprio">Carro (próprio)</option>
+            <option value="carro_alugado">Carro (alugado)</option>
+            <option value="onibus">Ônibus</option>
+            <option value="aviao">Avião</option>
         </select>
     </div>
+
+    <!-- Campos para Carro Próprio -->
+    <div id="carro-proprio-fields" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <h3 class="text-lg font-semibold text-blue-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-car"></i>
+            Informações do seu veículo
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-gray-600 font-semibold mb-2">
+                    Autonomia do veículo (km/litro)<label class="text-red-600 text-base font-thin">*</label>
+                </label>
+                <input 
+                    type="number" 
+                    name="autonomia_veiculo" 
+                    id="autonomia_veiculo"
+                    class="input" 
+                    placeholder="Ex: 12.5"
+                    step="0.1"
+                    min="1"
+                    max="50"
+                >
+                <p class="text-sm text-gray-500 mt-1">Quantos km seu carro faz por litro?</p>
+            </div>
+
+            <div>
+                <label class="block text-gray-600 font-semibold mb-2">
+                    Tipo de combustível<label class="text-red-600 text-base font-thin">*</label>
+                </label>
+                <select name="tipo_combustivel" id="tipo_combustivel" class="input">
+                    <option value="gasolina">Gasolina</option>
+                    <option value="etanol">Etanol</option>
+                    <option value="diesel">Diesel</option>
+                    <option value="gnv">GNV</option>
+                </select>
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="block text-gray-600 font-semibold mb-2">
+                    Preço do combustível por litro (opcional)
+                </label>
+                <input 
+                    type="number" 
+                    name="preco_combustivel" 
+                    id="preco_combustivel"
+                    class="input" 
+                    placeholder="Ex: 5.89"
+                    step="0.01"
+                    min="0"
+                >
+                <p class="text-sm text-gray-500 mt-1">Deixe em branco para usar o preço médio nacional</p>
+            </div>
+        </div>
+
+        <div class="mt-4 p-3 bg-blue-100 rounded-lg">
+            <div class="flex items-start gap-2">
+                <i class="fas fa-info-circle text-blue-600 mt-1"></i>
+                <div class="text-sm text-blue-800">
+                    <p class="font-semibold mb-1">Como funciona?</p>
+                    <p>Calcularemos automaticamente a distância total da viagem, estimativa de pedágios, quantidade de litros necessários e custo total de combustível baseado nas informações fornecidas.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="cars-rent" class="hidden flex gap-6 mb-8">
         <div class="mb-8 relative">
             <label class="block text-gray-600 font-semibold mb-2">Qual hora deseja retirar?<label class="text-red-600 text-base font-thin">*</label></label>
@@ -89,3 +155,74 @@
         <button type="button" class="next-btn btn-primary">Próximo →</button>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const meioLocomocaoSelect = document.getElementById('meio_locomocao');
+    const carroProprioFields = document.getElementById('carro-proprio-fields');
+    const carsRent = document.getElementById('cars-rent');
+    const depIataContainer = document.getElementById('dep_iata_container');
+    const autonomiaInput = document.getElementById('autonomia_veiculo');
+    const tipoCombustivelSelect = document.getElementById('tipo_combustivel');
+    const precoCombustivelInput = document.getElementById('preco_combustivel');
+
+    // Função para atualizar visibilidade dos campos
+    function updateFieldsVisibility() {
+        const selectedValue = meioLocomocaoSelect.value;
+
+        // Esconder todos primeiro
+        carroProprioFields.classList.add('hidden');
+        carsRent.classList.add('hidden');
+        depIataContainer.classList.add('hidden');
+
+        // Mostrar campos relevantes
+        switch(selectedValue) {
+            case 'carro_proprio':
+                carroProprioFields.classList.remove('hidden');
+                // Tornar campos obrigatórios
+                autonomiaInput.setAttribute('required', 'required');
+                tipoCombustivelSelect.setAttribute('required', 'required');
+                break;
+            case 'carro_alugado':
+                carsRent.classList.remove('hidden');
+                // Remover required dos campos de carro próprio
+                autonomiaInput.removeAttribute('required');
+                tipoCombustivelSelect.removeAttribute('required');
+                break;
+            case 'aviao':
+                depIataContainer.classList.remove('hidden');
+                autonomiaInput.removeAttribute('required');
+                tipoCombustivelSelect.removeAttribute('required');
+                break;
+            default:
+                autonomiaInput.removeAttribute('required');
+                tipoCombustivelSelect.removeAttribute('required');
+                break;
+        }
+    }
+
+    // Atualizar quando mudar seleção
+    meioLocomocaoSelect.addEventListener('change', updateFieldsVisibility);
+
+    // Inicializar estado correto
+    updateFieldsVisibility();
+
+    // Atualizar preço sugerido baseado no tipo de combustível
+    tipoCombustivelSelect.addEventListener('change', function() {
+        if (!precoCombustivelInput.value) {
+            const precosSugeridos = {
+                'gasolina': '5.89',
+                'etanol': '4.29',
+                'diesel': '5.99',
+                'gnv': '4.50'
+            };
+            precoCombustivelInput.placeholder = `Preço médio: R$ ${precosSugeridos[this.value]}`;
+        }
+    });
+
+    // Inicializar placeholder do preço
+    if (tipoCombustivelSelect.value) {
+        tipoCombustivelSelect.dispatchEvent(new Event('change'));
+    }
+});
+</script>

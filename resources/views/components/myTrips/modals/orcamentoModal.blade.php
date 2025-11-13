@@ -156,6 +156,58 @@
 
             <hr class="my-6">
 
+            <h4 class="text-xl font-semibold text-gray-800 mb-4">Carro Próprio</h4>
+            
+            @if(isset($viagemCarro) && $viagemCarro)
+                <div class="mb-4 p-4 rounded-lg border border-gray-100 shadow-sm bg-gradient-to-br from-indigo-50 to-blue-50">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-car text-indigo-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <span class="font-semibold text-gray-700 block">Viagem de Carro Próprio</span>
+                                <span class="text-sm text-gray-500">{{ number_format($viagemCarro->distancia_total_km, 0, ',', '.') }} km • {{ $viagemCarro->duracao_texto }}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-indigo-700 font-bold text-lg">R$ {{ number_format($viagemCarro->custo_total, 2, ',', '.') }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Detalhamento dos custos do carro -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 pt-3 border-t border-indigo-200">
+                        <div class="flex justify-between items-center bg-white/70 px-3 py-2 rounded">
+                            <span class="text-sm text-gray-600">
+                                <i class="fas fa-gas-pump text-green-600 mr-1"></i> Combustível
+                            </span>
+                            <span class="text-sm font-semibold text-gray-800">R$ {{ number_format($viagemCarro->custo_combustivel_estimado, 2, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white/70 px-3 py-2 rounded">
+                            <span class="text-sm text-gray-600">
+                                <i class="fas fa-road text-orange-600 mr-1"></i> Pedágios
+                                @if($viagemCarro->pedagio_oficial)
+                                    <span class="ml-1 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">✓</span>
+                                @else
+                                    <span class="ml-1 text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-full">≈</span>
+                                @endif
+                            </span>
+                            <span class="text-sm font-semibold text-gray-800">R$ {{ number_format($viagemCarro->pedagio_estimado, 2, ',', '.') }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 text-xs text-gray-500 italic">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Autonomia: {{ number_format($viagemCarro->autonomia_veiculo_km_l, 2, ',', '.') }} km/L • 
+                        Combustível: {{ ucfirst($viagemCarro->tipo_combustivel) }} (R$ {{ number_format($viagemCarro->preco_combustivel_litro, 2, ',', '.') }}/L)
+                    </div>
+                </div>
+            @else
+                <p class="text-gray-400 mb-4">Viagem não utiliza carro próprio.</p>
+            @endif
+
+            <hr class="my-6">
+
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-6 gap-4">
                 <h4 class="text-lg font-semibold text-gray-800">Total do Orçamento</h4>
                 @php
@@ -189,6 +241,13 @@
                         // fallback caso relação não exista ou cause erro
                         $total_veiculos = 0;
                     }
+
+                    // Soma do carro próprio
+                    $total_carro_proprio = 0;
+                    if (isset($viagemCarro) && $viagemCarro) {
+                        $total_carro_proprio = ($viagemCarro->custo_combustivel_estimado ?? 0) + ($viagemCarro->pedagio_estimado ?? 0);
+                        $preco_total += $total_carro_proprio;
+                    }
                 @endphp
                 
                 <span class="text-green-600 text-xl sm:text-2xl font-bold">R$ {{ number_format($preco_total, 2, ',', '.') }}</span>
@@ -202,6 +261,7 @@
                     $total_voos = 0;
                     $total_seguros = 0;
                     $total_veiculos = $total_veiculos ?? 0;
+                    $total_carro_proprio = $total_carro_proprio ?? 0;
                     
                     foreach ($viagem->hotel as $hotel) {
                         $checkin = \Carbon\Carbon::parse($hotel->data_check_in);
@@ -219,7 +279,7 @@
                         $total_seguros += $preco_seguro;
                     }
                 @endphp
-                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 text-sm">
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 text-sm">
                     <div class="text-center">
                         <div class="text-gray-600">Hospedagem</div>
                         <div class="font-bold text-green-600">R$ {{ number_format($total_hoteis, 2, ',', '.') }}</div>
@@ -233,8 +293,12 @@
                         <div class="font-bold text-purple-600">R$ {{ number_format($total_seguros, 2, ',', '.') }}</div>
                     </div>
                     <div class="text-center">
-                        <div class="text-gray-600">Carros</div>
+                        <div class="text-gray-600">Carros Alugados</div>
                         <div class="font-bold text-orange-500">R$ {{ number_format($total_veiculos, 2, ',', '.') }}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-gray-600">Carro Próprio</div>
+                        <div class="font-bold text-indigo-600">R$ {{ number_format($total_carro_proprio, 2, ',', '.') }}</div>
                     </div>
                 </div>
             </div>

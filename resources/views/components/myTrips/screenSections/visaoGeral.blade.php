@@ -17,6 +17,9 @@
     <!-- Seção de Veículos -->
     @include('components/myTrips/screenSections/themes/vehicleSection', ['veiculos' => $veiculos ?? collect()])
 
+    <!-- Seção de Carro Próprio -->
+    @include('components/myTrips/screenSections/carroProprioSection', ['viagemCarro' => $viagemCarro ?? null])
+
     {{-- REMOVIDO: Seções de clima e notícias (movidas para informacoesEstatisticas) --}}
 </div>
 

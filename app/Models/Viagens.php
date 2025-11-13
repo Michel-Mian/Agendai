@@ -23,6 +23,11 @@ class Viagens extends Model
         'fk_id_usuario'
     ];
     
+    protected $casts = [
+        'data_inicio_viagem' => 'date',
+        'data_final_viagem' => 'date'
+    ];
+    
     // Relação com  usuário (User)
     public function user()
     {
@@ -90,6 +95,12 @@ class Viagens extends Model
         return $this->hasOne(Veiculos::class, 'fk_id_viagem', 'pk_id_viagem')
                     ->where('is_selected', true)
                     ->latest('pk_id_veiculo');
+    }
+
+    // Relacionamento com dados de viagem de carro próprio (1:1)
+    public function viagemCarro(): HasOne
+    {
+        return $this->hasOne(ViagemCarro::class, 'fk_id_viagem', 'pk_id_viagem');
     }
 
     // Atributo calculado: status da viagem (concluida, andamento, proxima)
