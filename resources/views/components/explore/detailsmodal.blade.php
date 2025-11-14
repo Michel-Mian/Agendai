@@ -219,19 +219,114 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
                 .catch(() => showNotification('Erro ao adicionar hospedagem', 'error'));
             }
 
-            // Step 4: Set modal datepicker value to selected itinerary date or trip start date
+            // Configurar date pickers com limites da viagem
             setTimeout(() => {
+                console.log('🔍 DEBUG - Configurando date pickers do modal');
+                console.log('window.hasTrip:', window.hasTrip);
+                console.log('window.dataInicioViagem:', window.dataInicioViagem);
+                console.log('window.dataFimViagem:', window.dataFimViagem);
+                console.log('fromItinerary:', fromItinerary);
+                
+                // Função para normalizar data para formato YYYY-MM-DD
+                function normalizarData(data) {
+                    if (!data) return null;
+                    
+                    // Se já está no formato YYYY-MM-DD, retorna
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(data)) {
+                        return data;
+                    }
+                    
+                    // Se tem timestamp (YYYY-MM-DDTHH:mm:ss...), extrai apenas a data
+                    if (data.includes('T')) {
+                        return data.split('T')[0];
+                    }
+                    
+                    // Se está em formato DD/MM/YYYY, converte
+                    if (data.includes('/')) {
+                        const [d, m, y] = data.split('/');
+                        return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+                    }
+                    
+                    return data;
+                }
+                
+                // Normalizar datas para YYYY-MM-DD
+                let dataInicio = normalizarData(window.dataInicioViagem);
+                let dataFim = normalizarData(window.dataFimViagem);
+                
+                console.log('Data início normalizada:', dataInicio);
+                console.log('Data fim normalizada:', dataFim);
+                
                 if (!fromItinerary) {
                     const modalDatePicker = document.getElementById('itineraryDate');
                     const mainDatePicker = document.getElementById('datePicker');
-                    if (modalDatePicker && window.hasTrip && window.dataInicioViagem && window.dataFimViagem) {
-                        modalDatePicker.setAttribute('min', window.dataInicioViagem);
-                        modalDatePicker.setAttribute('max', window.dataFimViagem);
-                        let selectedDate = mainDatePicker && mainDatePicker.value ? mainDatePicker.value : window.dataInicioViagem;
+                    console.log('modalDatePicker encontrado:', !!modalDatePicker);
+                    console.log('mainDatePicker encontrado:', !!mainDatePicker);
+                    
+                    if (modalDatePicker && window.hasTrip && dataInicio && dataFim) {
+                        console.log('✅ Aplicando restrições ao itineraryDate');
+                        modalDatePicker.setAttribute('min', dataInicio);
+                        modalDatePicker.setAttribute('max', dataFim);
+                        let selectedDate = mainDatePicker && mainDatePicker.value ? mainDatePicker.value : dataInicio;
                         modalDatePicker.value = selectedDate;
+                        console.log('Data min:', modalDatePicker.getAttribute('min'));
+                        console.log('Data max:', modalDatePicker.getAttribute('max'));
+                        console.log('Data selecionada:', modalDatePicker.value);
+                    } else {
+                        console.log('❌ Condições não atendidas para itineraryDate');
                     }
                 }
-            }, 200); // Aguarda renderização do modal
+                
+                // Configurar date pickers de check-in/check-out para hotéis
+                const checkin = document.getElementById('checkinDate');
+                const checkout = document.getElementById('checkoutDate');
+                console.log('checkinDate encontrado:', !!checkin);
+                console.log('checkoutDate encontrado:', !!checkout);
+                
+                if (checkin && checkout && window.hasTrip && dataInicio && dataFim) {
+                    console.log('✅ Aplicando restrições aos campos de hospedagem');
+                    checkin.setAttribute('min', dataInicio);
+                    checkin.setAttribute('max', dataFim);
+                    checkout.setAttribute('min', dataInicio);
+                    checkout.setAttribute('max', dataFim);
+                    
+                    // Definir valores padrão
+                    checkin.value = dataInicio;
+                    checkout.value = dataFim;
+                    
+                    console.log('Check-in min:', checkin.getAttribute('min'));
+                    console.log('Check-in max:', checkin.getAttribute('max'));
+                    console.log('Check-in value:', checkin.value);
+                    console.log('Check-out min:', checkout.getAttribute('min'));
+                    console.log('Check-out max:', checkout.getAttribute('max'));
+                    console.log('Check-out value:', checkout.value);
+
+                    checkin.addEventListener('change', function() {
+                        if (checkin.value) {
+                            const minCheckout = new Date(checkin.value);
+                            minCheckout.setDate(minCheckout.getDate() + 1);
+                            const minCheckoutStr = minCheckout.toISOString().split('T')[0];
+                            
+                            // Garantir que o checkout não ultrapasse o fim da viagem
+                            const maxCheckoutDate = new Date(dataFim);
+                            if (minCheckout > maxCheckoutDate) {
+                                checkout.setAttribute('min', dataFim);
+                                checkout.value = dataFim;
+                            } else {
+                                checkout.setAttribute('min', minCheckoutStr);
+                                // Se o checkout atual for menor que o novo mínimo, ajusta
+                                if (checkout.value < minCheckoutStr) {
+                                    checkout.value = minCheckoutStr;
+                                }
+                            }
+                        } else {
+                            checkout.setAttribute('min', dataInicio);
+                        }
+                    });
+                } else {
+                    console.log('❌ Condições não atendidas para check-in/check-out');
+                }
+            }, 500); // Aumentado para 500ms para garantir renderização
         } else {
             modalContent.innerHTML = `
                 <div class="p-8 text-center text-red-500">
@@ -242,45 +337,6 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
             console.error('Erro ao carregar detalhes do lugar:', status);
         }
     });
-    
-    setTimeout(() => {
-        const checkin = document.getElementById('checkinDate');
-        const checkout = document.getElementById('checkoutDate');
-        if (checkin && checkout && window.dataInicioViagem && window.dataFimViagem) {
-            checkin.setAttribute('min', window.dataInicioViagem);
-            checkin.setAttribute('max', window.dataFimViagem);
-            checkout.setAttribute('min', window.dataInicioViagem);
-            checkout.setAttribute('max', window.dataFimViagem);
-
-            checkin.addEventListener('change', function() {
-                if (checkin.value) {
-                const minCheckout = new Date(checkin.value);
-                minCheckout.setDate(minCheckout.getDate() + 1);
-                const minCheckoutStr = minCheckout.toISOString().split('T')[0];
-                checkout.setAttribute('min', minCheckoutStr);
-
-                // Se o checkout atual for menor que o novo mínimo, limpa o valor
-                if (checkout.value < minCheckoutStr) {
-                    checkout.value = '';
-                }
-            } else {
-                checkout.setAttribute('min', window.dataInicioViagem);
-            }
-            });
-        }
-    }, 400);
-
-    // Step 4: Set modal datepicker value to selected itinerary date or trip start date
-    setTimeout(() => {
-        const modalDatePicker = document.getElementById('itineraryDate');
-        const mainDatePicker = document.getElementById('datePicker');
-        if (modalDatePicker && window.hasTrip && window.dataInicioViagem && window.dataFimViagem) {
-            modalDatePicker.setAttribute('min', window.dataInicioViagem);
-            modalDatePicker.setAttribute('max', window.dataFimViagem);
-            let selectedDate = mainDatePicker && mainDatePicker.value ? mainDatePicker.value : window.dataInicioViagem;
-            modalDatePicker.value = selectedDate;
-        }
-    }, 200); // Aguarda renderização do modal
 }
 
 function closeModal() {

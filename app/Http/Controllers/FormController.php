@@ -53,6 +53,8 @@ class FormController extends Controller
             'combustivel_litros' => 'nullable|numeric|min:0',
             'custo_combustivel' => 'nullable|numeric|min:0',
             'pedagio_estimado' => 'nullable|numeric|min:0',
+            'pedagio_oficial' => 'nullable|boolean',
+            'duracao_segundos' => 'nullable|integer|min:0',
             'rota_detalhada' => 'nullable|string',
             // Novos campos para viajantes e seguros
             'viajantesData' => 'nullable|string',
@@ -114,7 +116,7 @@ class FormController extends Controller
                     'preco_combustivel_litro' => $validatedData['preco_combustivel'] ?? null,
                     'distancia_total_km' => $validatedData['distancia_total_km'] ?? null,
                     'pedagio_estimado' => $validatedData['pedagio_estimado'] ?? null,
-                    'pedagio_oficial' => $request->input('pedagio_oficial', false),
+                    'pedagio_oficial' => filter_var($request->input('pedagio_oficial', false), FILTER_VALIDATE_BOOLEAN),
                     'combustivel_estimado_litros' => $validatedData['combustivel_litros'] ?? null,
                     'custo_combustivel_estimado' => $validatedData['custo_combustivel'] ?? null,
                     'duracao_segundos' => $request->input('duracao_segundos'),

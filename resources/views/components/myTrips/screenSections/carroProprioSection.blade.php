@@ -6,11 +6,11 @@
         <div class="flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                    <i class="fas fa-car text-white text-lg"></i>
+                    <i class="fas fa-car text-blue-600 text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-xl font-bold text-white">Carro Próprio</h3>
-                    <p class="text-blue-100 text-sm">Informações e custos da viagem</p>
+                    <h3 class="text-xl font-bold text-blue-600">Carro Próprio</h3>
+                    <p class="text-blue-600 text-sm">Informações e custos da viagem</p>
                 </div>
             </div>
             <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
@@ -150,17 +150,42 @@
 <!-- Script para renderizar o mapa -->
 <script>
     // Armazenar dados da rota para uso posterior
-    const carroProprioRotaData = {!! json_encode($viagemCarro->rota_detalhada) !!};
+    let carroProprioRotaData = {!! json_encode($viagemCarro->rota_detalhada) !!};
     
     console.log('=== DEBUG MAPA CARRO PRÓPRIO ===');
-    console.log('Dados brutos:', carroProprioRotaData);
-    console.log('Tem polyline?', carroProprioRotaData?.polyline ? 'SIM' : 'NÃO');
-    if (carroProprioRotaData?.polyline) {
-        console.log('Polyline (primeiros 100 chars):', carroProprioRotaData.polyline.substring(0, 100));
+    console.log('$viagemCarro existe?', {{ $viagemCarro ? 'true' : 'false' }});
+    console.log('Dados brutos (carroProprioRotaData):', carroProprioRotaData);
+    console.log('Tipo dos dados:', typeof carroProprioRotaData);
+    
+    // Se for string, fazer parse
+    if (typeof carroProprioRotaData === 'string') {
+        try {
+            console.log('⚠️ Dados são string, fazendo parse...');
+            carroProprioRotaData = JSON.parse(carroProprioRotaData);
+            console.log('✓ Parse realizado:', carroProprioRotaData);
+        } catch (e) {
+            console.error('❌ Erro ao fazer parse:', e);
+        }
     }
     
-    // Função para inicializar o mapa
-    function initCarroProprioMap() {
+    console.log('É array?', Array.isArray(carroProprioRotaData));
+    console.log('É objeto?', carroProprioRotaData !== null && typeof carroProprioRotaData === 'object');
+    
+    if (carroProprioRotaData && typeof carroProprioRotaData === 'object') {
+        console.log('Keys do objeto:', Object.keys(carroProprioRotaData));
+        console.log('Tem polyline?', 'polyline' in carroProprioRotaData ? 'SIM' : 'NÃO');
+        
+        if (carroProprioRotaData.polyline) {
+            console.log('✓ Polyline encontrada (primeiros 100 chars):', carroProprioRotaData.polyline.substring(0, 100));
+        } else {
+            console.log('❌ Polyline não encontrada. Conteúdo:', JSON.stringify(carroProprioRotaData).substring(0, 200));
+        }
+    } else {
+        console.log('❌ carroProprioRotaData inválido');
+    }
+    
+    // Função para inicializar o mapa (global para ser acessível pelo callback)
+    window.initCarroProprioMap = function() {
         const mapContainer = document.getElementById('carroProprioMap');
         
         if (!mapContainer) {
@@ -214,28 +239,100 @@
             map.fitBounds(bounds);
             console.log('✓ Mapa ajustado aos limites da rota');
 
-            // Adicionar marcadores de início e fim
+            // Adicionar marcadores para os destinos
             if (path.length > 0) {
+                console.log('📌 Estrutura dos legs:', carroProprioRotaData.legs);
+                
+                // Marcador de início (verde)
                 new google.maps.Marker({
                     position: path[0],
                     map: map,
                     icon: {
                         url: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
                     },
+                    label: {
+                        text: 'A',
+                        color: 'white',
+                        fontWeight: 'bold'
+                    },
                     title: 'Início da viagem',
                     zIndex: 1000
                 });
 
+                // Marcadores intermediários baseados nos legs
+                if (carroProprioRotaData.legs && Array.isArray(carroProprioRotaData.legs) && carroProprioRotaData.legs.length > 0) {
+                    console.log('📌 Processando', carroProprioRotaData.legs.length, 'legs (trechos)');
+                    
+                    // Para cada leg, adicionar marcador no final dele
+                    carroProprioRotaData.legs.forEach((leg, legIndex) => {
+                        console.log(`Leg ${legIndex}:`, {
+                            start: leg.startLocation,
+                            end: leg.endLocation,
+                            distance: leg.distanceMeters
+                        });
+                        
+                        // Usar a localização final de cada leg
+                        if (leg.endLocation && leg.endLocation.latLng) {
+                            const endPos = {
+                                lat: leg.endLocation.latLng.latitude,
+                                lng: leg.endLocation.latLng.longitude
+                            };
+                            
+                            // Não adicionar marcador no último leg (será o marcador final vermelho)
+                            if (legIndex < carroProprioRotaData.legs.length - 1) {
+                                const markerLabel = String.fromCharCode(66 + legIndex); // B, C, D...
+                                
+                                new google.maps.Marker({
+                                    position: endPos,
+                                    map: map,
+                                    icon: {
+                                        url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+                                    },
+                                    label: {
+                                        text: markerLabel,
+                                        color: 'white',
+                                        fontWeight: 'bold'
+                                    },
+                                    title: `Destino ${legIndex + 2}`,
+                                    zIndex: 999
+                                });
+                                
+                                console.log(`✓ Marcador ${markerLabel} adicionado em`, endPos);
+                            }
+                        }
+                    });
+                }
+
+                // Marcador de fim (vermelho)
+                const lastLeg = carroProprioRotaData.legs?.[carroProprioRotaData.legs.length - 1];
+                let finalPos = path[path.length - 1];
+                
+                if (lastLeg?.endLocation?.latLng) {
+                    finalPos = {
+                        lat: lastLeg.endLocation.latLng.latitude,
+                        lng: lastLeg.endLocation.latLng.longitude
+                    };
+                }
+                
+                const totalLegs = (carroProprioRotaData.legs?.length || 0) + 1;
+                const finalLabel = String.fromCharCode(64 + totalLegs); // Se 3 legs, será 'D'
+                
                 new google.maps.Marker({
-                    position: path[path.length - 1],
+                    position: finalPos,
                     map: map,
                     icon: {
                         url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
                     },
+                    label: {
+                        text: finalLabel,
+                        color: 'white',
+                        fontWeight: 'bold'
+                    },
                     title: 'Fim da viagem',
                     zIndex: 1000
                 });
-                console.log('✓ Marcadores de início e fim adicionados');
+                
+                console.log('✓ Marcadores adicionados ao mapa');
             }
 
             console.log('✅ Mapa renderizado com SUCESSO!');
@@ -250,12 +347,38 @@
     // Tentar inicializar quando o DOM estiver pronto
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('📄 DOM carregado, aguardando 1.5 segundos para Google Maps...');
-            setTimeout(initCarroProprioMap, 1500);
+            console.log('📄 DOM carregado, aguardando Google Maps...');
+            // Esperar o Google Maps carregar
+            waitForGoogleMaps();
         });
     } else {
-        console.log('📄 DOM já estava carregado, aguardando 1.5 segundos para Google Maps...');
-        setTimeout(initCarroProprioMap, 1500);
+        console.log('📄 DOM já estava carregado, aguardando Google Maps...');
+        waitForGoogleMaps();
     }
+    
+    // Função para esperar o Google Maps carregar
+    function waitForGoogleMaps() {
+        if (typeof google !== 'undefined' && google.maps && google.maps.geometry) {
+            console.log('✅ Google Maps já disponível, inicializando mapa...');
+            setTimeout(initCarroProprioMap, 100);
+        } else {
+            console.log('⏳ Aguardando Google Maps carregar...');
+            setTimeout(waitForGoogleMaps, 300);
+        }
+    }
+    
+    // Garantir que também tente inicializar quando a página estiver totalmente carregada
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            if (typeof google !== 'undefined' && google.maps && google.maps.geometry) {
+                const mapContainer = document.getElementById('carroProprioMap');
+                // Só inicializar se ainda não tiver conteúdo (não foi inicializado ainda)
+                if (mapContainer && !mapContainer.querySelector('.gm-style')) {
+                    console.log('🔄 Tentando inicializar mapa no evento load...');
+                    initCarroProprioMap();
+                }
+            }
+        }, 500);
+    });
 </script>
 @endif

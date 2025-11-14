@@ -644,12 +644,8 @@
                 // Guardar viagens disponíveis
                 window.availableTrips = data.viagens;
 
-                // Filtrar viagens cujo período cobre toda a locação (inicio <= retirada && fim >= devolução)
-                const eligibleTrips = (data.viagens || []).filter(v => {
-                    const inicio = parseDateOnly(v.data_inicio_viagem);
-                    const fim = parseDateOnly(v.data_final_viagem);
-                    return inicio <= rentalPeriod.start && fim >= rentalPeriod.end;
-                });
+                // Permitir selecionar qualquer viagem (sem filtro de datas)
+                const eligibleTrips = data.viagens;
 
                 populateTripSelect(eligibleTrips);
                 const confirmBtn = document.getElementById('confirm-vehicle-trip-btn');
