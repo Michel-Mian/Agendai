@@ -21,6 +21,58 @@
 </div>
 
 <script>
+    // --- Funções auxiliares ---
+    
+    /**
+     * Gera opções de horário de 30 em 30 minutos (00:00 até 23:30)
+     * @returns {string} HTML com options para select
+     */
+    function generateTimeOptions() {
+        let options = '<option value="">Selecione um horário</option>';
+        for (let hour = 0; hour < 24; hour++) {
+            for (let minute = 0; minute < 60; minute += 30) {
+                const hourStr = hour.toString().padStart(2, '0');
+                const minuteStr = minute.toString().padStart(2, '0');
+                const timeValue = `${hourStr}:${minuteStr}`;
+                options += `<option value="${timeValue}">${timeValue}</option>`;
+            }
+        }
+        return options;
+    }
+    
+    /**
+     * Gera opções de horário com uma opção pré-selecionada
+     * @param {string} selectedTime - Horário a ser selecionado (formato HH:MM)
+     * @returns {string} HTML com options para select
+     */
+    function generateTimeOptionsWithSelected(selectedTime) {
+        // Normalizar o horário selecionado para HH:MM
+        let normalizedSelected = '';
+        if (selectedTime) {
+            // Se vier em formato HH:MM:SS, pega apenas HH:MM
+            normalizedSelected = selectedTime.substring(0, 5);
+            
+            // Arredondar para o intervalo de 30 minutos mais próximo
+            const [h, m] = normalizedSelected.split(':').map(Number);
+            const roundedMinute = Math.round(m / 30) * 30;
+            const finalHour = roundedMinute === 60 ? h + 1 : h;
+            const finalMinute = roundedMinute === 60 ? 0 : roundedMinute;
+            normalizedSelected = `${finalHour.toString().padStart(2, '0')}:${finalMinute.toString().padStart(2, '0')}`;
+        }
+        
+        let options = '<option value="">Selecione um horário</option>';
+        for (let hour = 0; hour < 24; hour++) {
+            for (let minute = 0; minute < 60; minute += 30) {
+                const hourStr = hour.toString().padStart(2, '0');
+                const minuteStr = minute.toString().padStart(2, '0');
+                const timeValue = `${hourStr}:${minuteStr}`;
+                const selected = timeValue === normalizedSelected ? 'selected' : '';
+                options += `<option value="${timeValue}" ${selected}>${timeValue}</option>`;
+            }
+        }
+        return options;
+    }
+    
     // --- Funções do Modal ---
 async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId = null, horarioBanco = null) {
     if (typeof infoWindow !== 'undefined' && infoWindow) {
@@ -101,7 +153,9 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
                             <input type="hidden" name="_token" value="${csrfToken}">
                             <input type="hidden" name="_method" value="POST">
                             <label for="novo_horario" class="text-sm font-medium text-gray-700">Horário:</label>
-                            <input type="time" id="novo_horario" name="novo_horario" value="${horarioAtual}" class="border rounded px-2 py-1" required>
+                            <select id="novo_horario" name="novo_horario" class="border rounded px-2 py-1" required>
+                                ${generateTimeOptionsWithSelected(horarioAtual)}
+                            </select>
                             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded transition-colors">
                                 Alterar para esse horário
                             </button>
@@ -176,7 +230,9 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
                             </div>
                             <div class=\"flex items-center gap-2\">
                                 <label for=\"itineraryTime\" class=\"text-gray-700 font-medium whitespace-nowrap\">Hora da visita:</label>
-                                <input type=\"time\" id=\"itineraryTime\" class=\"form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 p-2\">
+                                <select id=\"itineraryTime\" class=\"form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 p-2\">
+                                    ${generateTimeOptions()}
+                                </select>
                             </div>
                         </div>
                         <button onclick=\"addToItinerary(currentDetailedPlace && currentDetailedPlace.place_id, document.getElementById('itineraryTime').value, document.getElementById('itineraryDate').value); closeModal();\" class=\"px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg w-full sm:w-auto\">
