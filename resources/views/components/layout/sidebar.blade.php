@@ -79,7 +79,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
             </button>
-            <div id="profile-dropdown" class="absolute bottom-full left-1 min-w-[230px] mb-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+            <div id="profile-dropdown" class="absolute bottom-full left-1 min-w-[230px] mb-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 hidden">
                 @csrf
                 <div class="py-2">
                     @if(Auth::check())

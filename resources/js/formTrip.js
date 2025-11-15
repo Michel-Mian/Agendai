@@ -716,6 +716,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 carsRentContainer.classList.add('hidden');
             }
         }
+        
+        // Atualizar indicadores de progresso
+        if (typeof window.updateProgressIndicators === 'function') {
+            window.updateProgressIndicators();
+        }
     });
 
     seguro.addEventListener('change', function() {
@@ -766,6 +771,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // -------------------- Inicialização --------------------
     showStep(currentStep);
+    
+    // Inicializar indicadores de progresso
+    if (typeof window.updateProgressIndicators === 'function') {
+        setTimeout(() => window.updateProgressIndicators(), 100);
+    }
 });
 
 // -------------------- Eventos de seleção de voo --------------------

@@ -7,10 +7,10 @@
     <div class="mb-6">
         <label class="block text-gray-600 font-semibold mb-2">Qual será o meio de locomoção?<label class="text-red-600 text-base font-thin">*</label></label>
         <select class="input" id="meio_locomocao" name="meio_locomocao">
-            <option value="carro_proprio">Carro (próprio)</option>
-            <option value="carro_alugado">Carro (alugado)</option>
-            <option value="onibus">Ônibus</option>
-            <option value="aviao">Avião</option>
+            <option value="Carro (próprio)">Carro (próprio)</option>
+            <option value="Carro (alugado)">Carro (alugado)</option>
+            <option value="Ônibus">Ônibus</option>
+            <option value="Avião">Avião</option>
         </select>
     </div>
 
@@ -79,50 +79,68 @@
         </div>
     </div>
 
-    <div id="cars-rent" class="hidden flex gap-6 mb-8">
-        <div class="mb-8 relative">
-            <label class="block text-gray-600 font-semibold mb-2">Qual hora deseja retirar?<label class="text-red-600 text-base font-thin">*</label></label>
-            <input 
-                type="datetime-local" 
-                name="car_pickup_datetime" 
-                id="car_pickup_datetime"
-                class="input"
-                step="1800"
-            >
-            <label class="block text-gray-600 font-semibold mb-2">Qual hora deseja devolver?<label class="text-red-600 text-base font-thin">*</label></label>
-            <input 
-                type="datetime-local" 
-                name="car_return_datetime" 
-                id="car_return_datetime"
-                class="input"
-                step="1800"
-            >
+    <!-- Campos para Aluguel de Carro -->
+    <div id="cars-rent" class="hidden mb-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+        <h3 class="text-lg font-semibold text-purple-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-car-side"></i>
+            Informações do aluguel
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-gray-600 font-semibold mb-2">Qual hora deseja retirar?<label class="text-red-600 text-base font-thin">*</label></label>
+                <input 
+                    type="datetime-local" 
+                    name="car_pickup_datetime" 
+                    id="car_pickup_datetime"
+                    class="input"
+                    step="1800"
+                >
+            </div>
+            <div>
+                <label class="block text-gray-600 font-semibold mb-2">Qual hora deseja devolver?<label class="text-red-600 text-base font-thin">*</label></label>
+                <input 
+                    type="datetime-local" 
+                    name="car_return_datetime" 
+                    id="car_return_datetime"
+                    class="input"
+                    step="1800"
+                >
+            </div>
         </div>
     </div>
-    <div id="dep_iata_container" class="hidden flex gap-6 mb-8">
-        <div class="mb-8 relative">
-            <label class="block text-gray-600 font-semibold mb-2">Qual cidade/aeroporto deseja decolar?<label class="text-red-600 text-base font-thin">*</label></label>
-            <input 
-                type="text" 
-                name="dep_iata" 
-                id="dep_iata"
-                placeholder="ex: Guarulhos"
-                class="input airport-autocomplete"
-                autocomplete="off"
-            >
-            <div id="dep_iata_suggestions" class="absolute left-0 top-full w-full bg-white border border-gray-200 rounded max-h-40 overflow-y-auto shadow"></div>
-        </div>
-        <div class="mb-8 relative">
-            <label class="block text-gray-600 font-semibold mb-2">Qual cidade/aeroporto deseja pousar?<label class="text-red-600 text-base font-thin">*</label></label>
-            <input 
-                type="text" 
-                name="arr_iata" 
-                id="arr_iata"
-                placeholder="ex: John F. Kennedy"
-                class="input airport-autocomplete"
-                autocomplete="off"
-            >
-            <div id="arr_iata_suggestions" class="absolute left-0 top-full w-full bg-white border border-gray-200 rounded max-h-40 overflow-y-auto shadow"></div>
+    <!-- Campos para Avião -->
+    <div id="dep_iata_container" class="hidden mb-6 p-4 bg-sky-50 border border-sky-200 rounded-lg">
+        <h3 class="text-lg font-semibold text-sky-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-plane"></i>
+            Informações do voo
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="relative">
+                <label class="block text-gray-600 font-semibold mb-2">Qual cidade/aeroporto deseja decolar?<label class="text-red-600 text-base font-thin">*</label></label>
+                <input 
+                    type="text" 
+                    name="dep_iata" 
+                    id="dep_iata"
+                    placeholder="ex: Guarulhos"
+                    class="input airport-autocomplete"
+                    autocomplete="off"
+                >
+                <div id="dep_iata_suggestions" class="absolute left-0 top-full w-full bg-white border border-gray-200 rounded max-h-40 overflow-y-auto shadow z-10"></div>
+            </div>
+            <div class="relative">
+                <label class="block text-gray-600 font-semibold mb-2">Qual cidade/aeroporto deseja pousar?<label class="text-red-600 text-base font-thin">*</label></label>
+                <input 
+                    type="text" 
+                    name="arr_iata" 
+                    id="arr_iata"
+                    placeholder="ex: John F. Kennedy"
+                    class="input airport-autocomplete"
+                    autocomplete="off"
+                >
+                <div id="arr_iata_suggestions" class="absolute left-0 top-full w-full bg-white border border-gray-200 rounded max-h-40 overflow-y-auto shadow z-10"></div>
+            </div>
         </div>
     </div>
     <div class="mb-6">
@@ -166,6 +184,87 @@ document.addEventListener('DOMContentLoaded', function() {
     const tipoCombustivelSelect = document.getElementById('tipo_combustivel');
     const precoCombustivelInput = document.getElementById('preco_combustivel');
 
+    // Função para obter a primeira data de início e a última data de fim dos destinos
+    function getViageDates() {
+        const dataInicioInputs = document.querySelectorAll('.destino-data-inicio');
+        const dataFimInputs = document.querySelectorAll('.destino-data-fim');
+        
+        let primeiraDataInicio = null;
+        let ultimaDataFim = null;
+        
+        // Pegar a primeira data de início (do primeiro destino)
+        if (dataInicioInputs.length > 0 && dataInicioInputs[0].value) {
+            primeiraDataInicio = dataInicioInputs[0].value;
+        }
+        
+        // Pegar a última data de fim (do último destino com data preenchida)
+        for (let i = dataFimInputs.length - 1; i >= 0; i--) {
+            if (dataFimInputs[i].value) {
+                ultimaDataFim = dataFimInputs[i].value;
+                break;
+            }
+        }
+        
+        return { primeiraDataInicio, ultimaDataFim };
+    }
+    
+    // Função para preencher as datas do aluguel
+    function preencherDatasAluguel() {
+        const { primeiraDataInicio, ultimaDataFim } = getViageDates();
+        
+        const carPickupInput = document.getElementById('car_pickup_datetime');
+        const carReturnInput = document.getElementById('car_return_datetime');
+        
+        if (carPickupInput && primeiraDataInicio) {
+            // Definir data de retirada como 10:00 do primeiro dia
+            carPickupInput.value = `${primeiraDataInicio}T10:00`;
+            // Definir data mínima como a primeira data de início
+            carPickupInput.setAttribute('min', `${primeiraDataInicio}T00:00`);
+        }
+        
+        if (carReturnInput && ultimaDataFim) {
+            // Definir data de devolução como 18:00 do último dia
+            carReturnInput.value = `${ultimaDataFim}T18:00`;
+            // Definir data máxima como a última data de fim
+            carReturnInput.setAttribute('max', `${ultimaDataFim}T23:59`);
+        }
+        
+        // Configurar validação entre os campos
+        if (carPickupInput && carReturnInput) {
+            // A data de retirada não pode ser depois da última data da viagem
+            if (ultimaDataFim) {
+                carPickupInput.setAttribute('max', `${ultimaDataFim}T23:59`);
+            }
+            
+            // A data de devolução não pode ser antes da primeira data da viagem
+            if (primeiraDataInicio) {
+                carReturnInput.setAttribute('min', `${primeiraDataInicio}T00:00`);
+            }
+            
+            // Quando mudar a data de retirada, atualizar o mínimo da devolução
+            carPickupInput.addEventListener('change', function() {
+                if (this.value) {
+                    carReturnInput.setAttribute('min', this.value);
+                    // Se a devolução for antes da retirada, limpar
+                    if (carReturnInput.value && carReturnInput.value < this.value) {
+                        carReturnInput.value = '';
+                    }
+                }
+            });
+            
+            // Quando mudar a data de devolução, atualizar o máximo da retirada
+            carReturnInput.addEventListener('change', function() {
+                if (this.value) {
+                    carPickupInput.setAttribute('max', this.value);
+                    // Se a retirada for depois da devolução, limpar
+                    if (carPickupInput.value && carPickupInput.value > this.value) {
+                        carPickupInput.value = '';
+                    }
+                }
+            });
+        }
+    }
+
     // Função para atualizar visibilidade dos campos
     function updateFieldsVisibility() {
         const selectedValue = meioLocomocaoSelect.value;
@@ -177,19 +276,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Mostrar campos relevantes
         switch(selectedValue) {
-            case 'carro_proprio':
+            case 'Carro (próprio)':
                 carroProprioFields.classList.remove('hidden');
                 // Tornar campos obrigatórios
                 autonomiaInput.setAttribute('required', 'required');
                 tipoCombustivelSelect.setAttribute('required', 'required');
                 break;
-            case 'carro_alugado':
+            case 'Carro (alugado)':
                 carsRent.classList.remove('hidden');
+                // Preencher datas automaticamente
+                preencherDatasAluguel();
                 // Remover required dos campos de carro próprio
                 autonomiaInput.removeAttribute('required');
                 tipoCombustivelSelect.removeAttribute('required');
                 break;
-            case 'aviao':
+            case 'Avião':
                 depIataContainer.classList.remove('hidden');
                 autonomiaInput.removeAttribute('required');
                 tipoCombustivelSelect.removeAttribute('required');
@@ -202,10 +303,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Atualizar quando mudar seleção
-    meioLocomocaoSelect.addEventListener('change', updateFieldsVisibility);
+    meioLocomocaoSelect.addEventListener('change', function() {
+        updateFieldsVisibility();
+        
+        // Atualizar indicadores de progresso
+        if (typeof window.updateProgressIndicators === 'function') {
+            window.updateProgressIndicators();
+        }
+    });
 
     // Inicializar estado correto
     updateFieldsVisibility();
+    
+    // Preencher datas se já estiverem disponíveis e meio for Carro (alugado)
+    if (meioLocomocaoSelect.value === 'Carro (alugado)') {
+        setTimeout(() => preencherDatasAluguel(), 200);
+    }
+    
+    // Inicializar indicadores de progresso
+    if (typeof window.updateProgressIndicators === 'function') {
+        setTimeout(() => window.updateProgressIndicators(), 100);
+    }
 
     // Atualizar preço sugerido baseado no tipo de combustível
     tipoCombustivelSelect.addEventListener('change', function() {
@@ -223,6 +341,44 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar placeholder do preço
     if (tipoCombustivelSelect.value) {
         tipoCombustivelSelect.dispatchEvent(new Event('change'));
+    }
+    
+    // Observar mudanças nas datas dos destinos para atualizar datas de aluguel
+    const observarDatasDestinos = () => {
+        const dataInicioInputs = document.querySelectorAll('.destino-data-inicio');
+        const dataFimInputs = document.querySelectorAll('.destino-data-fim');
+        
+        dataInicioInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                if (meioLocomocaoSelect.value === 'Carro (alugado)') {
+                    preencherDatasAluguel();
+                }
+            });
+        });
+        
+        dataFimInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                if (meioLocomocaoSelect.value === 'Carro (alugado)') {
+                    preencherDatasAluguel();
+                }
+            });
+        });
+    };
+    
+    // Observar mudanças iniciais
+    observarDatasDestinos();
+    
+    // Re-observar quando novos destinos forem adicionados (usar MutationObserver)
+    const destinosContainer = document.getElementById('destinos-container');
+    if (destinosContainer) {
+        const observer = new MutationObserver(function(mutations) {
+            observarDatasDestinos();
+        });
+        
+        observer.observe(destinosContainer, {
+            childList: true,
+            subtree: true
+        });
     }
 });
 </script>

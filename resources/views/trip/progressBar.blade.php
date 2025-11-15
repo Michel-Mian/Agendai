@@ -82,6 +82,19 @@
             text-align: center;
         }
 
+        /* Disabled step style */
+        .step-indicator.disabled {
+            background: #f1f5f9;
+            color: #cbd5e1;
+            border-color: #e2e8f0;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .progress-step.disabled .step-label {
+            color: #cbd5e1;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 720px) {
             .step-label { font-size: 0.78rem; max-width: 80px; }
@@ -92,10 +105,54 @@
 
     <nav aria-label="Progresso da criação do roteiro" class="progress-steps mb-8" role="navigation">
         @foreach(['Informações iniciais', 'Detalhes da viagem', 'Preferências', 'Seguros', 'Voos', 'Aluguel de carros', 'Revisão final'] as $i => $etapa)
-            <div class="progress-step">
-                <div class="step-indicator @if($i==0) active @endif" id="step-indicator-{{ $i+1 }}">{{ $i+1 }}</div>
+            <div class="progress-step" data-step-id="{{ $i }}">
+                <div class="step-indicator @if($i==0) active @endif" id="step-indicator-{{ $i }}">{{ $i+1 }}</div>
                 <span class="step-label">{{ $etapa }}</span>
             </div>
         @endforeach
     </nav>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Função para atualizar o estado dos indicadores de progresso
+    window.updateProgressIndicators = function() {
+        const meioLocomocao = document.getElementById('meio_locomocao')?.value;
+        const seguroViagem = document.getElementById('seguroViagem')?.value;
+        
+        // Step 4 (índice 4) = Voos
+        const stepVoos = document.querySelector('.progress-step[data-step-id="4"]');
+        const indicatorVoos = stepVoos?.querySelector('.step-indicator');
+        
+        // Step 5 (índice 5) = Aluguel de carros
+        const stepCarros = document.querySelector('.progress-step[data-step-id="5"]');
+        const indicatorCarros = stepCarros?.querySelector('.step-indicator');
+        
+        // Habilitar/desabilitar step de Voos
+        if (meioLocomocao === 'Avião') {
+            stepVoos?.classList.remove('disabled');
+            indicatorVoos?.classList.remove('disabled');
+        } else {
+            stepVoos?.classList.add('disabled');
+            indicatorVoos?.classList.add('disabled');
+        }
+        
+        // Habilitar/desabilitar step de Aluguel de carros
+        if (meioLocomocao === 'Carro (alugado)') {
+            stepCarros?.classList.remove('disabled');
+            indicatorCarros?.classList.remove('disabled');
+        } else {
+            stepCarros?.classList.add('disabled');
+            indicatorCarros?.classList.add('disabled');
+        }
+    };
+    
+    // Observar mudanças no meio de locomoção
+    const meioLocomocaoSelect = document.getElementById('meio_locomocao');
+    if (meioLocomocaoSelect) {
+        meioLocomocaoSelect.addEventListener('change', window.updateProgressIndicators);
+        // Executar inicialização
+        setTimeout(() => window.updateProgressIndicators(), 100);
+    }
+});
+</script>

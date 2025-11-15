@@ -338,49 +338,85 @@ async function openPlaceDetailsModal(placeId, fromItinerary = false, databaseId 
                 const checkout = document.getElementById('checkoutDate');
                 console.log('checkinDate encontrado:', !!checkin);
                 console.log('checkoutDate encontrado:', !!checkout);
+                console.log('window.dataInicioViagem:', window.dataInicioViagem);
+                console.log('window.dataFimViagem:', window.dataFimViagem);
+                console.log('dataInicio (normalizada):', dataInicio);
+                console.log('dataFim (normalizada):', dataFim);
                 
-                if (checkin && checkout && window.hasTrip && dataInicio && dataFim) {
-                    console.log('✅ Aplicando restrições aos campos de hospedagem');
-                    checkin.setAttribute('min', dataInicio);
-                    checkin.setAttribute('max', dataFim);
-                    checkout.setAttribute('min', dataInicio);
-                    checkout.setAttribute('max', dataFim);
-                    
-                    // Definir valores padrão
-                    checkin.value = dataInicio;
-                    checkout.value = dataFim;
-                    
-                    console.log('Check-in min:', checkin.getAttribute('min'));
-                    console.log('Check-in max:', checkin.getAttribute('max'));
-                    console.log('Check-in value:', checkin.value);
-                    console.log('Check-out min:', checkout.getAttribute('min'));
-                    console.log('Check-out max:', checkout.getAttribute('max'));
-                    console.log('Check-out value:', checkout.value);
-
-                    checkin.addEventListener('change', function() {
-                        if (checkin.value) {
-                            const minCheckout = new Date(checkin.value);
-                            minCheckout.setDate(minCheckout.getDate() + 1);
-                            const minCheckoutStr = minCheckout.toISOString().split('T')[0];
+                if (checkin && checkout && window.hasTrip) {
+                    // Se não temos as datas da viagem nas variáveis globais, buscar dos destinos
+                    if (!dataInicio || !dataFim) {
+                        console.log('⚠️ Datas não encontradas, tentando buscar dos destinos...');
+                        
+                        // Buscar primeira e última data dos destinos
+                        if (window.destinosViagem && Array.isArray(window.destinosViagem) && window.destinosViagem.length > 0) {
+                            const destinos = window.destinosViagem;
+                            console.log('Destinos encontrados:', destinos);
                             
-                            // Garantir que o checkout não ultrapasse o fim da viagem
-                            const maxCheckoutDate = new Date(dataFim);
-                            if (minCheckout > maxCheckoutDate) {
-                                checkout.setAttribute('min', dataFim);
-                                checkout.value = dataFim;
-                            } else {
-                                checkout.setAttribute('min', minCheckoutStr);
-                                // Se o checkout atual for menor que o novo mínimo, ajusta
-                                if (checkout.value < minCheckoutStr) {
-                                    checkout.value = minCheckoutStr;
-                                }
+                            // Pegar a primeira data de início
+                            const primeiroDestino = destinos[0];
+                            if (primeiroDestino.data_inicio) {
+                                dataInicio = normalizarData(primeiroDestino.data_inicio);
                             }
-                        } else {
-                            checkout.setAttribute('min', dataInicio);
+                            
+                            // Pegar a última data de fim
+                            const ultimoDestino = destinos[destinos.length - 1];
+                            if (ultimoDestino.data_fim) {
+                                dataFim = normalizarData(ultimoDestino.data_fim);
+                            }
+                            
+                            console.log('Datas dos destinos - Início:', dataInicio, 'Fim:', dataFim);
                         }
-                    });
+                    }
+                    
+                    if (dataInicio && dataFim) {
+                        console.log('✅ Aplicando restrições aos campos de hospedagem');
+                        checkin.setAttribute('min', dataInicio);
+                        checkin.setAttribute('max', dataFim);
+                        checkout.setAttribute('min', dataInicio);
+                        checkout.setAttribute('max', dataFim);
+                        
+                        // Definir valores padrão
+                        checkin.value = dataInicio;
+                        checkout.value = dataFim;
+                        
+                        console.log('Check-in min:', checkin.getAttribute('min'));
+                        console.log('Check-in max:', checkin.getAttribute('max'));
+                        console.log('Check-in value:', checkin.value);
+                        console.log('Check-out min:', checkout.getAttribute('min'));
+                        console.log('Check-out max:', checkout.getAttribute('max'));
+                        console.log('Check-out value:', checkout.value);
+
+                        checkin.addEventListener('change', function() {
+                            if (checkin.value) {
+                                const minCheckout = new Date(checkin.value);
+                                minCheckout.setDate(minCheckout.getDate() + 1);
+                                const minCheckoutStr = minCheckout.toISOString().split('T')[0];
+                                
+                                // Garantir que o checkout não ultrapasse o fim da viagem
+                                const maxCheckoutDate = new Date(dataFim);
+                                if (minCheckout > maxCheckoutDate) {
+                                    checkout.setAttribute('min', dataFim);
+                                    checkout.value = dataFim;
+                                } else {
+                                    checkout.setAttribute('min', minCheckoutStr);
+                                    // Se o checkout atual for menor que o novo mínimo, ajusta
+                                    if (checkout.value < minCheckoutStr) {
+                                        checkout.value = minCheckoutStr;
+                                    }
+                                }
+                            } else {
+                                checkout.setAttribute('min', dataInicio);
+                            }
+                        });
+                    } else {
+                        console.log('❌ Datas de viagem não disponíveis');
+                    }
                 } else {
                     console.log('❌ Condições não atendidas para check-in/check-out');
+                    if (!checkin) console.log('  - checkinDate não encontrado');
+                    if (!checkout) console.log('  - checkoutDate não encontrado');
+                    if (!window.hasTrip) console.log('  - window.hasTrip é false');
                 }
             }, 500); // Aumentado para 500ms para garantir renderização
         } else {

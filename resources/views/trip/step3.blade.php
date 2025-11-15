@@ -8,7 +8,7 @@
             </button>
         @endforeach
     </div>
-    <input type="hidden" name="preferences[]" id="preferences" value="">
+    <input type="hidden" name="preferences" id="preferences" value="">
     <div class="flex justify-between">
         <button type="button" class="prev-btn btn-secondary">← Voltar</button>
         <button type="button" class="next-btn btn-primary">Próximo →</button>
@@ -63,23 +63,36 @@
 <script>
 // Delegação de eventos para funcionar mesmo se o passo for injetado depois do load
 (function () {
+    console.log('🎯 Script de preferências carregado');
+    
     function syncHiddenInput() {
         const preferencesInput = document.getElementById('preferences');
-        if (!preferencesInput) return;
+        if (!preferencesInput) {
+            console.log('❌ Input #preferences não encontrado');
+            return;
+        }
         const selected = Array.from(document.querySelectorAll('.pref-btn.selected'))
             .map(btn => btn.getAttribute('data-preference'))
             .filter(Boolean);
         preferencesInput.value = selected.join(',');
+        console.log('✅ Preferências sincronizadas:', preferencesInput.value);
     }
 
     function preloadFromHidden() {
         const input = document.getElementById('preferences');
-        if (!input || !input.value) return;
+        if (!input || !input.value) {
+            console.log('ℹ️ Nenhuma preferência pré-existente');
+            return;
+        }
         const list = input.value.split(',').map(s => s.trim()).filter(Boolean);
         if (!list.length) return;
+        console.log('📥 Carregando preferências:', list);
         document.querySelectorAll('.pref-btn').forEach(btn => {
             const pref = btn.getAttribute('data-preference');
-            if (list.includes(pref)) btn.classList.add('selected');
+            if (list.includes(pref)) {
+                btn.classList.add('selected');
+                console.log('  ✓', pref);
+            }
         });
     }
 
@@ -87,18 +100,27 @@
     document.addEventListener('click', function (e) {
         const btn = e.target.closest('.pref-btn');
         if (!btn) return;
+        
+        console.log('🖱️ Clique detectado em:', btn.getAttribute('data-preference'));
         e.preventDefault();
+        e.stopPropagation();
+        
         btn.classList.toggle('selected');
-        btn.setAttribute('aria-pressed', btn.classList.contains('selected') ? 'true' : 'false');
+        const isSelected = btn.classList.contains('selected');
+        btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+        
+        console.log('  → Estado:', isSelected ? 'SELECIONADO' : 'DESMARCADO');
         syncHiddenInput();
-    });
+    }, true); // Capture phase para garantir que pegamos primeiro
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function(){
+            console.log('📄 DOM carregado - inicializando preferências');
             preloadFromHidden();
             syncHiddenInput();
         });
     } else {
+        console.log('📄 DOM já carregado - inicializando preferências');
         preloadFromHidden();
         syncHiddenInput();
     }
