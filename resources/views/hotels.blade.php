@@ -26,6 +26,7 @@
             <!-- Formulário de Busca -->
             <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                 <form id="hotel-search-form" class="flex flex-col gap-6 w-full">
+                    @csrf
                     <div class="flex flex-col gap-6">
                         <div class="flex flex-col gap-2">
                             <label for="hotel-query" class="text-base text-gray-700 font-semibold">Destino ou Nome do Hotel</label>
@@ -92,24 +93,32 @@
             </div>
         </div>
     </div>
+    <script>
+        window.userTrips = @json($trips ?? []);
+    </script>
+    <script src="/js/toast.js"></script>
 </div>
 
-<div id="trip-selection-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center z-50 hidden">
-    <div class="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-md border border-gray-200">
-        <h3 class="text-xl font-semibold text-gray-900 mb-4">Adicionar hotel a uma viagem</h3>
-        <p class="text-base text-gray-600 mb-4">Selecione a viagem para a qual deseja adicionar este hotel.</p>
-        
-        <div class="mb-4">
-            <label for="trip-select" class="block text-base font-medium text-gray-700 mb-2">Escolha uma viagem:</label>
-            <select id="trip-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 rounded-lg">
+<div id="trip-selection-modal" class="fixed inset-0 backdrop-blur-md overflow-y-auto h-full w-full flex items-center justify-center z-50 hidden" role="dialog" aria-modal="true">
+    <div class="relative bg-white rounded-2xl shadow-2xl p-6 md:p-7 w-full max-w-xl border border-gray-200">
+        <button id="close-trip-modal-btn" type="button" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" aria-label="Fechar">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">Adicionar hotel a uma viagem</h3>
+    <p id="trip-modal-hint" class="text-sm text-gray-600 mb-5">Selecione uma viagem cujo período cubra as datas da sua hospedagem.</p>
+
+        <div class="mb-5">
+            <label for="trip-select" class="block text-sm font-medium text-gray-700 mb-2">Escolha uma viagem</label>
+            <select id="trip-select" class="h-11 w-full rounded-lg border border-gray-300 bg-white text-gray-800 pl-3 pr-10 focus:border-pink-500 focus:ring-pink-500 transition">
             </select>
+            <p id="trip-select-helper" class="mt-2 text-xs text-gray-500">Listamos viagens cujo intervalo de datas abrange o seu check-in e check-out.</p>
         </div>
-        
-        <div class="flex justify-end space-x-3">
-            <button id="cancel-trip-btn" type="button" class="px-4 py-2 text-base font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+
+        <div class="flex justify-end gap-3">
+            <button id="cancel-trip-btn" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition">
                 Cancelar
             </button>
-            <button id="add-to-trip-confirm-btn" type="button" class="px-4 py-2 text-base font-medium text-white bg-pink-600 rounded-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-colors">
+            <button id="add-to-trip-confirm-btn" type="button" class="px-5 py-2 text-sm font-semibold text-white bg-pink-600 rounded-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition">
                 Adicionar
             </button>
         </div>

@@ -1620,3 +1620,439 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
 })();
+
+// -------------------- Cálculo de Rota para Carro Próprio --------------------
+(function() {
+    'use strict';
+
+    // Dados da viagem para cálculo
+    let dadosViagem = {
+        origem_place_id: null,
+        destinos_place_ids: [],
+        autonomia: null,
+        tipo_combustivel: 'gasolina',
+        preco_combustivel: null,
+        meio_locomocao: null
+    };
+
+    // Função para coletar dados do formulário
+    function coletarDadosViagem() {
+        // Meio de locomoção
+        const meioLocomocao = document.getElementById('meio_locomocao');
+        if (meioLocomocao) {
+            dadosViagem.meio_locomocao = meioLocomocao.value;
+        }
+
+        // Origem
+        const origemInput = document.getElementById('origem');
+        if (origemInput) {
+            dadosViagem.origem_place_id = origemInput.getAttribute('data-place-id');
+        }
+
+        // Destinos
+        const destinoInputs = document.querySelectorAll('.destino-input');
+        dadosViagem.destinos_place_ids = [];
+        destinoInputs.forEach(input => {
+            const placeId = input.getAttribute('data-place-id');
+            if (placeId && input.value.trim()) {
+                dadosViagem.destinos_place_ids.push(placeId);
+            }
+        });
+
+        // Autonomia
+        const autonomiaInput = document.getElementById('autonomia_veiculo');
+        if (autonomiaInput && autonomiaInput.value) {
+            dadosViagem.autonomia = parseFloat(autonomiaInput.value);
+        }
+
+        // Tipo de combustível
+        const tipoCombustivelSelect = document.getElementById('tipo_combustivel');
+        if (tipoCombustivelSelect && tipoCombustivelSelect.value) {
+            dadosViagem.tipo_combustivel = tipoCombustivelSelect.value;
+        }
+
+        // Preço do combustível
+        const precoCombustivelInput = document.getElementById('preco_combustivel');
+        if (precoCombustivelInput && precoCombustivelInput.value) {
+            dadosViagem.preco_combustivel = parseFloat(precoCombustivelInput.value);
+        } else {
+            // Usar preço médio
+            const precosMedios = {
+                'gasolina': 5.89,
+                'etanol': 4.29,
+                'diesel': 5.99,
+                'gnv': 4.50
+            };
+            dadosViagem.preco_combustivel = precosMedios[dadosViagem.tipo_combustivel] || 5.89;
+        }
+
+        return dadosViagem;
+    }
+
+    // Função para calcular rota usando endpoint backend (evita CORS)
+    async function calcularRota() {
+        try {
+            const dados = coletarDadosViagem();
+
+            // Verificar se tem todos os dados necessários
+            if (!dados.origem_place_id || dados.destinos_place_ids.length === 0) {
+                console.warn('Dados incompletos para calcular rota');
+                return null;
+            }
+
+            if (!dados.autonomia || dados.autonomia <= 0) {
+                console.warn('Autonomia não definida');
+                return null;
+            }
+
+            // Fazer requisição para o backend
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            
+            const response = await fetch('/calcular-rota', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    origem_place_id: dados.origem_place_id,
+                    destinos_place_ids: dados.destinos_place_ids
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Erro ao calcular rota:', errorData);
+                
+                // Mostrar mensagem amigável para o usuário
+                if (errorData.error && (errorData.error.includes('Routes API') || errorData.error.includes('PERMISSION_DENIED'))) {
+                    alert('⚠️ ATENÇÃO: A Google Routes API não está habilitada!\n\n' +
+                          'Para habilitar:\n' +
+                          '1. Acesse: https://console.cloud.google.com/apis/library/routes-backend.googleapis.com\n' +
+                          '2. Clique em "Ativar"\n' +
+                          '3. Aguarde 2-3 minutos\n' +
+                          '4. Tente novamente\n\n' +
+                          'Detalhes: ' + errorData.error);
+                }
+                
+                throw new Error(errorData.error || 'Erro ao calcular rota');
+            }
+
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.error || 'Erro ao calcular rota');
+            }
+
+            const distanciaKm = data.distancia_km;
+
+            // Usar pedágio da API se disponível, senão estimar
+            let pedagioEstimado = 0;
+            let pedagioObservacao = '';
+            
+            if (data.pedagio) {
+                pedagioEstimado = data.pedagio.valor_estimado || 0;
+                
+                if (data.pedagio.tem_pedagio) {
+                    pedagioObservacao = 'Valor oficial da Routes API';
+                } else {
+                    pedagioObservacao = data.pedagio.observacao || 'Valor estimado';
+                }
+            } else {
+                // Fallback: estimar R$ 0,10 por km
+                pedagioEstimado = distanciaKm * 0.10;
+                pedagioObservacao = 'Valor estimado (R$ 0,10/km)';
+            }
+
+            // Calcular combustível
+            const litrosNecessarios = distanciaKm / dados.autonomia;
+            const custoCombustivel = litrosNecessarios * dados.preco_combustivel;
+
+            return {
+                success: true,
+                distancia_km: Math.round(distanciaKm * 100) / 100,
+                distancia_metros: data.distancia_metros,
+                duracao_segundos: data.duracao_segundos,
+                duracao_texto: `${Math.floor(data.duracao_segundos / 3600)}h ${Math.floor((data.duracao_segundos % 3600) / 60)}min`,
+                pedagio_estimado: Math.round(pedagioEstimado * 100) / 100,
+                pedagio_observacao: pedagioObservacao,
+                pedagio_oficial: data.pedagio?.tem_pedagio || false,
+                litros_necessarios: Math.round(litrosNecessarios * 100) / 100,
+                custo_combustivel: Math.round(custoCombustivel * 100) / 100,
+                custo_total: Math.round((custoCombustivel + pedagioEstimado) * 100) / 100,
+                preco_combustivel_litro: dados.preco_combustivel,
+                polyline: data.polyline || '',
+                legs: data.legs || []
+            };
+
+        } catch (error) {
+            console.error('Erro ao calcular rota:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    // Função para atualizar a interface do step7 com os dados calculados
+    function atualizarStep7ComCalculos(resultado) {
+        const carroProprioCalculos = document.getElementById('carroProprioCalculos');
+        
+        if (!carroProprioCalculos) {
+            return;
+        }
+
+        if (!resultado || !resultado.success) {
+            carroProprioCalculos.classList.add('hidden');
+            return;
+        }
+
+        // Mostrar a seção
+        carroProprioCalculos.classList.remove('hidden');
+
+        // Atualizar displays
+        const distanciaDisplay = document.getElementById('distancia_total_display');
+        const duracaoDisplay = document.getElementById('duracao_display');
+        const combustivelDisplay = document.getElementById('combustivel_litros_display');
+        const custoCombustivelDisplay = document.getElementById('custo_combustivel_display');
+        const pedagioDisplay = document.getElementById('pedagio_display');
+        const custoTotalDisplay = document.getElementById('custo_total_display');
+
+        if (distanciaDisplay) {
+            distanciaDisplay.innerHTML = `${resultado.distancia_km.toLocaleString('pt-BR')} km`;
+        }
+
+        if (duracaoDisplay) {
+            duracaoDisplay.innerHTML = `Tempo estimado: ${resultado.duracao_texto}`;
+        }
+
+        if (combustivelDisplay) {
+            combustivelDisplay.innerHTML = `${resultado.litros_necessarios.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} L`;
+        }
+
+        if (custoCombustivelDisplay) {
+            custoCombustivelDisplay.innerHTML = `R$ ${resultado.custo_combustivel.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        if (pedagioDisplay) {
+            let pedagioHtml = `R$ ${resultado.pedagio_estimado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            
+            // Adicionar badge indicando se é oficial ou estimado
+            if (resultado.pedagio_oficial) {
+                pedagioHtml += ' <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded ml-2">✓ Oficial</span>';
+            } else {
+                pedagioHtml += ' <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded ml-2">≈ Estimado</span>';
+            }
+            
+            pedagioDisplay.innerHTML = pedagioHtml;
+        }
+
+        if (custoTotalDisplay) {
+            custoTotalDisplay.innerHTML = `R$ ${resultado.custo_total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        // Renderizar mapa com a rota
+        renderizarMapaRota(resultado);
+
+        // Atualizar campos hidden
+        const hiddenFields = {
+            'distancia_total_km': resultado.distancia_km,
+            'combustivel_litros': resultado.litros_necessarios,
+            'custo_combustivel': resultado.custo_combustivel,
+            'pedagio_estimado': resultado.pedagio_estimado,
+            'pedagio_oficial': resultado.pedagio_oficial ? 1 : 0,
+            'duracao_segundos': resultado.duracao_segundos,
+            'rota_detalhada': JSON.stringify({
+                polyline: resultado.polyline,
+                legs: resultado.legs,
+                duracao: resultado.duracao_segundos
+            })
+        };
+
+        for (const [fieldId, value] of Object.entries(hiddenFields)) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.value = value;
+            }
+        }
+    }
+
+    // Variável global para armazenar a instância do mapa
+    let routeMapInstance = null;
+    let directionsRenderer = null;
+
+    // Função para renderizar o mapa com a rota
+    function renderizarMapaRota(resultado) {
+        const mapContainer = document.getElementById('routeMap');
+        
+        if (!mapContainer) {
+            console.warn('Container do mapa não encontrado');
+            return;
+        }
+
+        // Verificar se o Google Maps está disponível
+        if (typeof google === 'undefined' || !google.maps) {
+            console.error('Google Maps API não está carregada');
+            return;
+        }
+
+        try {
+            const dados = coletarDadosViagem();
+            
+            // Criar mapa se não existir
+            if (!routeMapInstance) {
+                routeMapInstance = new google.maps.Map(mapContainer, {
+                    zoom: 7,
+                    center: { lat: -23.5505, lng: -46.6333 }, // São Paulo como centro inicial
+                    mapTypeControl: true,
+                    streetViewControl: false,
+                    fullscreenControl: true
+                });
+            }
+
+            // Criar DirectionsRenderer se não existir
+            if (!directionsRenderer) {
+                directionsRenderer = new google.maps.DirectionsRenderer({
+                    map: routeMapInstance,
+                    suppressMarkers: false,
+                    polylineOptions: {
+                        strokeColor: '#4F46E5',
+                        strokeWeight: 5,
+                        strokeOpacity: 0.8
+                    }
+                });
+            }
+
+            // Criar serviço de direções
+            const directionsService = new google.maps.DirectionsService();
+
+            // Montar waypoints (destinos intermediários)
+            const waypoints = dados.destinos_place_ids.slice(0, -1).map(placeId => ({
+                location: { placeId: placeId },
+                stopover: true
+            }));
+
+            // Última posição é o destino final
+            const destinoFinal = dados.destinos_place_ids[dados.destinos_place_ids.length - 1];
+
+            // Fazer requisição de direções
+            const request = {
+                origin: { placeId: dados.origem_place_id },
+                destination: { placeId: destinoFinal },
+                waypoints: waypoints,
+                travelMode: google.maps.TravelMode.DRIVING,
+                optimizeWaypoints: false
+            };
+
+            directionsService.route(request, function(result, status) {
+                if (status === 'OK') {
+                    directionsRenderer.setDirections(result);
+                    
+                    // Adicionar marcadores customizados
+                    const route = result.routes[0];
+                    
+                    // Marcador de início (origem)
+                    new google.maps.Marker({
+                        position: route.legs[0].start_location,
+                        map: routeMapInstance,
+                        label: {
+                            text: 'A',
+                            color: 'white',
+                            fontWeight: 'bold'
+                        },
+                        icon: {
+                            url: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+                        },
+                        title: 'Origem: ' + route.legs[0].start_address
+                    });
+
+                    // Marcadores dos waypoints
+                    for (let i = 0; i < route.legs.length - 1; i++) {
+                        new google.maps.Marker({
+                            position: route.legs[i].end_location,
+                            map: routeMapInstance,
+                            label: {
+                                text: String.fromCharCode(66 + i), // B, C, D...
+                                color: 'white',
+                                fontWeight: 'bold'
+                            },
+                            icon: {
+                                url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+                            },
+                            title: 'Parada ' + (i + 1) + ': ' + route.legs[i].end_address
+                        });
+                    }
+
+                    // Marcador de fim (destino final)
+                    const lastLeg = route.legs[route.legs.length - 1];
+                    new google.maps.Marker({
+                        position: lastLeg.end_location,
+                        map: routeMapInstance,
+                        label: {
+                            text: String.fromCharCode(66 + route.legs.length - 1),
+                            color: 'white',
+                            fontWeight: 'bold'
+                        },
+                        icon: {
+                            url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+                        },
+                        title: 'Destino: ' + lastLeg.end_address
+                    });
+
+                    console.log('Mapa da rota renderizado com sucesso');
+                } else {
+                    console.error('Erro ao renderizar rota no mapa:', status);
+                }
+            });
+
+        } catch (error) {
+            console.error('Erro ao criar mapa:', error);
+        }
+    }
+
+    // Listener para quando entrar no step7
+    function setupStep7Listener() {
+        const form = document.getElementById('multiStepForm');
+        if (!form) return;
+
+        // Observer para detectar quando step7 fica visível
+        const observer = new MutationObserver(async (mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const target = mutation.target;
+                    
+                    // Verificar se é o step7 e se ficou ativo
+                    if (target.classList.contains('form-step') && 
+                        target.classList.contains('active') &&
+                        target.querySelector('#carroProprioCalculos')) {
+                        
+                        // Verificar se é carro próprio
+                        const dados = coletarDadosViagem();
+                        if (dados.meio_locomocao === 'carro_proprio') {
+                            // Calcular rota
+                            const resultado = await calcularRota();
+                            if (resultado) {
+                                atualizarStep7ComCalculos(resultado);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Observar todas as form-steps
+        document.querySelectorAll('.form-step').forEach(step => {
+            observer.observe(step, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+        });
+    }
+
+    // Inicializar quando o DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', function() {
+        setupStep7Listener();
+    });
+
+})();

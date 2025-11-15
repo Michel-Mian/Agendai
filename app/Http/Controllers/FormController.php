@@ -44,6 +44,16 @@ class FormController extends Controller
             'idades' => 'nullable|array',
             'idades.*' => 'nullable|integer|min:1|max:120',
             'preferences' => 'nullable',
+            // Campos de carro próprio
+            'meio_locomocao' => 'nullable|string|max:50',
+            'autonomia_veiculo' => 'nullable|numeric|min:0',
+            'tipo_combustivel' => 'nullable|string|max:50',
+            'preco_combustivel' => 'nullable|numeric|min:0',
+            'distancia_total_km' => 'nullable|numeric|min:0',
+            'combustivel_litros' => 'nullable|numeric|min:0',
+            'custo_combustivel' => 'nullable|numeric|min:0',
+            'pedagio_estimado' => 'nullable|numeric|min:0',
+            'rota_detalhada' => 'nullable|string',
             // Novos campos para viajantes e seguros
             'viajantesData' => 'nullable|string',
             'segurosViajantesData' => 'nullable|string',
@@ -82,14 +92,35 @@ class FormController extends Controller
 
 
             // 1. Criar viagem principal
-            $viagem = \App\Models\Viagens::create([
+            $usaCarroProprio = $request->input('meio_locomocao') === 'carro_proprio';
+            
+            $viagemData = [
                 'nome_viagem' => $validatedData['nome_viagem'],
                 'origem_viagem' => $validatedData['origem'],
                 'data_inicio_viagem' => $dataInicioViagem,
                 'data_final_viagem' => $dataFimViagem,
                 'orcamento_viagem' => $validatedData['orcamento'] ?? 0,
                 'fk_id_usuario' => auth()->id(),
-            ]);
+            ];
+
+            $viagem = \App\Models\Viagens::create($viagemData);
+
+            // Criar registro de viagem de carro se aplicável
+            if ($usaCarroProprio) {
+                \App\Models\ViagemCarro::create([
+                    'fk_id_viagem' => $viagem->pk_id_viagem,
+                    'autonomia_veiculo_km_l' => $validatedData['autonomia_veiculo'] ?? null,
+                    'tipo_combustivel' => $validatedData['tipo_combustivel'] ?? null,
+                    'preco_combustivel_litro' => $validatedData['preco_combustivel'] ?? null,
+                    'distancia_total_km' => $validatedData['distancia_total_km'] ?? null,
+                    'pedagio_estimado' => $validatedData['pedagio_estimado'] ?? null,
+                    'pedagio_oficial' => $request->input('pedagio_oficial', false),
+                    'combustivel_estimado_litros' => $validatedData['combustivel_litros'] ?? null,
+                    'custo_combustivel_estimado' => $validatedData['custo_combustivel'] ?? null,
+                    'duracao_segundos' => $request->input('duracao_segundos'),
+                    'rota_detalhada' => $validatedData['rota_detalhada'] ?? null,
+                ]);
+            }
 
 
 

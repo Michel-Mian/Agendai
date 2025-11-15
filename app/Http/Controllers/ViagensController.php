@@ -5,6 +5,7 @@ use App\Models\User;
 use App\Models\Viajantes;
 use App\Models\Objetivos;
 use App\Models\Hotel;
+use App\Models\Seguros;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use App\Models\PontoInteresse;
@@ -22,13 +23,51 @@ Carbon::setLocale('pt_BR');
 class ViagensController extends Controller
 {
     
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
-        $viagens = Viagens::with('viajantes')->where('fk_id_usuario', $user->id)->get();
+        $query = Viagens::with('viajantes')->where('fk_id_usuario', $user->id);
+
+        // Filtro por nome parcial
+        if ($request->filled('nome')) {
+            $nome = trim($request->get('nome'));
+            $query->where('nome_viagem', 'like', "%$nome%");
+        }
+
+    // Filtro por status (usa accessor status) aceita 'planejada', 'andamento', 'concluida'. Mantém compatibilidade com 'proxima'.
+    $statusParam = $request->get('status');
+    $status = $statusParam === 'proxima' ? 'planejada' : $statusParam; // backward compat
+        $hoje = \Carbon\Carbon::today();
+        if (in_array($status, ['concluida','andamento','planejada'])) {
+            if ($status === 'concluida') {
+                $query->where('data_final_viagem', '<', $hoje);
+            } elseif ($status === 'planejada') {
+                $query->where('data_inicio_viagem', '>', $hoje);
+            } else { // andamento
+                $query->where('data_inicio_viagem', '<=', $hoje)->where('data_final_viagem', '>=', $hoje);
+            }
+        }
+
+        // Ordenação por proximidade
+        $sort = $request->get('sort');
+        if ($sort === 'planejada' || $sort === 'proxima') { // aceita os dois termos
+            $query->orderBy('data_inicio_viagem', 'asc');
+        } elseif ($sort === 'longe') {
+            $query->orderBy('data_inicio_viagem', 'desc');
+        } else {
+            $query->orderBy('created_at', 'desc'); // padrão
+        }
+
+        $viagens = $query->get();
+
         return view('viagens/myTrips', [
             'title' => 'Minhas Viagens',
-            'viagens' => $viagens
+            'viagens' => $viagens,
+            'filtros' => [
+                'nome' => $request->get('nome'),
+                'status' => $status,
+                'sort' => $sort,
+            ]
         ]);
     }
 
@@ -47,6 +86,7 @@ class ViagensController extends Controller
                 'veiculos',
                 'seguros',
                 'veiculos',
+                'viagemCarro',  // Adicionar relacionamento com dados de carro
                 'destinos' => function($query) {
                     $query->orderBy('ordem_destino', 'asc');
                 },
@@ -84,6 +124,14 @@ class ViagensController extends Controller
             $veiculos = $viagem->veiculos;
             $veiculosTotal = $veiculos->sum('preco_total');
 
+            // Adicionar dados de carro próprio
+            $viagemCarro = $viagem->viagemCarro;
+            $carroProprioTotal = 0;
+            
+            if ($viagemCarro) {
+                $carroProprioTotal = ($viagemCarro->custo_combustivel_estimado ?? 0) + ($viagemCarro->pedagio_estimado ?? 0);
+            }
+
             // Inicializar eventos/notícias vazios (serão carregados via AJAX)
             $eventos = collect();
 
@@ -93,14 +141,15 @@ class ViagensController extends Controller
                 'total_pontos' => $pontosOrdenados->count(), 
                 'total_objetivos' => $objetivos->count(),
                 'total_destinos' => $destinos->count(),
-                'orcamento_liquido' => $viagem->orcamento_viagem - ($voos->sum('preco_voo') * $viajantes->count()) - (($seguros ?? collect())->sum(function($seguro) use ($viajantes) { 
-                    return ($seguro->preco_pix ?? $seguro->preco_cartao ?? 0) * $viajantes->count(); 
+                // Cálculo de orçamento líquido: orçamento - voos*passageiros - hotéis - veículos - seguros - carro próprio
+                'orcamento_liquido' => $viagem->orcamento_viagem - ($voos->sum('preco_voo') * $viajantes->count()) - (($seguros ?? collect())->sum(function($seguro) { 
+                    return ($seguro->preco_pix ?? $seguro->preco_cartao ?? 0); 
                 })) - ($hotel ? $hotel->sum(function($h) { 
                     $checkin = Carbon::parse($h->data_check_in);
                     $checkout = Carbon::parse($h->data_check_out);
                     $noites = $checkin->diffInDays($checkout);
                     return $h->preco * $noites;
-                }) : 0) - $veiculosTotal,
+                }) : 0) - $veiculosTotal - $carroProprioTotal,
                 'dias_viagem' => Carbon::parse($viagem->data_inicio_viagem)->diffInDays(Carbon::parse($viagem->data_final_viagem)) + 1
             ];
 
@@ -125,6 +174,7 @@ class ViagensController extends Controller
                 'hotel',
                 'seguros',
                 'veiculos',
+                'viagemCarro',
                 'eventos',
                 'estatisticas'
             ));
@@ -396,6 +446,24 @@ class ViagensController extends Controller
 
             $viagem->update($updateData);
 
+            // Após atualização, recalcular orçamento líquido para retornar à UI
+            $viagem->loadMissing(['viajantes','voos','hotel','veiculos','seguros']);
+            $viajantes = $viagem->viajantes ?? collect();
+            $voos = ($viagem->voos ?? collect())->filter(function($voo){ return is_object($voo) && $voo !== false; });
+            $hotel = $viagem->hotel ?? collect();
+            $veiculosTotal = ($viagem->veiculos ?? collect())->sum('preco_total');
+            $seguros = $viagem->seguros ?? collect();
+            $orcamentoLiquido = ($viagem->orcamento_viagem ?? 0)
+                - ($voos->sum('preco_voo') * $viajantes->count())
+                - ($seguros->sum(function($s){ return ($s->preco_pix ?? $s->preco_cartao ?? 0); }))
+                - ($hotel ? $hotel->sum(function($h){
+                    $checkin = \Carbon\Carbon::parse($h->data_check_in);
+                    $checkout = \Carbon\Carbon::parse($h->data_check_out);
+                    $noites = $checkin->diffInDays($checkout);
+                    return ($h->preco ?? 0) * $noites;
+                }) : 0)
+                - $veiculosTotal;
+
             Log::info('Viagem atualizada com sucesso', [
                 'viagem_id' => $id,
                 'user_id' => auth()->id(),
@@ -405,7 +473,9 @@ class ViagensController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Viagem atualizada com sucesso!',
-                'data' => $updateData
+                'data' => array_merge($updateData, [
+                    'orcamento_liquido' => $orcamentoLiquido
+                ])
             ]);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -690,11 +760,13 @@ class ViagensController extends Controller
                     $query->orderBy('data_ponto_interesse', 'asc')
                           ->orderBy('hora_ponto_interesse', 'asc');
                 },
-                'seguros', 
+                'seguros',
+                'veiculos',
                 'destinos' => function($query) {
                     $query->orderBy('ordem_destino', 'asc');
                 },
-                'seguroSelecionado'
+                'seguroSelecionado',
+                'veiculoSelecionado'
             ])->findOrFail($id);
 
             // TEMPORÁRIO: Verificação de permissão desabilitada para teste
@@ -812,6 +884,8 @@ class ViagensController extends Controller
                 'user' => $viagem->user,
                 'seguros' => $viagem->seguros,
                 'seguro_selecionado' => $viagem->seguroSelecionado,
+                'veiculos' => $viagem->veiculos,
+                'veiculo_selecionado' => $viagem->veiculoSelecionado,
                 'noticias' => $noticias,
                 'eventos' => $eventos,
                 'clima' => $clima,
@@ -831,9 +905,21 @@ class ViagensController extends Controller
                     'total_destinos' => $viagem->destinos->count(),
                     'total_voos' => $viagem->voos->count(),
                     'total_seguros' => $viagem->seguros->count(),
+                    'total_veiculos' => $viagem->veiculos->count(),
                     'total_hoteis' => $viagem->hotel->count(),
-                    // Ajusta orcamento_liquido também na API mobile para considerar veículos
-                    'orcamento_liquido' => $viagem->orcamento_viagem - $viagem->voos->sum('preco_voo') - $viagem->veiculos->sum('preco_total'),
+                    // Orçamento líquido para API mobile: orçamento - voos*passageiros - hotéis - veículos - seguros (sem multiplicar)
+                    'orcamento_liquido' => ($viagem->orcamento_viagem)
+                        - ($viagem->voos->sum('preco_voo') * $viagem->viajantes->count())
+                        - (($viagem->hotel ?? collect())->sum(function($h){
+                            $checkin = \Carbon\Carbon::parse($h->data_check_in);
+                            $checkout = \Carbon\Carbon::parse($h->data_check_out);
+                            $noites = $checkin->diffInDays($checkout);
+                            return ($h->preco ?? 0) * $noites;
+                        }))
+                        - ($viagem->veiculos->sum('preco_total'))
+                        - (($viagem->seguros ?? collect())->sum(function($s){
+                            return ($s->preco_pix ?? $s->preco_cartao ?? 0);
+                        })),
                     'dias_viagem' => Carbon::parse($viagem->data_inicio_viagem)->diffInDays(Carbon::parse($viagem->data_final_viagem)) + 1
                 ]
             ];
@@ -848,6 +934,43 @@ class ViagensController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             return response()->json(['success' => false, 'message' => 'Erro interno', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Retorna todos os seguros relacionados a uma viagem específica.
+     */
+    public function segurosByViagem($id)
+    {
+        try {
+            // Confere se a viagem existe (mantém consistência das respostas)
+            $viagem = Viagens::findOrFail($id);
+
+            // Opcional: validar permissão quando autenticação estiver habilitada
+            // if ($viagem->fk_id_usuario !== auth()->id()) {
+            //     return response()->json(['success' => false, 'message' => 'Acesso negado'], 403);
+            // }
+
+            // Busca todos os seguros vinculados à viagem e carrega dados do viajante
+            $seguros = Seguros::with('viajante')
+                ->where('fk_id_viagem', $id)
+                ->orderBy('pk_id_seguro', 'asc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'viagem_id' => $viagem->pk_id_viagem,
+                'total' => $seguros->count(),
+                'data' => $seguros,
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'message' => 'Viagem não encontrada.'], 404);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao listar seguros por viagem', [
+                'viagem_id' => $id,
+                'erro' => $e->getMessage(),
+            ]);
+            return response()->json(['success' => false, 'message' => 'Erro interno.'], 500);
         }
     }
     public function getEventsDataForDestination(Viagens $viagem, Destinos $destino)

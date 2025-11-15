@@ -13,7 +13,6 @@ class HotelsController extends Controller
 {
     public function index()
     {
-
         $user = auth()->user();
         $viagens = Viagens::with('viajantes')->where('fk_id_usuario', $user->id)->get();
         return view('hotels', [
@@ -60,11 +59,10 @@ class HotelsController extends Controller
 
             if ($response->failed()) {
                 Log::error('SerpApi request failed', [
-                    'status' => $response->status(), 
+                    'status' => $response->status(),
                     'body' => $response->body(),
                     'params' => $params
                 ]);
-                
                 return response()->json([
                     'error' => 'Failed to fetch data from SerpApi. Status: ' . $response->status()
                 ], 502);
@@ -78,13 +76,11 @@ class HotelsController extends Controller
             }
 
             return response()->json($data);
-
         } catch (\Exception $e) {
             Log::error('SerpApi request exception', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
             return response()->json([
                 'error' => 'An unexpected error occurred: ' . $e->getMessage()
             ], 500);
@@ -101,29 +97,34 @@ class HotelsController extends Controller
         
         $request->validate([
             'name' => 'required|string',
-            'link' => 'nullable|url',
+            'link' => 'nullable|string',
             'check_in_date' => 'required|date',
             'check_out_date' => 'required|date|after:check_in_date',
             'overall_rating' => 'nullable|numeric',
-            'rate_per_night.lowest' => 'nullable|string',
-            'extracted_price' => 'nullable|numeric',
-            'price' => 'nullable|numeric',
-            'thumbnail' => 'nullable|url',
+            // Aceitar número ou string (SerpAPI varia) – retiramos tipo para não invalidar números
+            'rate_per_night.lowest' => 'nullable',
+            'extracted_price' => 'nullable',
+            'price' => 'nullable',
+            'thumbnail' => 'nullable|string',
             'gps_coordinates.latitude' => 'nullable|string',
             'gps_coordinates.longitude' => 'nullable|string',
         ]);
 
-        $preco = $request->input('rate_per_night.lowest') ??
-                 $request->input('extracted_price') ??
-                 $request->input('price') ??
-                 null;
-
-        if (is_string($preco)) {
-            $preco = preg_replace('/[^\d,\.]/', '', $preco); // Remove R$ e espaços
-            $preco = str_replace(',', '.', $preco); // Troca vírgula por ponto
-            $preco = (float) $preco;
+        // Sanitizar URLs: adicionar https:// se ausente
+        $link = $request->input('link');
+        if ($link && !preg_match('#^https?://#i', $link)) {
+            $link = 'https://' . ltrim($link, '/');
         }
-        $hotelData['preco'] = $preco;
+        $thumb = $request->input('thumbnail');
+        if ($thumb && !preg_match('#^https?://#i', $thumb)) {
+            $thumb = 'https://' . ltrim($thumb, '/');
+        }
+
+        $rawRate = $request->input('rate_per_night.lowest');
+        $rawExtracted = $request->input('extracted_price');
+        $rawPrice = $request->input('price');
+
+        $preco = $this->normalizePrice([$rawRate, $rawExtracted, $rawPrice]);
 
         $hotelData = [
             'nome_hotel' => $request->input('name'),
@@ -133,7 +134,7 @@ class HotelsController extends Controller
             'preco' => $preco,
             'data_check_in' => $request->input('check_in_date'),
             'data_check_out' => $request->input('check_out_date'),
-            'image_url' => $request->input('thumbnail'),
+            'image_url' => $thumb,
             'fk_id_viagem' => $id,
         ];
 
@@ -146,6 +147,7 @@ class HotelsController extends Controller
             ]);
             
             return response()->json([
+                'success' => true,
                 'message' => 'Hotel adicionado à viagem com sucesso.',
                 'hotel' => $hotelData
             ], 201);
@@ -157,8 +159,57 @@ class HotelsController extends Controller
             ]);
 
             return response()->json([
+                'success' => false,
                 'message' => 'Erro interno ao adicionar o hotel.'
             ], 500);
         }
+    }
+
+    /**
+     * Normaliza uma lista de possíveis campos de preço, retornando float ou null.
+     */
+    private function normalizePrice(array $candidates): ?float
+    {
+        foreach ($candidates as $val) {
+            if ($val === null || $val === '') continue;
+            $num = $this->parseBrazilianPrice($val);
+            if ($num !== null) return $num;
+        }
+        return null;
+    }
+
+    /**
+     * Converte string monetária variada em float (pt-BR ou en-US misto).
+     */
+    private function parseBrazilianPrice($value): ?float
+    {
+        if (is_numeric($value)) return (float)$value;
+        if (!is_string($value)) return null;
+        $trim = trim($value);
+        if ($trim === '') return null;
+        // Remove moeda e espaços (permite dígitos, vírgula e ponto)
+        $clean = preg_replace('/[^0-9,\.]/', '', $trim);
+        if ($clean === '' ) return null;
+        // BR: 2.641,50
+        if (preg_match('/^\d{1,3}(\.\d{3})*,\d{1,2}$/', $clean)) {
+            $clean = str_replace('.', '', $clean);
+            $clean = str_replace(',', '.', $clean);
+            return (float)$clean;
+        }
+        // BR simples: 2641,50
+        if (preg_match('/^\d+,\d{1,2}$/', $clean)) {
+            $clean = str_replace(',', '.', $clean);
+            return (float)$clean;
+        }
+        // EN: 2641.50 ou 2641
+        if (preg_match('/^\d+(\.\d+)?$/', $clean)) {
+            return (float)$clean;
+        }
+        // BR milhar sem decimais: 2.641
+        if (preg_match('/^\d{1,3}(\.\d{3})+$/', $clean)) {
+            $clean = str_replace('.', '', $clean);
+            return (float)$clean;
+        }
+        return null;
     }
 }

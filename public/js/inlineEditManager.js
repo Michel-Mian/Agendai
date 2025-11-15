@@ -289,7 +289,7 @@ class InlineEditManager {
                 // Fechar modo de edição
                 this.closeEditMode(type);
                 // Atualizar interface com novos valores
-                this.updateInterface(type, value);
+                this.updateInterface(type, value, data);
             } else {
                 this.showNotification(data.message || 'Erro ao salvar alterações', 'error');
             }
@@ -311,7 +311,7 @@ class InlineEditManager {
         displayDiv.classList.remove('hidden');
     }
 
-    updateInterface(type, value) {
+    updateInterface(type, value, serverData) {
         switch(type) {
             case 'nome':
                 // Atualizar o título do nome da viagem no header
@@ -413,7 +413,10 @@ class InlineEditManager {
                 }
 
                 // Recalcular e atualizar orçamento líquido
-                this.updateOrcamentoLiquido(value);
+                const liquido = serverData && serverData.data && typeof serverData.data.orcamento_liquido !== 'undefined'
+                    ? serverData.data.orcamento_liquido
+                    : value; // fallback
+                this.updateOrcamentoLiquido(liquido);
                 break;
         }
     }
@@ -465,18 +468,14 @@ class InlineEditManager {
     }
 
     updateOrcamentoLiquido(novoOrcamento) {
-        // Esta função pode ser expandida para recalcular o orçamento líquido
-        // Por ora, apenas atualiza o valor total, mas poderia fazer uma requisição
-        // para recalcular baseado nos gastos atuais de hotéis e voos
         const orcamentoLiquidoElement = document.querySelectorAll('.orcamento-display .text-gray-800.font-bold.text-xl')[1];
         if (orcamentoLiquidoElement) {
-            // Mantém o mesmo valor por enquanto - em uma implementação completa,
-            // faria uma requisição para recalcular baseado nos gastos
             const valorFormatado = new Intl.NumberFormat('pt-BR', {
                 style: 'currency',
                 currency: 'BRL'
             }).format(novoOrcamento);
             orcamentoLiquidoElement.textContent = valorFormatado;
+            this.highlightUpdatedElement(orcamentoLiquidoElement);
         }
     }
 

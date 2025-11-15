@@ -154,4 +154,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Expor dados da viagem atual (se fornecido pelo controller).
     // Não depender da sessão aqui para evitar associar o formulário a uma viagem anterior.
     window.VIAGEM_DATA = <?php echo isset($viagem) ? json_encode($viagem, 15, 512) : 'null'; ?>;
+
+    // API Key do Google Maps para uso no JavaScript
+    window.GOOGLE_MAPS_API_KEY = "{{ config('services.google_maps_api_key') }}";
 </script>

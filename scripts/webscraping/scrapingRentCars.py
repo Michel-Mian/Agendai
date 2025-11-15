@@ -450,6 +450,41 @@ def coletar_resultados(page):
         'veiculos': resultados
     }
 
+def fechar_popup_se_existir(page, timeout=5000):
+    """
+    Verifica se o pop-up (baseado em pop-up.html) está visível
+    e o fecha para não interferir no scraping.
+    """
+    # Seletor baseado na classe do botão de fechar (o 'x')
+    seletor_fechar = 'div.ins-element-close-button'
+    
+    try:
+        log_info("Verificando se há pop-up na página...")
+        
+        # Localiza o botão
+        botao_fechar = page.locator(seletor_fechar).first
+        
+        # Espera o botão ficar visível (com timeout curto)
+        # Se não aparecer em 'timeout' ms, ele lança um PlaywrightTimeout
+        log_info(f"Aguardando pop-up por até {timeout}ms...")
+        botao_fechar.wait_for(state='visible', timeout=timeout)
+        
+        # Se chegou aqui, o botão está visível
+        log_info("Pop-up detectado. Tentando fechar...")
+        botao_fechar.click()
+        
+        # Espera o pop-up desaparecer para garantir
+        botao_fechar.wait_for(state='hidden', timeout=3000)
+        log_info("Pop-up fechado com sucesso.")
+        
+    except PlaywrightTimeout:
+        # Isso é o esperado se o pop-up não aparecer
+        log_info("Nenhum pop-up encontrado (timeout). Continuando...")
+    except Exception as e:
+        # Captura outros erros (ex: clique falhou)
+        log_error(f"Erro inesperado ao tentar fechar o pop-up: {str(e)}")
+        # Continua mesmo assim
+
 
 def scrape_rentcars(params):
     """Função principal de scraping"""
@@ -482,6 +517,9 @@ def scrape_rentcars(params):
             page.goto("https://www.rentcars.com/pt-br/", timeout=60000)
             page.wait_for_selector('#searchInputDesk', timeout=15000)
             log_info("Site carregado!")
+
+            # Verifica e fecha o pop-up de ofertas antes de interagir
+            fechar_popup_se_existir(page, timeout=4500) # Dando 4,5s para o pop-up aparecer
             
             # 2. PREENCHER LOCAL DE RETIRADA
             log_info(f"Preenchendo local: {params['local_retirada']}")

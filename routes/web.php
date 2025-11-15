@@ -14,6 +14,7 @@ use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 use App\Http\Controllers\ViagemPdfController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\VehiclesController;
+use App\Http\Controllers\RouteCalculatorController;
 
 Route::get('/', function () {
     return view('home');
@@ -37,6 +38,7 @@ Route::middleware(['auth'])->group(function (){
     Route::post('/trip/salvar-seguro', [TripController::class, 'salvarSeguro']);
     Route::get('/formTrip', [FormController::class, 'create'])->name('createTrip');
     Route::post('/formTrip', [FormController::class, 'store'])->name('formTrip.store');
+    Route::post('/calcular-rota', [RouteCalculatorController::class, 'calcularRota'])->name('calcular.rota');
     Route::get('autocomplete-airports', [FlightsController::class, 'autocompleteAirports'])->name('autocomplete.airports');
     Route::get('/formTrip/flights', [FormController::class, 'searchAjax'])->name('formTrip.flights.ajax');
     Route::get('/formTrip/card-flight', [FormController::class, 'cardFlightAjax'])->name('formTrip.cardFlight.ajax');    

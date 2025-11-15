@@ -14,7 +14,7 @@
     
     <div class="p-6">
         @php
-            $veiculosSelecionados = isset($veiculos) ? $veiculos->where('is_selected', true) : collect();
+            $veiculosSelecionados = $veiculos ?? collect();
         @endphp
 
         @if($veiculosSelecionados->count() > 0)

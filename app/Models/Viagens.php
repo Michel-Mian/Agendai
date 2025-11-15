@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Carbon\Carbon;
 
 class Viagens extends Model
 {
@@ -19,6 +21,11 @@ class Viagens extends Model
         'data_final_viagem',
         'orcamento_viagem',
         'fk_id_usuario'
+    ];
+    
+    protected $casts = [
+        'data_inicio_viagem' => 'date',
+        'data_final_viagem' => 'date'
     ];
     
     // Relação com  usuário (User)
@@ -57,9 +64,10 @@ class Viagens extends Model
     }
 
     // Relação com os seguros (Seguros) - através dos viajantes
-    public function seguros()
+    // Agora retorna TODOS os seguros ligados diretamente à viagem via fk_id_viagem
+    public function seguros(): HasMany
     {
-        return $this->hasManyThrough(Seguros::class, Viajantes::class, 'fk_id_viagem', 'fk_id_viajante', 'pk_id_viagem', 'pk_id_viajante');
+        return $this->hasMany(Seguros::class, 'fk_id_viagem', 'pk_id_viagem');
     }
 
     public function destinos(): HasMany
@@ -71,5 +79,43 @@ class Viagens extends Model
     public function veiculos(): HasMany
     {
         return $this->hasMany(Veiculos::class, 'fk_id_viagem', 'pk_id_viagem');
+    }
+
+    // Relacionamento para obter o seguro marcado como selecionado para a viagem
+    public function seguroSelecionado(): HasOne
+    {
+        // Usa a relação direta pela chave fk_id_viagem e filtra por is_selected
+        return $this->hasOne(Seguros::class, 'fk_id_viagem', 'pk_id_viagem')
+                    ->where('is_selected', true);
+    }
+
+    // Relacionamento para obter o veículo marcado como selecionado para a viagem
+    public function veiculoSelecionado(): HasOne
+    {
+        return $this->hasOne(Veiculos::class, 'fk_id_viagem', 'pk_id_viagem')
+                    ->where('is_selected', true)
+                    ->latest('pk_id_veiculo');
+    }
+
+    // Relacionamento com dados de viagem de carro próprio (1:1)
+    public function viagemCarro(): HasOne
+    {
+        return $this->hasOne(ViagemCarro::class, 'fk_id_viagem', 'pk_id_viagem');
+    }
+
+    // Atributo calculado: status da viagem (concluida, andamento, proxima)
+    public function getStatusAttribute(): string
+    {
+        $hoje = Carbon::today();
+        $inicio = Carbon::parse($this->data_inicio_viagem);
+        $fim = Carbon::parse($this->data_final_viagem);
+
+        if ($fim->lt($hoje)) {
+            return 'concluida';
+        }
+        if ($inicio->gt($hoje)) {
+            return 'planejada';
+        }
+        return 'andamento';
     }
 }

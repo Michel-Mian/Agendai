@@ -6,3 +6,4 @@ import './dashBoard';
 import './formTrip';
 // import './explore'; // Temporariamente desabilitado para evitar conflito com initMap
 import './filter';
+import './hotels';
