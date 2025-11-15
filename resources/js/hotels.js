@@ -733,27 +733,14 @@ const hotelJsonString = JSON.stringify(hotel).replace(/"/g, '&quot;');
       return
     }
 
-    // Filtrar viagens cujo intervalo engloba o período da hospedagem
-    const inRange = (t) => {
-      if (!t || !t.data_inicio_viagem || !t.data_final_viagem) return false
-      try {
-        const ti = new Date(t.data_inicio_viagem + 'T00:00:00')
-        const tf = new Date(t.data_final_viagem + 'T23:59:59')
-        const ci = new Date(checkInDate + 'T00:00:00')
-        const co = new Date(checkOutDate + 'T23:59:59')
-        return ti <= ci && tf >= co
-      } catch {
-        return false
-      }
-    }
-    const matchingTrips = (trips || []).filter(inRange)
+    const allTrips = trips || []
 
-    if (matchingTrips.length === 0) {
-  tripSelect.innerHTML = `<option value="" disabled>Nenhuma viagem cobre o período ${formatDateBr(checkInDate)} → ${formatDateBr(checkOutDate)}</option>`
+    if (allTrips.length === 0) {
+      tripSelect.innerHTML = `<option value="" disabled>Nenhuma viagem disponível</option>`
       confirmTripBtn.disabled = true
     } else {
       confirmTripBtn.disabled = false
-      tripSelect.innerHTML = matchingTrips
+      tripSelect.innerHTML = allTrips
         .map((trip) => {
           const nome = trip.nome_viagem || `Viagem #${trip.pk_id_viagem}`
           const inicio = formatDateBr(trip.data_inicio_viagem)

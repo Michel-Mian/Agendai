@@ -23,7 +23,7 @@ return new class extends Migration
             $table->decimal('combustivel_estimado_litros', 10, 2)->nullable()->after('pedagio_estimado');
             $table->decimal('custo_combustivel_estimado', 10, 2)->nullable()->after('combustivel_estimado_litros');
             $table->decimal('preco_combustivel_litro', 10, 2)->nullable()->after('custo_combustivel_estimado');
-            $table->text('rota_detalhada')->nullable()->after('preco_combustivel_litro'); // JSON com informações da rota
+            $table->longtext('rota_detalhada')->nullable()->after('preco_combustivel_litro'); // JSON com informações da rota
         });
     }
 

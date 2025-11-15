@@ -119,13 +119,13 @@
         </div>
 
         <!-- Campos hidden para enviar os dados -->
-        <input type="hidden" name="distancia_total_km" id="distancia_total_km">
-        <input type="hidden" name="combustivel_litros" id="combustivel_litros">
-        <input type="hidden" name="custo_combustivel" id="custo_combustivel">
-        <input type="hidden" name="pedagio_estimado" id="pedagio_estimado">
-        <input type="hidden" name="pedagio_oficial" id="pedagio_oficial">
-        <input type="hidden" name="duracao_segundos" id="duracao_segundos">
-        <input type="hidden" name="rota_detalhada" id="rota_detalhada">
+        <input type="hidden" name="distancia_total_km" id="distancia_total_km" value="">
+        <input type="hidden" name="combustivel_litros" id="combustivel_litros" value="">
+        <input type="hidden" name="custo_combustivel" id="custo_combustivel" value="">
+        <input type="hidden" name="pedagio_estimado" id="pedagio_estimado" value="">
+        <input type="hidden" name="pedagio_oficial" id="pedagio_oficial" value="0">
+        <input type="hidden" name="duracao_segundos" id="duracao_segundos" value="">
+        <input type="hidden" name="rota_detalhada" id="rota_detalhada" value="">
     </div>
 
     <!-- Seção de informações importantes -->

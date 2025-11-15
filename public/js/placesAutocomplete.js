@@ -216,8 +216,9 @@ window.PlacesAutocomplete = class {
             this.autocompleteList.appendChild(item);
         });
         
-        // Inserir após o input
-        this.input.parentNode.appendChild(this.autocompleteList);
+        // Inserir no container pai do input
+        const container = this.input.closest('.relative') || this.input.parentNode;
+        container.appendChild(this.autocompleteList);
         this.selectedIndex = -1;
     }
     
@@ -237,7 +238,8 @@ window.PlacesAutocomplete = class {
             </div>
         `;
         
-        this.input.parentNode.appendChild(this.autocompleteList);
+        const container = this.input.closest('.relative') || this.input.parentNode;
+        container.appendChild(this.autocompleteList);
     }
     
     /**
@@ -305,7 +307,8 @@ window.PlacesAutocomplete = class {
         errorDiv.id = `${this.inputId}_error`;
         errorDiv.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i>${this.options.errorMessage}`;
         
-        this.input.parentNode.appendChild(errorDiv);
+        const container = this.input.closest('.relative') || this.input.parentNode;
+        container.appendChild(errorDiv);
     }
     
     /**

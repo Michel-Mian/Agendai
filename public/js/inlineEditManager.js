@@ -507,4 +507,12 @@ window.initInlineEditMap = function() {
     if (window.inlineEditManager) {
         window.inlineEditManager.initPlacesAutocomplete();
     }
+    
+    // Inicializar mapa de carro próprio se a função existir
+    setTimeout(function() {
+        if (typeof initCarroProprioMap === 'function') {
+            console.log('🚗 Inicializando mapa de carro próprio...');
+            initCarroProprioMap();
+        }
+    }, 500);
 };

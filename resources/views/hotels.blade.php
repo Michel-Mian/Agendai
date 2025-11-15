@@ -1,6 +1,9 @@
 @extends('index')
 
 @section('content')
+<!-- CSS do Autocomplete -->
+<link rel="stylesheet" href="{{ asset('css/places-autocomplete.css') }}">
+
 <style>
     #loader { display: none !important; }
 </style>
@@ -28,7 +31,7 @@
                 <form id="hotel-search-form" class="flex flex-col gap-6 w-full">
                     @csrf
                     <div class="flex flex-col gap-6">
-                        <div class="flex flex-col gap-2">
+                        <div class="flex flex-col gap-2 relative">
                             <label for="hotel-query" class="text-base text-gray-700 font-semibold">Destino ou Nome do Hotel</label>
                             <input type="text" id="hotel-query" class="px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-base text-gray-700 placeholder-gray-400 transition" placeholder="Ex: Rio de Janeiro" required>
                         </div>
@@ -97,6 +100,13 @@
         window.userTrips = @json($trips ?? []);
     </script>
     <script src="/js/toast.js"></script>
+    
+    <!-- Scripts do Autocomplete -->
+    <script src="{{ asset('js/placesAutocomplete.js') }}"></script>
+    <script src="{{ asset('js/hotels-autocomplete.js') }}"></script>
+    
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places&callback=initHotelsMap" async defer></script>
 </div>
 
 <div id="trip-selection-modal" class="fixed inset-0 backdrop-blur-md overflow-y-auto h-full w-full flex items-center justify-center z-50 hidden" role="dialog" aria-modal="true">
@@ -105,13 +115,13 @@
             <i class="fa-solid fa-xmark text-xl"></i>
         </button>
         <h3 class="text-xl font-semibold text-gray-900 mb-2">Adicionar hotel a uma viagem</h3>
-    <p id="trip-modal-hint" class="text-sm text-gray-600 mb-5">Selecione uma viagem cujo período cubra as datas da sua hospedagem.</p>
+    <p id="trip-modal-hint" class="text-sm text-gray-600 mb-5">Selecione a viagem na qual deseja adicionar este hotel.</p>
 
         <div class="mb-5">
             <label for="trip-select" class="block text-sm font-medium text-gray-700 mb-2">Escolha uma viagem</label>
             <select id="trip-select" class="h-11 w-full rounded-lg border border-gray-300 bg-white text-gray-800 pl-3 pr-10 focus:border-pink-500 focus:ring-pink-500 transition">
             </select>
-            <p id="trip-select-helper" class="mt-2 text-xs text-gray-500">Listamos viagens cujo intervalo de datas abrange o seu check-in e check-out.</p>
+            <p id="trip-select-helper" class="mt-2 text-xs text-gray-500">Você pode adicionar o hotel a qualquer uma das suas viagens criadas.</p>
         </div>
 
         <div class="flex justify-end gap-3">

@@ -7,9 +7,12 @@
 /* Container da lista de autocomplete */
 .autocomplete-list {
     position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
     z-index: 1000;
     width: 100%;
-    background: white;
+    background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -39,6 +42,8 @@
     transition: background-color 0.15s ease, transform 0.1s ease;
     display: flex;
     align-items: center;
+    background-color: #ffffff;
+    color: #1f2937;
 }
 
 /* Último item sem borda */
@@ -197,30 +202,53 @@
     outline-offset: -2px;
 }
 
-/* Modo escuro (se necessário no futuro) */
-@media (prefers-color-scheme: dark) {
-    .autocomplete-list {
-        background: #1f2937;
-        border-color: #374151;
-    }
-    
-    .autocomplete-item {
-        border-bottom-color: #374151;
-    }
-    
-    .autocomplete-item:hover {
-        background-color: #374151;
-    }
-    
-    .autocomplete-item.selected {
-        background-color: #4b5563;
-    }
-    
-    .autocomplete-item .font-medium {
-        color: #f9fafb;
-    }
-    
-    .autocomplete-item .text-sm {
-        color: #d1d5db;
-    }
+/* Modo escuro usando classe .night-mode */
+.night-mode .autocomplete-list {
+    background: #161b22 !important;
+    border-color: #30363d !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3) !important;
 }
+
+.night-mode .autocomplete-item {
+    border-bottom-color: #30363d !important;
+    background-color: #161b22 !important;
+    color: #f0f6fc !important;
+}
+
+.night-mode .autocomplete-item:hover {
+    background-color: #21262d !important;
+}
+
+.night-mode .autocomplete-item.selected {
+    background-color: #30363d !important;
+}
+
+.night-mode .autocomplete-item .font-medium {
+    color: #f0f6fc !important;
+}
+
+.night-mode .autocomplete-item .text-sm {
+    color: #7d8590 !important;
+}
+
+.night-mode .autocomplete-item.text-center {
+    background-color: #161b22 !important;
+    color: #7d8590 !important;
+}
+
+.night-mode .autocomplete-item.text-center:hover {
+    background-color: #161b22 !important;
+}
+
+.night-mode .autocomplete-list::-webkit-scrollbar-track {
+    background: #0d1117 !important;
+}
+
+.night-mode .autocomplete-list::-webkit-scrollbar-thumb {
+    background: #30363d !important;
+}
+
+.night-mode .autocomplete-list::-webkit-scrollbar-thumb:hover {
+    background: #6e7681 !important;
+}
+

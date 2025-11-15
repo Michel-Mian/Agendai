@@ -9,7 +9,7 @@
                 <h3 class="text-2xl font-bold text-gray-900">Selecionar Viagem</h3>
             </div>
             <p id="vehicle-trip-modal-hint" class="text-sm text-gray-600 mb-5">
-                Selecione uma viagem cujo período cubra as datas da sua locação (retirada até devolução).
+                Selecione uma viagem para associar este veículo.
             </p>
 
             <div class="mb-6">
@@ -23,7 +23,7 @@
                     <option value="">Carregando...</option>
                 </select>
                 <p id="vehicle-trip-empty" class="hidden mt-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2">
-                    Nenhuma viagem cobre o período selecionado. Ajuste as datas ou crie uma nova viagem.
+                    Nenhuma viagem cadastrada. Crie uma nova viagem primeiro.
                 </p>
             </div>
 
