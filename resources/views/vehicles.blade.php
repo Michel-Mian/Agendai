@@ -63,6 +63,7 @@
     // Configuração global para paginação de veículos (pode ser lida por outros scripts)
     window.VEHICLES_PAGE_SIZE = 6;
 </script>
+<script src="/js/toast.js"></script>
 
 <!-- Scripts do Autocomplete -->
 <script src="{{ asset('js/placesAutocomplete.js') }}"></script>

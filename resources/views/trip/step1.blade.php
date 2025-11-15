@@ -44,7 +44,8 @@
                                class="input destino-data-inicio" 
                                name="destino_data_inicio[]" 
                                id="destino_data_inicio_0"
-                               data-destino-index="0">
+                               data-destino-index="0"
+                               min="{{ date('Y-m-d') }}">
                     </div>
                     <div class="flex-1">
                         <label class="block text-gray-600 font-semibold mb-2">Data de fim<label class="text-red-600 text-base font-thin">*</label></label>
@@ -52,7 +53,8 @@
                                class="input destino-data-fim" 
                                name="destino_data_fim[]" 
                                id="destino_data_fim_0"
-                               data-destino-index="0">
+                               data-destino-index="0"
+                               min="{{ date('Y-m-d') }}">
                     </div>
                 </div>
             </div>
@@ -503,6 +505,52 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+    
+    // Validação para o primeiro destino (index 0)
+    const dataInicioInput = document.getElementById('destino_data_inicio_0');
+    const dataFimInput = document.getElementById('destino_data_fim_0');
+    if (dataInicioInput && dataFimInput) {
+        // Sempre garantir min da data de início como hoje
+        const today = new Date().toISOString().split('T')[0];
+        dataInicioInput.setAttribute('min', today);
+
+        // Inicializa min da data de fim como hoje
+        dataFimInput.setAttribute('min', today);
+
+        // Atualiza min da data de fim ao mudar data de início
+        dataInicioInput.addEventListener('change', function() {
+            dataFimInput.setAttribute('min', this.value);
+            // Se data de fim for menor que início, limpa e mostra erro
+            if (dataFimInput.value && dataFimInput.value < this.value) {
+                dataFimInput.value = '';
+                dataFimInput.style.borderColor = '#ef4444';
+                window.showErrorMessage && window.showErrorMessage(dataFimInput, 'A data de fim não pode ser anterior à data de início');
+                setTimeout(() => {
+                    dataFimInput.style.borderColor = '';
+                    window.hideErrorMessage && window.hideErrorMessage(dataFimInput);
+                }, 2500);
+            }
+        });
+
+        // Garante que data de fim nunca seja menor que início
+        dataFimInput.addEventListener('change', function() {
+            if (dataInicioInput.value && this.value < dataInicioInput.value) {
+                this.value = '';
+                this.style.borderColor = '#ef4444';
+                window.showErrorMessage && window.showErrorMessage(this, 'A data de fim não pode ser anterior à data de início');
+                setTimeout(() => {
+                    this.style.borderColor = '';
+                    window.hideErrorMessage && window.hideErrorMessage(this);
+                }, 2500);
+            }
+        });
+
+        // Sempre que o campo de fim receber foco, atualiza o min para garantir
+        dataFimInput.addEventListener('focus', function() {
+            const minDate = dataInicioInput.value || today;
+            dataFimInput.setAttribute('min', minDate);
+        });
+    }
 });
 </script>
 
@@ -791,8 +839,6 @@ window.initializeDestinationAutocomplete = function(index) {
             closeAutocompleteList();
         }
     });
-    
-
 };
 
 // Expor funções de erro globalmente
@@ -1029,8 +1075,6 @@ window.initializeOriginAutocomplete = function() {
             closeAutocompleteList();
         }
     });
-    
-
 };
 
 function initStepFormMap() {

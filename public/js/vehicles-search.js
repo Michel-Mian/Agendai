@@ -611,15 +611,35 @@
         // Armazenar dados do veículo e índice para uso posterior
         window.selectedVehicleData = veiculoData;
         window.selectedVehicleIndex = index;
-        
+
+        // Obter período de locação a partir do formulário
+        const dataRetiradaStr = document.getElementById('data_retirada')?.value;
+        const dataDevolucaoStr = document.getElementById('data_devolucao')?.value;
+
+        if (!dataRetiradaStr || !dataDevolucaoStr) {
+            alert('Informe as datas de retirada e devolução para selecionar a viagem.');
+            return;
+        }
+
+        const rentalStart = parseDateOnly(dataRetiradaStr);
+        const rentalEnd = parseDateOnly(dataDevolucaoStr);
+
+        if (rentalEnd < rentalStart) {
+            alert('A data de devolução não pode ser anterior à data de retirada.');
+            return;
+        }
+
+        const rentalDays = computeDaysInclusive(rentalStart, rentalEnd);
+        window.vehicleRentalPeriod = { start: rentalStart, end: rentalEnd, days: rentalDays };
+
         // Buscar viagens do usuário
-        fetchUserTrips();
+        fetchUserTrips(window.vehicleRentalPeriod);
     };
 
     /**
      * Busca viagens do usuário
      */
-    function fetchUserTrips() {
+    function fetchUserTrips(rentalPeriod) {
         fetch(window.APP_ROUTES.getUserTrips, {
             method: 'GET',
             headers: {
@@ -630,7 +650,26 @@
         .then(response => response.json())
         .then(data => {
             if (data.success && data.viagens && data.viagens.length > 0) {
-                populateTripSelect(data.viagens);
+                // Guardar viagens disponíveis
+                window.availableTrips = data.viagens;
+
+                // Filtrar viagens cujo período cobre toda a locação (inicio <= retirada && fim >= devolução)
+                const eligibleTrips = (data.viagens || []).filter(v => {
+                    const inicio = parseDateOnly(v.data_inicio_viagem);
+                    const fim = parseDateOnly(v.data_final_viagem);
+                    return inicio <= rentalPeriod.start && fim >= rentalPeriod.end;
+                });
+
+                populateTripSelect(eligibleTrips);
+                const confirmBtn = document.getElementById('confirm-vehicle-trip-btn');
+                const emptyMsg = document.getElementById('vehicle-trip-empty');
+                if (eligibleTrips.length === 0) {
+                    if (confirmBtn) confirmBtn.disabled = true;
+                    if (emptyMsg) emptyMsg.classList.remove('hidden');
+                } else {
+                    if (confirmBtn) confirmBtn.disabled = false;
+                    if (emptyMsg) emptyMsg.classList.add('hidden');
+                }
                 openVehicleTripModal();
             } else {
                 alert('Uma viagem deve estar criada para se selecionar um carro');
@@ -674,7 +713,27 @@
      */
     window.openVehicleTripModal = function() {
         const modal = document.getElementById('vehicle-trip-modal');
+        const panel = modal?.querySelector('.rounded-2xl');
         modal.classList.remove('hidden');
+        // Clique no backdrop fecha
+        if (modal && !modal._backdropBound) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeVehicleTripModal();
+                }
+            });
+            modal._backdropBound = true;
+        }
+        // Animação simples de entrada
+        if (panel) {
+            panel.style.opacity = '0';
+            panel.style.transform = 'scale(0.98)';
+            requestAnimationFrame(() => {
+                panel.style.transition = 'opacity 150ms ease, transform 150ms ease';
+                panel.style.opacity = '1';
+                panel.style.transform = 'scale(1)';
+            });
+        }
     };
 
     /**
@@ -688,7 +747,7 @@
     /**
      * Confirma a seleção do veículo
      */
-    window.confirmVehicleSelection = function() {
+    window.confirmVehicleSelection = async function() {
         const select = document.getElementById('trip-select');
         const tripId = select.value;
         
@@ -699,6 +758,46 @@
 
         const veiculoData = window.selectedVehicleData;
         const index = window.selectedVehicleIndex;
+
+        // Checagem de orçamento (>60%) com base na diária x dias da viagem (mesma lógica dos hotéis)
+        try {
+            const trips = window.availableTrips || [];
+            const selectedTrip = trips.find(t => String(t.pk_id_viagem) === String(tripId));
+            const rental = window.vehicleRentalPeriod;
+
+            if (selectedTrip && selectedTrip.orcamento_viagem) {
+                const tripStart = parseDateOnly(selectedTrip.data_inicio_viagem);
+                const tripEnd = parseDateOnly(selectedTrip.data_final_viagem);
+                const tripDays = computeDaysInclusive(tripStart, tripEnd);
+
+                const daily = (veiculoData?.preco?.diaria) ? Number(veiculoData.preco.diaria) : undefined;
+                const perDay = daily && !Number.isNaN(daily)
+                    ? daily
+                    : (veiculoData?.preco?.total && rental?.days ? Number(veiculoData.preco.total) / rental.days : undefined);
+
+                const budget = Number(selectedTrip.orcamento_viagem);
+                if (perDay && budget) {
+                    const estimated = perDay * tripDays;
+                    const threshold = budget * 0.6;
+                    if (estimated > threshold) {
+                        if (window.Toast && Toast.confirm) {
+                            const ok = await Toast.confirm(
+                                `Aviso: o custo estimado do veículo (R$ ${formatPrice(estimated)}) ultrapassa 60% do orçamento (R$ ${formatPrice(threshold)}). Deseja continuar?`,
+                                { confirmText: 'Continuar', cancelText: 'Cancelar' }
+                            );
+                            if (!ok) return;
+                        } else {
+                            const proceed = confirm(
+                                `Aviso: o custo estimado do veículo (R$ ${formatPrice(estimated)}) ultrapassa 60% do orçamento (R$ ${formatPrice(threshold)}). Deseja continuar?`
+                            );
+                            if (!proceed) return;
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Falha na checagem de orçamento do veículo:', e);
+        }
 
         fetch(window.APP_ROUTES.saveVehicle, {
             method: 'POST',
@@ -715,7 +814,8 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Veículo salvo com sucesso!');
+                if (window.Toast) Toast.success('Veículo salvo com sucesso!');
+                else alert('Veículo salvo com sucesso!');
                 closeVehicleTripModal();
                 
                 // Marcar como selecionado visualmente
@@ -724,14 +824,27 @@
                     cards[index].classList.add('ring-4', 'ring-green-500');
                 }
             } else {
-                alert('Erro ao salvar veículo: ' + (data.message || 'Erro desconhecido'));
+                if (window.Toast) Toast.error('Erro ao salvar veículo');
+                else alert('Erro ao salvar veículo: ' + (data.message || 'Erro desconhecido'));
             }
         })
         .catch(error => {
             console.error('Erro ao salvar:', error);
-            alert('Erro ao salvar veículo');
+            if (window.Toast) Toast.error('Erro ao salvar veículo');
+            else alert('Erro ao salvar veículo');
         });
     };
+
+    // Helpers de datas
+    function parseDateOnly(str) {
+        // Garante comparação por data (timezone-safe)
+        return new Date(`${str}T00:00:00`);
+    }
+
+    function computeDaysInclusive(d1, d2) {
+        const ms = Math.abs(d2 - d1);
+        return Math.floor(ms / (1000 * 60 * 60 * 24)) + 1;
+    }
 
 
 
