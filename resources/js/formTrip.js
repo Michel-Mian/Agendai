@@ -1805,6 +1805,18 @@ document.addEventListener("DOMContentLoaded", function() {
 
         if (!resultado || !resultado.success) {
             carroProprioCalculos.classList.add('hidden');
+            
+            const camposParaLimpar = ['distancia_total_km', 'combustivel_litros', 'custo_combustivel', 
+                                      'pedagio_estimado', 'duracao_segundos', 'rota_detalhada'];
+            camposParaLimpar.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) field.value = '';
+            });
+            
+            // Garantir que pedagio_oficial seja 0 (false)
+            const pedagioOficialField = document.getElementById('pedagio_oficial');
+            if (pedagioOficialField) pedagioOficialField.value = '0';
+            
             return;
         }
 
