@@ -1,6 +1,9 @@
 @extends('index')
 
 @section('content')
+<!-- CSS do Autocomplete -->
+<link rel="stylesheet" href="{{ asset('css/places-autocomplete.css') }}">
+
 <style>
     #loader { display: none !important; }
 </style>
@@ -28,7 +31,7 @@
                 <form id="hotel-search-form" class="flex flex-col gap-6 w-full">
                     @csrf
                     <div class="flex flex-col gap-6">
-                        <div class="flex flex-col gap-2">
+                        <div class="flex flex-col gap-2 relative">
                             <label for="hotel-query" class="text-base text-gray-700 font-semibold">Destino ou Nome do Hotel</label>
                             <input type="text" id="hotel-query" class="px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-base text-gray-700 placeholder-gray-400 transition" placeholder="Ex: Rio de Janeiro" required>
                         </div>
@@ -97,6 +100,13 @@
         window.userTrips = @json($trips ?? []);
     </script>
     <script src="/js/toast.js"></script>
+    
+    <!-- Scripts do Autocomplete -->
+    <script src="{{ asset('js/placesAutocomplete.js') }}"></script>
+    <script src="{{ asset('js/hotels-autocomplete.js') }}"></script>
+    
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps_api_key')}}&libraries=places&callback=initHotelsMap" async defer></script>
 </div>
 
 <div id="trip-selection-modal" class="fixed inset-0 backdrop-blur-md overflow-y-auto h-full w-full flex items-center justify-center z-50 hidden" role="dialog" aria-modal="true">
