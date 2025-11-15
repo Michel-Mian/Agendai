@@ -115,13 +115,13 @@
             <i class="fa-solid fa-xmark text-xl"></i>
         </button>
         <h3 class="text-xl font-semibold text-gray-900 mb-2">Adicionar hotel a uma viagem</h3>
-    <p id="trip-modal-hint" class="text-sm text-gray-600 mb-5">Selecione uma viagem cujo período cubra as datas da sua hospedagem.</p>
+    <p id="trip-modal-hint" class="text-sm text-gray-600 mb-5">Selecione a viagem na qual deseja adicionar este hotel.</p>
 
         <div class="mb-5">
             <label for="trip-select" class="block text-sm font-medium text-gray-700 mb-2">Escolha uma viagem</label>
             <select id="trip-select" class="h-11 w-full rounded-lg border border-gray-300 bg-white text-gray-800 pl-3 pr-10 focus:border-pink-500 focus:ring-pink-500 transition">
             </select>
-            <p id="trip-select-helper" class="mt-2 text-xs text-gray-500">Listamos viagens cujo intervalo de datas abrange o seu check-in e check-out.</p>
+            <p id="trip-select-helper" class="mt-2 text-xs text-gray-500">Você pode adicionar o hotel a qualquer uma das suas viagens criadas.</p>
         </div>
 
         <div class="flex justify-end gap-3">
