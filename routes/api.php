@@ -1,0 +1,49 @@
+<?php
+
+use App\Http\Controllers\Api\AuthController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashBoardController;
+use App\Http\Controllers\ViagensController;
+use App\Http\Controllers\Api\PontosInteresseController;
+use App\Http\Controllers\Api\ViagemCarroController;
+use App\Http\Controllers\Api\AiChatMessageController;
+
+// Rotas de autenticação (não protegidas)
+Route::prefix('auth')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/debug', [AuthController::class, 'debug']); // Debug endpoint
+    
+    // Rotas protegidas por autenticação
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/validate', [AuthController::class, 'validate']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+    });
+});
+
+// Rota protegida para obter dados do usuário autenticado
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
+Route::middleware('auth:sanctum')->get('/dashboard', [DashBoardController::class, 'dashboard']);
+// TEMPORÁRIO: Rota sem autenticação para teste - remova quando configurar auth
+Route::get('/viagens/{id}', [ViagensController::class, 'showApi']);
+// Lista todos os seguros da viagem
+Route::get('/viagens/{id}/seguros', [ViagensController::class, 'segurosByViagem']);
+
+// Rota protegida para atualizar status de ponto de interesse
+Route::middleware('auth:sanctum')->put('/pontos-interesse/{id}/toggle-completed', [PontosInteresseController::class, 'toggleCompleted']);
+
+// Rota para buscar viagem de carro por ID da viagem
+Route::get('/viagens/{id}/viagens-carro', [ViagemCarroController::class, 'getByViagem']);
+
+// Rotas para mensagens da IA (histórico de conversas)
+Route::middleware('auth:sanctum')->prefix('ai')->group(function () {
+    Route::get('/viagens/{viagem_id}/messages', [AiChatMessageController::class, 'index']);
+    Route::post('/viagens/{viagem_id}/messages', [AiChatMessageController::class, 'store']);
+    Route::get('/messages/{id}', [AiChatMessageController::class, 'show']);
+    Route::delete('/messages/{id}', [AiChatMessageController::class, 'destroy']);
+    // Endpoint para o mobile enviar mensagem e receber resposta da IA
+    Route::post('/send', [\App\Http\Controllers\Api\AiChatProxyController::class, 'send']);
+});

@@ -1,0 +1,100 @@
+/* Sidebar aberta */
+#sidebar {
+    width: 250px;
+    transition: width 0.4s ease;
+    overflow: hidden;
+}
+
+/* Sidebar fechada */
+#sidebar.collapsed {
+    width: 70px;
+}
+
+/* Itens internos da sidebar */
+#sidebar .nav-text,
+#sidebar #logo-text,
+#sidebar .profile-info,
+#sidebar .profile-chevron {
+    opacity: 1;
+    transform: translateX(0);
+    transition: opacity 0.4s cubic-bezier(0.25, 1, 0.3, 1),
+                transform 0.4s cubic-bezier(0.25, 1, 0.3, 1);
+    will-change: opacity, transform;
+}
+
+/* Itens escondidos ao recolher */
+.sidebar-collapsed .nav-text,
+.sidebar-collapsed #logo-text,
+.sidebar-collapsed .profile-info,
+.sidebar-collapsed .profile-chevron {
+    opacity: 0;
+    transform: translateX(-15px);
+    pointer-events: none;
+}
+
+/* Delay na entrada quando está abrindo */
+.sidebar-opening .nav-text,
+.sidebar-opening #logo-text,
+.sidebar-opening .profile-info,
+.sidebar-opening .profile-chevron {
+    transition-delay: 0.35s; /* Começam a aparecer depois da largura abrir */
+}
+
+/* Delay na saída quando está fechando */
+.sidebar-closing .nav-text,
+.sidebar-closing #logo-text,
+.sidebar-closing .profile-info,
+.sidebar-closing .profile-chevron {
+    transition-delay: 0s; /* Some imediatamente antes da largura fechar */
+}
+
+/* Esconde o texto no modo fechado */
+#sidebar.collapsed .nav-text,
+#sidebar.collapsed .profile-info,
+#sidebar.collapsed .profile-chevron {
+    display: none;
+}
+
+/* Centraliza ícones no modo fechado */
+#sidebar.collapsed a {
+    justify-content: center;
+}
+
+#sidebar.collapsed #sidebar-header {
+    justify-content: center;
+}
+
+#sidebar.collapsed #toggle-sidebar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 64px;
+    padding: 0;
+    margin: 0;
+    background: none;
+    border: none;
+}
+
+#sidebar.collapsed #toggle-icon {
+    font-size: 1.5rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateX(-17px); /* ajuste o valor conforme necessário */
+}
+
+/* Parte do seu CSS que já resolve a centralização */
+#sidebar.collapsed .nav-text,
+#sidebar.collapsed .profile-info,
+#sidebar.collapsed .profile-chevron {
+    display: none; /* ESSENCIAL: Oculta o texto para centralizar o ícone */
+}
+
+/* Esta regra irá centralizar o ícone restante */
+#sidebar.collapsed a {
+    justify-content: center;
+}
+
+

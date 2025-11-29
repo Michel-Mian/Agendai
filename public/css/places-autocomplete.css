@@ -1,0 +1,254 @@
+/**
+ * Estilos para Autocomplete de Lugares (Google Places API)
+ * @author AgendAI Development Team
+ * @version 1.0.0
+ */
+
+/* Container da lista de autocomplete */
+.autocomplete-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 0.25rem;
+    animation: fadeInDown 0.2s ease-in-out;
+}
+
+/* Animação de entrada */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Item individual da lista */
+.autocomplete-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    background-color: #ffffff;
+    color: #1f2937;
+}
+
+/* Último item sem borda */
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+/* Hover no item */
+.autocomplete-item:hover {
+    background-color: #eff6ff;
+    transform: translateX(2px);
+}
+
+/* Item selecionado (navegação por teclado) */
+.autocomplete-item.selected {
+    background-color: #dbeafe;
+}
+
+/* Item ativo (ao clicar) */
+.autocomplete-item:active {
+    background-color: #bfdbfe;
+}
+
+/* Scrollbar customizada para a lista */
+.autocomplete-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.autocomplete-list::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.autocomplete-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.autocomplete-list::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Input com valor válido */
+.input-valid {
+    border-color: #10b981 !important;
+    background-color: #f0fdf4;
+}
+
+.input-valid:focus {
+    border-color: #10b981 !important;
+    ring-color: #10b981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Input com valor inválido */
+.input-invalid {
+    border-color: #ef4444 !important;
+    background-color: #fef2f2;
+}
+
+.input-invalid:focus {
+    border-color: #ef4444 !important;
+    ring-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Mensagem de erro */
+.error-message {
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    color: #ef4444;
+    margin-top: 0.25rem;
+    animation: shake 0.3s ease-in-out;
+}
+
+/* Animação de shake para erro */
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+/* Ícones dentro dos itens */
+.autocomplete-item i {
+    flex-shrink: 0;
+}
+
+/* Texto dos itens */
+.autocomplete-item .font-medium {
+    color: #1f2937;
+}
+
+.autocomplete-item .text-sm {
+    color: #6b7280;
+}
+
+/* Quando não há resultados */
+.autocomplete-item.text-center {
+    justify-content: center;
+    cursor: default;
+    background-color: #fafafa;
+}
+
+.autocomplete-item.text-center:hover {
+    background-color: #fafafa;
+    transform: none;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .autocomplete-list {
+        max-height: 200px;
+    }
+    
+    .autocomplete-item {
+        padding: 0.625rem 0.75rem;
+        font-size: 0.875rem;
+    }
+}
+
+/* Estados de loading (opcional para futuras implementações) */
+.autocomplete-loading {
+    padding: 1rem;
+    text-align: center;
+    color: #6b7280;
+}
+
+.autocomplete-loading::after {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #e5e7eb;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin-left: 0.5rem;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Acessibilidade */
+.autocomplete-item:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
+}
+
+/* Modo escuro usando classe .night-mode */
+.night-mode .autocomplete-list {
+    background: #161b22 !important;
+    border-color: #30363d !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3) !important;
+}
+
+.night-mode .autocomplete-item {
+    border-bottom-color: #30363d !important;
+    background-color: #161b22 !important;
+    color: #f0f6fc !important;
+}
+
+.night-mode .autocomplete-item:hover {
+    background-color: #21262d !important;
+}
+
+.night-mode .autocomplete-item.selected {
+    background-color: #30363d !important;
+}
+
+.night-mode .autocomplete-item .font-medium {
+    color: #f0f6fc !important;
+}
+
+.night-mode .autocomplete-item .text-sm {
+    color: #7d8590 !important;
+}
+
+.night-mode .autocomplete-item.text-center {
+    background-color: #161b22 !important;
+    color: #7d8590 !important;
+}
+
+.night-mode .autocomplete-item.text-center:hover {
+    background-color: #161b22 !important;
+}
+
+.night-mode .autocomplete-list::-webkit-scrollbar-track {
+    background: #0d1117 !important;
+}
+
+.night-mode .autocomplete-list::-webkit-scrollbar-thumb {
+    background: #30363d !important;
+}
+
+.night-mode .autocomplete-list::-webkit-scrollbar-thumb:hover {
+    background: #6e7681 !important;
+}
+
