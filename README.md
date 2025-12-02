@@ -1,6 +1,6 @@
 <!-- Logo do projeto -->
 <p align="center">
-  <a href="https://www.youtube.com/watch?si=Yh4zWISCRkQa7F6-&v=r4HKf4ICAFA&feature=youtu.be"> <img src="public/imgs/logoagendaibranco.png" alt="Logo do AgendAí" width="300"/> </a>
+  <a href="https://youtu.be/GmD5ePt0-Yc?si=vMfqwVYArHBvfqb1"> <img src="public/imgs/logoagendaibranco.png" alt="Logo do AgendAí" width="300"/> </a>
     <h5 align="center">Clique na imagem!</h5>
 </p>
 
@@ -99,7 +99,7 @@ Dados meteorológicos detalhados por dia e período da viagem.
 
 ## 📈 Status do Projeto
 
-📌 Em desenvolvimento  
+📌 Finalizado.
 
 ---
 
